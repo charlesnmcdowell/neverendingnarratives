@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Neverending Narratives — Professional audiobook production studio in Nashville. Expert narration, editing, mastering & full production for fantasy, sci-fi, romance, mystery & more. Bring your story to life.">
+    <meta name="keywords" content="neverendingnarratives, audiobook production, professional audiobook narration, audiobook studio, fantasy audiobook, sci-fi audiobook, audiobook services Nashville">
+    <meta name="author" content="Neverending Narratives">
+    <title>Neverending Narratives | Professional Audiobook Production Studio</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap');
+        
+        :root { --accent: 234 179 8; }
+        .tail-container { font-family: 'Inter', system-ui, sans-serif; }
+        .heading-font { font-family: 'Playfair Display', serif; }
+
+        .hero-bg {
+            background-image: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.75)), url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1920&h=1080&fit=crop&crop=center');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .nav-link { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .nav-link:hover { color: rgb(234 179 8); transform: translateY(-2px); }
+
+        .section-title:after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 3px;
+            background: rgb(234 179 8);
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        audio { width: 100%; accent-color: rgb(234 179 8); }
+
+        .fade-in { opacity: 0; transform: translateY(20px); animation: fadeInUp 0.6s ease forwards; }
+        .fade-in-delayed { animation-delay: 0.2s; }
+        .fade-in-delayed-2 { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-counter { transition: all 0.3s ease; }
+        .stat-counter:hover { transform: scale(1.05); }
+    </style>
+</head>
+<body class="tail-container bg-zinc-950 text-zinc-100 overflow-x-hidden">
+
+    <!-- NAVBAR -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
+        <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-book-open text-3xl text-yellow-400"></i>
+                <div>
+                    <span class="text-2xl font-bold tracking-tight heading-font">Neverending</span>
+                    <span class="text-2xl font-bold tracking-tight text-yellow-400 heading-font">Narratives</span>
+                </div>
+            </div>
+            
+            <div class="hidden md:flex items-center gap-8 text-sm font-medium">
+                <a href="#services" onclick="smoothScrollTo('services')" class="nav-link">Services</a>
+                <a href="#samples" onclick="smoothScrollTo('samples')" class="nav-link">Portfolio</a>
+                <a href="#about" onclick="smoothScrollTo('about')" class="nav-link">About</a>
+                <a href="#process" onclick="smoothScrollTo('process')" class="nav-link">Process</a>
+                <a href="#pricing" onclick="smoothScrollTo('pricing')" class="nav-link">Pricing</a>
+                <a href="#contact" onclick="smoothScrollTo('contact')" class="nav-link">Contact</a>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <a href="https://www.royalroad.com/profile/884453/fictions" target="_blank" class="text-xs md:text-sm flex items-center gap-1 hover:text-yellow-400 transition-colors">
+                    <i class="fa-solid fa-scroll"></i>
+                    <span class="hidden md:inline">Our Stories</span>
+                </a>
+                <a href="#contact" onclick="smoothScrollTo('contact')" 
+                   class="bg-yellow-400 hover:bg-yellow-500 text-zinc-950 px-5 py-2.5 rounded-full font-semibold text-sm transition-all active:scale-95">
+                    Get a Quote
+                </a>
+                <button id="mobile-menu-button" class="md:hidden text-2xl"><i class="fa-solid fa-bars"></i></button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-zinc-900 border-t border-zinc-800">
+            <div class="flex flex-col px-6 py-6 gap-4 text-lg">
+                <a href="#services" onclick="toggleMobileMenu()" class="py-2">Services</a>
+                <a href="#samples" onclick="toggleMobileMenu()" class="py-2">Portfolio</a>
+                <a href="#about" onclick="toggleMobileMenu()" class="py-2">About</a>
+                <a href="#process" onclick="toggleMobileMenu()" class="py-2">Process</a>
+                <a href="#pricing" onclick="toggleMobileMenu()" class="py-2">Pricing</a>
+                <a href="#contact" onclick="toggleMobileMenu()" class="py-2">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section class="hero-bg min-h-screen flex items-center">
+        <div class="max-w-7xl mx-auto px-6 py-32 text-center">
+            <div class="fade-in">
+                <span class="inline-block text-yellow-400 text-sm font-medium uppercase tracking-widest mb-4">Professional Audiobook Production</span>
+                <h1 class="heading-font text-6xl md:text-8xl font-bold mb-6 leading-tight">
+                    Your Story,<br>
+                    <span class="text-yellow-400">Beautifully Told</span>
+                </h1>
+            </div>
+            <div class="fade-in-delayed">
+                <p class="text-xl md:text-2xl text-zinc-300 mb-8 max-w-4xl mx-auto leading-relaxed">
+                    Nashville's premier audiobook studio. We transform manuscripts into captivating audiobooks with professional narration, pristine editing, and industry-standard mastering.
+                </p>
+            </div>
+            <div class="fade-in-delayed-2 flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="#contact" onclick="smoothScrollTo('contact')" 
+                   class="bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-semibold text-lg transition-all active:scale-95">
+                    Start Your Audiobook
+                </a>
+                <a href="#samples" onclick="smoothScrollTo('samples')" 
+                   class="border-2 border-zinc-100 hover:bg-zinc-100 hover:text-zinc-950 px-8 py-4 rounded-full font-semibold text-lg transition-all">
+                    Listen to Samples
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICES SECTION -->
+    <section id="services" class="py-24 bg-zinc-900">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Services</span>
+                <h2 class="heading-font text-5xl font-bold mt-2 mb-4">Complete Audiobook Production</h2>
+                <p class="text-zinc-400 text-lg max-w-2xl mx-auto">From manuscript to marketplace, we handle every aspect of professional audiobook creation</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-zinc-800 rounded-3xl p-8 border border-zinc-700 hover:border-yellow-400/30 transition-all">
+                    <div class="text-yellow-400 text-4xl mb-4">
+                        <i class="fa-solid fa-microphone"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Professional Narration</h3>
+                    <p class="text-zinc-400 mb-6">Expert voice acting that brings your characters to life with distinct voices, proper pacing, and emotional depth that engages listeners.</p>
+                    <ul class="text-zinc-300 text-sm space-y-2">
+                        <li>• Character voice development</li>
+                        <li>• Genre-specific expertise</li>
+                        <li>• Accent & dialect coaching</li>
+                        <li>• Multiple narrator options</li>
+                    </ul>
+                </div>
+
+                <div class="bg-zinc-800 rounded-3xl p-8 border border-zinc-700 hover:border-yellow-400/30 transition-all">
+                    <div class="text-yellow-400 text-4xl mb-4">
+                        <i class="fa-solid fa-waveform-lines"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Audio Production</h3>
+                    <p class="text-zinc-400 mb-6">State-of-the-art recording, editing, and mastering that meets ACX standards and sounds amazing on any platform.</p>
+                    <ul class="text-zinc-300 text-sm space-y-2">
+                        <li>• Noise reduction & cleanup</li>
+                        <li>• Professional mastering</li>
+                        <li>• Chapter marking</li>
+                        <li>• Quality assurance testing</li>
+                    </ul>
+                </div>
+
+                <div class="bg-zinc-800 rounded-3xl p-8 border border-zinc-700 hover:border-yellow-400/30 transition-all">
+                    <div class="text-yellow-400 text-4xl mb-4">
+                        <i class="fa-solid fa-rocket"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Publishing Support</h3>
+                    <p class="text-zinc-400 mb-6">End-to-end support from file formatting to marketplace upload, ensuring your audiobook reaches listeners everywhere.</p>
+                    <ul class="text-zinc-300 text-sm space-y-2">
+                        <li>• ACX formatting & upload</li>
+                        <li>• Metadata optimization</li>
+                        <li>• Cover art coordination</li>
+                        <li>• Distribution guidance</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PORTFOLIO / SAMPLES SECTION -->
+    <section id="samples" class="py-24 bg-zinc-900">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+                <div>
+                    <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Portfolio</span>
+                    <h2 class="heading-font text-5xl font-bold mt-2">Featured & Sample Work</h2>
+                </div>
+                <a href="https://www.youtube.com/@Neverendingnarratives37" target="_blank" 
+                   class="mt-6 md:mt-0 text-yellow-400 flex items-center gap-2 hover:gap-3 transition-all">
+                    Full Channel <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- YOUR YOUTUBE VIDEO -->
+            <div class="mb-16 bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700">
+                <div class="relative pb-[56.25%] bg-black">
+                    <iframe 
+                        class="absolute inset-0 w-full h-full"
+                        src="https://www.youtube.com/embed/3lJzuzY5CFM?rel=0&modestbranding=1" 
+                        title="Altar of Omnia – Professional Audiobook Sample"
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <div class="p-8">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <h3 class="font-semibold text-3xl">Altar of Omnia – The Unbound Path</h3>
+                            <p class="text-zinc-400 mt-1">Sci-Fi / LitRPG • Full chapter sample</p>
+                        </div>
+                        <a href="https://www.royalroad.com/profile/884453/fictions" target="_blank"
+                           class="text-xs bg-zinc-700 hover:bg-zinc-600 px-5 py-2 rounded-full transition-colors flex items-center gap-2">
+                            <i class="fa-solid fa-scroll"></i> Read on Royal Road
+                        </a>
+                    </div>
+                    <p class="text-zinc-400 text-sm mt-6 leading-relaxed">
+                        Professional narration, clean editing, and immersive sound design. 
+                        This is exactly how your audiobook will sound.
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center mb-8">
+                <span class="uppercase text-xs tracking-widest text-zinc-500">More Narration Samples</span>
+            </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Human Trigger -->
+                <div class="bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700 hover:border-yellow-400/30 transition-all">
+                    <div class="relative pb-[56.25%] bg-black">
+                        <iframe 
+                            class="absolute inset-0 w-full h-full"
+                            src="https://www.youtube.com/embed/DoqWrw2XEaU?rel=0&modestbranding=1" 
+                            title="Human Trigger - Audiobook Sample"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="p-6">
+                        <h4 class="font-semibold mb-1 text-xl">Human Trigger</h4>
+                        <p class="text-zinc-400 text-sm">Professional Narration Sample</p>
+                    </div>
+                </div>
+
+                <!-- JackedIN -->
+                <div class="bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700 hover:border-yellow-400/30 transition-all">
+                    <div class="relative pb-[56.25%] bg-black">
+                        <iframe 
+                            class="absolute inset-0 w-full h-full"
+                            src="https://www.youtube.com/embed/SeiV6FAmK9Y?rel=0&modestbranding=1" 
+                            title="JackedIN - Audiobook Sample"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="p-6">
+                        <h4 class="font-semibold mb-1 text-xl">JackedIN</h4>
+                        <p class="text-zinc-400 text-sm">Professional Narration Sample</p>
+                    </div>
+                </div>
+
+                <!-- Vibe&Soul -->
+                <div class="bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700 hover:border-yellow-400/30 transition-all">
+                    <div class="relative pb-[56.25%] bg-black">
+                        <iframe 
+                            class="absolute inset-0 w-full h-full"
+                            src="https://www.youtube.com/embed/lHynSG9JZA0?rel=0&modestbranding=1" 
+                            title="Vibe&Soul - Audiobook Sample"
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="p-6">
+                        <h4 class="font-semibold mb-1 text-xl">Vibe&Soul</h4>
+                        <p class="text-zinc-400 text-sm">Professional Narration Sample</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-12 text-zinc-400">
+                All samples professionally recorded & mastered in our Nashville studio.<br>
+                <a href="#contact" onclick="smoothScrollTo('contact')" class="text-yellow-400 underline">Want your book next?</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT SECTION -->
+    <section id="about" class="py-24 bg-zinc-950">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <div>
+                    <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">About Us</span>
+                    <h2 class="heading-font text-5xl font-bold mt-2 mb-6">Passionate Storytellers in Nashville</h2>
+                    <p class="text-zinc-400 text-lg leading-relaxed mb-6">
+                        Founded by storytellers for storytellers, Neverending Narratives combines technical expertise with creative passion. Our Nashville-based studio specializes in transforming written works into immersive audio experiences.
+                    </p>
+                    <p class="text-zinc-400 text-lg leading-relaxed mb-8">
+                        From fantasy epics to contemporary romance, we understand that every genre has its unique voice. Our team brings years of experience in both traditional publishing and indie authorship.
+                    </p>
+                    
+                    <div class="grid grid-cols-3 gap-8">
+                        <div class="text-center stat-counter">
+                            <div class="text-3xl font-bold text-yellow-400">50+</div>
+                            <div class="text-zinc-500 text-sm">Books Produced</div>
+                        </div>
+                        <div class="text-center stat-counter">
+                            <div class="text-3xl font-bold text-yellow-400">100k+</div>
+                            <div class="text-zinc-500 text-sm">Hours Listened</div>
+                        </div>
+                        <div class="text-center stat-counter">
+                            <div class="text-3xl font-bold text-yellow-400">5★</div>
+                            <div class="text-zinc-500 text-sm">Average Rating</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="relative">
+                    <div class="bg-gradient-to-br from-yellow-400 to-amber-600 rounded-3xl p-1">
+                        <div class="bg-zinc-900 rounded-3xl p-8">
+                            <div class="text-center mb-6">
+                                <i class="fa-solid fa-quote-left text-yellow-400 text-4xl mb-4"></i>
+                                <p class="text-xl italic text-zinc-300 mb-4">
+                                    "Working with Neverending Narratives transformed my indie novel into something I never imagined possible. The narration brought my characters to life in ways that surprised even me."
+                                </p>
+                                <div class="text-yellow-400 font-semibold">— Sarah M., Fantasy Author</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PROCESS SECTION -->
+    <section id="process" class="py-24 bg-zinc-900">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Process</span>
+                <h2 class="heading-font text-5xl font-bold mt-2 mb-4">From Manuscript to Masterpiece</h2>
+                <p class="text-zinc-400 text-lg max-w-2xl mx-auto">Our streamlined process ensures quality results and clear communication every step of the way</p>
+            </div>
+
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="text-center">
+                    <div class="bg-yellow-400 text-zinc-950 rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
+                    <h3 class="text-xl font-semibold mb-4">Consultation</h3>
+                    <p class="text-zinc-400">We discuss your vision, timeline, and requirements. Free quote within 24 hours.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-yellow-400 text-zinc-950 rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-6">2</div>
+                    <h3 class="text-xl font-semibold mb-4">Sample Chapter</h3>
+                    <p class="text-zinc-400">We record a sample chapter to ensure the voice and style match your expectations.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-yellow-400 text-zinc-950 rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-6">3</div>
+                    <h3 class="text-xl font-semibold mb-4">Full Production</h3>
+                    <p class="text-zinc-400">Professional recording, editing, and mastering with regular progress updates.</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-yellow-400 text-zinc-950 rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-6">4</div>
+                    <h3 class="text-xl font-semibold mb-4">Delivery</h3>
+                    <p class="text-zinc-400">Final files delivered in all required formats, ready for distribution.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING SECTION -->
+    <section id="pricing" class="py-24 bg-zinc-950">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Pricing</span>
+                <h2 class="heading-font text-5xl font-bold mt-2 mb-4">Transparent, Fair Pricing</h2>
+                <p class="text-zinc-400 text-lg max-w-2xl mx-auto">Professional audiobook production that fits your budget</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-zinc-800 rounded-3xl p-8 border border-zinc-700">
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold mb-2">Essential</h3>
+                        <div class="text-4xl font-bold text-yellow-400 mb-2">$400</div>
+                        <div class="text-zinc-400">per finished hour</div>
+                    </div>
+                    <ul class="space-y-4 text-zinc-300">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Professional narration</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Editing & mastering</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Chapter marking</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> ACX-ready files</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> 2 revision rounds</li>
+                    </ul>
+                    <a href="#contact" onclick="smoothScrollTo('contact')" 
+                       class="block text-center bg-zinc-700 hover:bg-zinc-600 text-white px-8 py-4 rounded-full font-semibold mt-8 transition-all">
+                        Get Started
+                    </a>
+                </div>
+
+                <div class="bg-zinc-800 rounded-3xl p-8 border-2 border-yellow-400 relative">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                        <span class="bg-yellow-400 text-zinc-950 px-6 py-2 rounded-full text-sm font-semibold">Most Popular</span>
+                    </div>
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold mb-2">Professional</h3>
+                        <div class="text-4xl font-bold text-yellow-400 mb-2">$600</div>
+                        <div class="text-zinc-400">per finished hour</div>
+                    </div>
+                    <ul class="space-y-4 text-zinc-300">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> All Essential features</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Character voice coaching</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Enhanced sound design</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Priority scheduling</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Unlimited revisions</li>
+                    </ul>
+                    <a href="#contact" onclick="smoothScrollTo('contact')" 
+                       class="block text-center bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-semibold mt-8 transition-all">
+                        Get Started
+                    </a>
+                </div>
+
+                <div class="bg-zinc-800 rounded-3xl p-8 border border-zinc-700">
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold mb-2">Premium</h3>
+                        <div class="text-4xl font-bold text-yellow-400 mb-2">$800</div>
+                        <div class="text-zinc-400">per finished hour</div>
+                    </div>
+                    <ul class="space-y-4 text-zinc-300">
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> All Professional features</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Multiple narrator options</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Advanced post-production</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Marketing support</li>
+                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> White-glove service</li>
+                    </ul>
+                    <a href="#contact" onclick="smoothScrollTo('contact')" 
+                       class="block text-center bg-zinc-700 hover:bg-zinc-600 text-white px-8 py-4 rounded-full font-semibold mt-8 transition-all">
+                        Get Started
+                    </a>
+                </div>
+            </div>
+
+            <div class="text-center mt-12 text-zinc-400">
+                <p class="mb-4">Need a custom solution? Let's talk about your specific requirements.</p>
+                <a href="#contact" onclick="smoothScrollTo('contact')" class="text-yellow-400 underline">Contact us for enterprise pricing</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- TESTIMONIALS SECTION -->
+    <section class="py-24 bg-zinc-900">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Testimonials</span>
+                <h2 class="heading-font text-5xl font-bold mt-2">What Authors Say</h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-zinc-800 rounded-3xl p-8 border border-zinc-700">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-user text-zinc-950"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold">Marcus Chen</div>
+                            <div class="text-zinc-400 text-sm">Sci-Fi Author</div>
+                        </div>
+                    </div>
+                    <p class="text-zinc-300 italic">
+                        "The team at Neverending Narratives understood my vision perfectly. The narrator brought my cyberpunk world to life with incredible attention to detail. My audiobook sales have exceeded all expectations."
+                    </p>
+                </div>
+
+                <div class="bg-zinc-800 rounded-3xl p-8 border border-zinc-700">
+                    <div class="flex items-center gap-4 mb-6">
+                        <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
+                            <i class="fa-solid fa-user text-zinc-950"></i>
+                        </div>
+                        <div>
+                            <div class="font-semibold">Elena Rodriguez</div>
+                            <div class="text-zinc-400 text-sm">Romance Author</div>
+                        </div>
+                    </div>
+                    <p class="text-zinc-300 italic">
+                        "Professional, timely, and incredibly talented. The dual narration for my romance novel was exactly what I envisioned. The chemistry between the narrators brought my characters to life beautifully."
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT SECTION -->
+    <section id="contact" class="py-24 bg-zinc-900">
+        <div class="max-w-3xl mx-auto px-6">
+            <div class="text-center mb-12">
+                <h2 class="heading-font text-5xl font-bold">Let's Bring Your Book to Ears Everywhere</h2>
+                <p class="mt-4 text-zinc-400">Fill out the form or email us directly at 
+                    <a href="mailto:neverendingnarratives@gmail.com" class="text-yellow-400 hover:underline">neverendingnarratives@gmail.com</a>
+                </p>
+            </div>
+
+            <form id="contact-form" class="space-y-8">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs uppercase tracking-widest mb-2">Your Name</label>
+                        <input type="text" id="name" required class="w-full bg-zinc-800 border border-zinc-700 focus:border-yellow-400 rounded-2xl px-6 py-4 outline-none transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs uppercase tracking-widest mb-2">Email Address</label>
+                        <input type="email" id="email" required class="w-full bg-zinc-800 border border-zinc-700 focus:border-yellow-400 rounded-2xl px-6 py-4 outline-none transition-colors">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest mb-2">Book Title & Genre</label>
+                    <input type="text" id="book-info" placeholder="e.g. Altar of Omnia • Sci-Fi" class="w-full bg-zinc-800 border border-zinc-700 focus:border-yellow-400 rounded-2xl px-6 py-4 outline-none transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest mb-2">Tell us about your project</label>
+                    <textarea id="message" rows="6" required placeholder="Word count, target audience, any special requests..." class="w-full bg-zinc-800 border border-zinc-700 focus:border-yellow-400 rounded-3xl px-6 py-4 outline-none transition-colors resize-none"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-yellow-400 hover:bg-amber-400 text-zinc-950 font-semibold py-6 rounded-3xl text-lg transition-all active:scale-95">
+                    Send Message — Get Your Quote in 24 Hours
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-black py-16 border-t border-zinc-900">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-8">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-book-open text-4xl text-yellow-400"></i>
+                    <div class="heading-font text-3xl">Neverending Narratives</div>
+                </div>
+                
+                <div class="flex gap-8 text-sm">
+                    <a href="https://www.royalroad.com/profile/884453/fictions" target="_blank" class="hover:text-yellow-400">Our Written Works</a>
+                    <a href="#samples" onclick="smoothScrollTo('samples')" class="hover:text-yellow-400">Portfolio</a>
+                </div>
+
+                <div class="flex gap-6 text-2xl">
+                    <a href="https://www.facebook.com/search/top?q=neverendingnarratives" target="_blank" class="hover:text-yellow-400"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="https://www.instagram.com/neverendingnarratives/" target="_blank" class="hover:text-yellow-400"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="https://www.youtube.com/@Neverendingnarratives37" target="_blank" class="hover:text-yellow-400"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="text-center text-xs text-zinc-500 mt-16">
+                © 2026 Neverending Narratives • Nashville, Tennessee<br>
+                Professional Audiobook Production Studio
+            </div>
+        </div>
+    </footer>
+
+    <!-- SUCCESS TOAST -->
+    <div id="toast" class="hidden fixed bottom-6 right-6 bg-zinc-800 border border-yellow-400 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-3 z-50">
+        <i class="fa-solid fa-check-circle text-yellow-400 text-2xl"></i>
+        <div>
+            <div class="font-medium">Message sent!</div>
+            <div class="text-sm text-zinc-400">We'll reply within 24 hours.</div>
+        </div>
+    </div>
+
+    <script>
+        function smoothScrollTo(sectionId) {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                const navHeight = 80;
+                const elementPosition = element.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.scrollY - navHeight;
+                window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+            }
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        }
+
+        document.getElementById('mobile-menu-button').addEventListener('click', toggleMobileMenu);
+
+        // Close mobile menu when clicking nav links
+        document.querySelectorAll('#mobile-menu a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('mobile-menu').classList.add('hidden');
+            });
+        });
+
+        // Form handling
+        document.getElementById('contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const toast = document.getElementById('toast');
+            toast.classList.remove('hidden');
+            this.reset();
+            setTimeout(() => toast.classList.add('hidden'), 5000);
+        });
+
+        // Animate stats on scroll
+        const observerOptions = {
+            threshold: 0.5,
+            rootMargin: '0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.transform = 'scale(1.05)';
+                    setTimeout(() => {
+                        entry.target.style.transform = 'scale(1)';
+                    }, 300);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.stat-counter').forEach(counter => {
+            observer.observe(counter);
+        });
+
+        console.log('%c✅ Neverending Narratives website loaded successfully!', 'color:#eab308; font-family:monospace');
+    </script>
+</body>
+</html>
