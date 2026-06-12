@@ -737,6 +737,7 @@ function spawnFight(){
   cam.x=cam.tx=W/2;cam.y=cam.ty=H/2;cam.z=cam.tz=1;cam.hold=0;S.fatal=false;
   P.x=arena.x;P.y=arena.y+arena.r*0.55;P.hp=maxHP();P.dead=false;P.rollT=0;P.rollCD=0;P.heavyCD=0;P.heavyWind=0;
   P.parryT=0;P.parryCD=0;P.ripoT=0;P.combo=0;P.comboT=0;
+  P.hexCD=0;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;P.humanCD=0;P.wolfCD=0;P.formCD=0; // all skills fresh each fight (Hiro)
   P.ft={dmgTaken:0,heavy:0,slash:0,rolls:0,parries:0,t0:NOW(),low:false};
   UI.boss(S.fight>=18,FIGHTS[S.fight].name);
 }
@@ -1117,6 +1118,7 @@ function startEncounter(list,cb){
   cam.x=cam.tx=W/2;cam.y=cam.ty=H/2;cam.z=cam.tz=1;cam.hold=0;S.fatal=false;
   P.x=arena.x;P.y=arena.y+arena.r*0.55;P.hp=maxHP();P.dead=false;P.rollT=0;P.rollCD=0;P.heavyCD=0;P.heavyWind=0;
   P.parryT=0;P.parryCD=0;P.ripoT=0;P.combo=0;P.comboT=0;
+  P.hexCD=0;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;P.humanCD=0;P.wolfCD=0;P.formCD=0; // all skills fresh each fight (Hiro)
   P.ft={dmgTaken:0,heavy:0,slash:0,rolls:0,parries:0,t0:NOW(),low:false};
   S.mode='fight';UI.hud(true);UI.controls(true);UI.name(nickname);
   UI.stats(diceN()+'d8',(P.char==='ronin'?'':'LV '+lvl()+' · ')+'KILLS '+P.kills);

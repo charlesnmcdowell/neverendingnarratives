@@ -51,7 +51,7 @@ const QuestNav = {
   // ---- zone graph: next hop from zone A toward zone B ----
   nextHop(from, to) {
     const HOPS = {
-      'karridge-city': { 'thorn-grove': { x: 1120, y: 40, interact: false }, 'grove-dungeon': { x: 1120, y: 40, interact: false }, 'varenholm': { x: 1656, y: 744, interact: true } },
+      'karridge-city': { 'thorn-grove': { x: 1120, y: 24, interact: false }, 'grove-dungeon': { x: 1120, y: 24, interact: false }, 'varenholm': { x: 1656, y: 744, interact: true } },
       'thorn-grove': { 'karridge-city': { x: 1088, y: 1572, interact: false }, 'varenholm': { x: 1088, y: 1572, interact: false }, 'grove-dungeon': { x: 1984, y: 1344, interact: true } },
       'grove-dungeon': { 'thorn-grove': { x: 160, y: 96, interact: true }, 'karridge-city': { x: 160, y: 96, interact: true }, 'varenholm': { x: 160, y: 96, interact: true } },
       'varenholm': { 'karridge-city': { x: 896, y: 1088, interact: true }, 'thorn-grove': { x: 896, y: 1088, interact: true }, 'grove-dungeon': { x: 896, y: 1088, interact: true } },

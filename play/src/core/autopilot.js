@@ -35,34 +35,50 @@ const Autopilot = {
     const nearest = foes.sort((a, b) => dist(P, a) - dist(P, b))[0];
 
     if (P.char === 'warlock') {
-      if (P.devilT > 0) { combat.doSlash(); return; }
+      // the warlock's kit, played properly: hex on cooldown, FULL-duration channels,
+      // blink for spacing, portal to escape crowds and to flee his own succubus bombs
+      const demons = combat.demons.filter(d => d.hp > 0);
+      const archBomb = demons.find(d => d.arch);                  // ticking succubus
+      if (P.devilT > 0) {
+        const succubus = demons.find(d => d.type === 'succubus' && !d.arch);
+        if (archBomb && dist(P, archBomb) < 200 && P.parryCD <= 0) { combat.doParry(); return; } // PORTAL away from the blast
+        if (archBomb && dist(P, archBomb) < 190 && P.rollCD <= 0) { combat.doRoll(); return; }   // or blink clear
+        if (succubus && dist(P, succubus) < 130) { combat.doHeavy(); return; }                   // BITE — ascend her
+        combat.doSlash();                                                                        // CLAW everything else
+        return;
+      }
       moveTo(foe.x, foe.y);
-      if (prio.length && P.parryCD <= 0 && dFoe > 160 && foes.length > 1) combat.doParry();
-      if (P.hexCD <= 0 && (nearest === foe || dFoe < 70)) combat.doSlash();
-      const demonsUp = combat.demons.filter(d => d.hp > 0).length;
-      if (!P.channel && demonsUp === 0 && P.heavyCD <= 0) {
-        if (dist(P, nearest) < 230 && P.rollCD <= 0) combat.doRoll();
+      if (archBomb && dist(P, archBomb) < 190 && P.parryCD <= 0) combat.doParry();               // never stand near the bomb
+      if (P.hexCD <= 0 && (nearest === foe || dFoe < 70)) combat.doSlash();                      // hex whenever available
+      const crowd = foes.filter(e => dist(P, e) < 120).length;
+      if (crowd >= 2 && P.parryCD <= 0) combat.doParry();                                        // portal out of a surround
+      else if (dist(P, nearest) < 70 && P.rollCD <= 0 && !P.channel) combat.doRoll();            // blink for spacing
+      if (!P.channel && demons.length < 2 && P.heavyCD <= 0) {
+        if (dist(P, nearest) < 230 && P.rollCD <= 0) combat.doRoll();                            // clear room, then channel
         combat.doHeavy();
       }
-      if (P.channel) { const want = combat.lvl() >= 8 ? 6.2 : (combat.lvl() >= 3 ? 4.2 : 3.2);
+      // hold the channel its FULL duration: fiend 3s, +dragon 4s, +coven/devil 6s
+      if (P.channel) { const want = combat.lvl() >= 5 ? 6.2 : (combat.lvl() >= 3 ? 4.2 : 3.2);
         if (P.channel.t >= want) combat.heavyRelease(); }
-      if (P.hp / combat.maxHP() < 0.35 && P.rollCD <= 0 && dist(P, nearest) < 80) combat.doRoll();
     } else if (P.char === 'druid') {
+      // full form rotation: vines+glaive in human, shift to BEAR for the brawl,
+      // WOLF for the heal and the pack, back to human when the wild needs to gather
       const tooClose = dFoe < 90, tooFar = dFoe > 165;
-      if (tooClose) moveTo(P.x + (P.x - foe.x), P.y + (P.y - foe.y));
-      else if (tooFar) moveTo(foe.x, foe.y);
+      if (tooClose && P.form === 'human') moveTo(P.x + (P.x - foe.x), P.y + (P.y - foe.y));
+      else if (tooFar || P.form !== 'human') moveTo(foe.x, foe.y);
       if (P.form === 'human') {
-        combat.doSlash();
-        if (foes.some(e => dist(P, e) < 160) && P.cdVines <= 0) combat.doHeavy();
-        if (combat.lvl() >= 6 && P.hp / combat.maxHP() < 0.5 && P.humanCD <= 0) { combat.doParry(); combat.doParry(); }
-      } else if (P.form === 'wolf') {
-        if (P.cdHowl <= 0) combat.doHeavy();
-        combat.doSlash();
-      } else {
-        if (dFoe < 130 && P.cdRoar <= 0) combat.doHeavy();
-        if (dFoe < 95) combat.doSlash(); else combat.doParry();
+        combat.doSlash();                                          // glaive patterns
+        if (foes.some(e => dist(P, e) < 160) && P.cdVines <= 0) combat.doHeavy(); // vines + hop
+        if (combat.lvl() >= 3 && P.humanCD <= 0 && P.formCD <= 0 && dFoe < 170) combat.doParry(); // -> BEAR
+      } else if (P.form === 'bear') {
+        if (foes.filter(e => dist(P, e) < 145).length >= 2 && P.cdRoar <= 0) combat.doHeavy();    // ROAR the crowd
+        if (dFoe < 95) combat.doSlash();                                                          // CLAW
+        if (combat.lvl() >= 6 && P.formCD <= 0 && (P.hp / combat.maxHP() < 0.75 || P.cdRoar > 1.5)) combat.doParry(); // -> WOLF
+      } else { // wolf
+        if (P.cdHowl <= 0) combat.doHeavy();                       // HOWL heal + pack
+        combat.doSlash();                                          // BITE lunges
       }
-      if (foe.attacking && foe.tele < 0.15 && dFoe < 100 && P.rollCD <= 0) combat.doRoll();
+      if (foe.attacking && foe.tele < 0.15 && dFoe < 100 && P.rollCD <= 0 && P.form === 'human') combat.doRoll();
     } else { // ronin
       moveTo(foe.x - Math.cos(foe.face) * 55, foe.y - Math.sin(foe.face) * 55);
       if (foe.attacking && foe.tele > 0 && dFoe < 140) combat.doParry();

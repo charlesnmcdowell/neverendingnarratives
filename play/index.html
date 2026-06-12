@@ -81,6 +81,34 @@
     border:1px solid rgba(61,240,200,.4);background:rgba(4,2,8,.7);padding:5px 10px;margin-left:8px}
   .hudbtn:active{background:rgba(61,240,200,.2)}
   @media (max-width:700px){ #cityHint{display:none} }
+  /* ---------- MOBILE: shrink the UI so the action owns the screen ---------- */
+  @media (max-width:900px){
+    #pname,#cityName{font-size:11px;letter-spacing:2px}
+    #pdice,#pkills,#cityPurse{font-size:10px}
+    #hpwrap{height:8px;max-width:200px}
+    .hudbtn{font-size:9px;padding:3px 6px;margin-left:5px}
+    #hud{padding:6px 8px 4px}
+    #cityhud{padding:6px 8px}
+    #bSlash{width:64px;height:64px;font-size:10px;right:10px}
+    #bHeavy{width:48px;height:48px;font-size:8px;right:84px}
+    #bRoll{width:48px;height:48px;font-size:8px;right:22px;bottom:calc(max(20px,env(safe-area-inset-bottom)) + 76px)}
+    #bParry{width:48px;height:48px;font-size:8px;right:84px;bottom:calc(max(14px,env(safe-area-inset-bottom)) + 60px)}
+    .beltslot{width:30px;height:30px;font-size:13px}
+    #belt{bottom:8px;gap:4px}
+    #interactPrompt{bottom:84px;font-size:10px;padding:6px 12px}
+    #dialog{bottom:56px;padding:10px;gap:8px}
+    #dlgPortrait{flex:0 0 56px;height:56px}
+    #dlgPortrait canvas{width:52px;height:52px}
+    #dlgName{font-size:10px}
+    #dlgText{font-size:10px;line-height:1.5}
+    .dlgopt{font-size:10px;padding:4px 8px;margin-top:5px}
+    #questlog,#guildboard,#companions{top:36px;padding:10px;width:min(88vw,300px)}
+    .qtitle{font-size:11px}.qtext{font-size:10px}.qobj{font-size:9px}
+    #musicBtn{top:6px;right:8px}
+    #stickBase{width:84px;height:84px}
+    #stickNub{width:36px;height:36px}
+    #autoBtnArena{font-size:9px}
+  }
   #interactPrompt{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;display:none;z-index:6;
     font-size:13px;letter-spacing:2px;color:#3df0c8;background:rgba(4,2,8,.8);border:1px solid rgba(61,240,200,.5);
     padding:8px 18px;text-transform:uppercase;pointer-events:none}
@@ -235,29 +263,29 @@
   </div>
 </div>
 
-<script src="lib/phaser.min.js?v=1781280122"></script>
-<script src="config.js?v=1781280122"></script>
-<script src="assets/embedded.js?v=1781280122"></script>
-<script src="src/core/money.js?v=1781280122"></script>
-<script src="src/core/dialog.js?v=1781280122"></script>
-<script src="src/core/worldmap.js?v=1781280122"></script>
-<script src="src/core/autopilot.js?v=1781280122"></script>
-<script src="src/core/questnav.js?v=1781280122"></script>
-<script src="src/core/touchstick.js?v=1781280122"></script>
-<script src="src/core/save.js?v=1781280122"></script>
-<script src="src/core/music.js?v=1781280122"></script>
-<script src="src/core/voice.js?v=1781280122"></script>
-<script src="src/world/citymap.js?v=1781280122"></script>
-<script src="src/world/quests.js?v=1781280122"></script>
-<script src="src/world/companions.js?v=1781280122"></script>
-<script src="src/core/companionAI.js?v=1781280122"></script>
-<script src="src/combat/pit.js?v=1781280122"></script>
-<script src="src/scenes/ArenaScene.js?v=1781280122"></script>
-<script src="src/scenes/WorldScene.js?v=1781280122"></script>
-<script src="src/scenes/CityScene.js?v=1781280122"></script>
-<script src="src/scenes/GroveScene.js?v=1781280122"></script>
-<script src="src/scenes/DungeonScene.js?v=1781280122"></script>
-<script src="src/scenes/VarenholmScene.js?v=1781280122"></script>
-<script src="src/main.js?v=1781280122"></script>
+<script src="lib/phaser.min.js?v=1781286507"></script>
+<script src="config.js?v=1781286507"></script>
+<script src="assets/embedded.js?v=1781286507"></script>
+<script src="src/core/money.js?v=1781286507"></script>
+<script src="src/core/dialog.js?v=1781286507"></script>
+<script src="src/core/worldmap.js?v=1781286507"></script>
+<script src="src/core/autopilot.js?v=1781286507"></script>
+<script src="src/core/questnav.js?v=1781286507"></script>
+<script src="src/core/touchstick.js?v=1781286507"></script>
+<script src="src/core/save.js?v=1781286507"></script>
+<script src="src/core/music.js?v=1781286507"></script>
+<script src="src/core/voice.js?v=1781286507"></script>
+<script src="src/world/citymap.js?v=1781286507"></script>
+<script src="src/world/quests.js?v=1781286507"></script>
+<script src="src/world/companions.js?v=1781286507"></script>
+<script src="src/core/companionAI.js?v=1781286507"></script>
+<script src="src/combat/pit.js?v=1781286507"></script>
+<script src="src/scenes/ArenaScene.js?v=1781286507"></script>
+<script src="src/scenes/WorldScene.js?v=1781286507"></script>
+<script src="src/scenes/CityScene.js?v=1781286507"></script>
+<script src="src/scenes/GroveScene.js?v=1781286507"></script>
+<script src="src/scenes/DungeonScene.js?v=1781286507"></script>
+<script src="src/scenes/VarenholmScene.js?v=1781286507"></script>
+<script src="src/main.js?v=1781286507"></script>
 </body>
 </html>
