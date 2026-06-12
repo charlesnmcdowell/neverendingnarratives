@@ -10,7 +10,13 @@ const MusicMan = {
     this._gestured = true;
     const kick = () => {
       const a = this.current;
-      if (a && a.paused && !this._missing[this.currentName]) a.play().catch(() => {});
+      if (a && a.paused && !this._missing[this.currentName]) {
+        a.volume = 0; const p = a.play(); if (p && p.catch) p.catch(() => {});
+        this._fadeIn(a);
+      }
+      // failsafe: anything that isn't the current track gets silenced, no exceptions
+      for (const [n, t] of Object.entries(this.tracks))
+        if (t !== this.current && !t.paused && !t._fading) this._fadeOut(t);
     };
     window.addEventListener('pointerdown', kick);
     window.addEventListener('keydown', kick);
@@ -20,7 +26,10 @@ const MusicMan = {
     this._ensureGestureRetry();
     if (this.currentName === name) return;
     this.currentName = name;
-    for (const [n, a] of Object.entries(this.tracks)) if (n !== name) this._fadeOut(a);
+    for (const [n, a] of Object.entries(this.tracks)) if (n !== name) {
+      this._fadeOut(a);
+      setTimeout(() => { if (this.tracks[n] !== this.current) { a.pause(); a.volume = 0; a._fading = false; } }, 1500);
+    }
     if (this._missing[name]) { this.current = null; return; }
     let a = this.tracks[name];
     if (!a) {
