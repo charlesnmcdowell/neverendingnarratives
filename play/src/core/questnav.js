@@ -58,6 +58,11 @@ const QuestNav = {
       if (!f['varenholm-show-seen']) return at('varenholm', 1248, 416, true, 'the Civic Auditorium');
       return at('varenholm', 864, 896, true, 'the Adventurers Guild — Cookie');
     }
+    // after Cookie: the road home rolls the credits — guide her to the coach so she's never stranded
+    if (f['q-mq6-the-dancer'] === 'done' && druid && !f['credits-rolled']) {
+      if (GS.world.zone === 'varenholm') return at('varenholm', 896, 1088, true, 'the coach home — your road south');
+      return at('karridge-city', 1656, 744, true, 'the heartland coach');
+    }
     return null;
   },
 
