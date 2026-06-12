@@ -36,7 +36,7 @@ const SaveSystem = {
   },
 
   sceneForZone(zone) {
-    return { 'karridge-city': 'CityScene', 'thorn-grove': 'GroveScene', 'grove-dungeon': 'DungeonScene', 'varenholm': 'VarenholmScene', 'dragonspine': 'MountainScene' }[zone] || 'CityScene';
+    return { 'karridge-city': 'CityScene', 'thorn-grove': 'GroveScene', 'grove-dungeon': 'DungeonScene', 'varenholm': 'VarenholmScene', 'dragonspine': 'MountainScene', 'ashenveil': 'AshenveilScene' }[zone] || 'CityScene';
   },
 
   wipe() { try { localStorage.removeItem(this.KEY); } catch (e) {} },

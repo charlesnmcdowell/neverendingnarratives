@@ -163,6 +163,12 @@ class CityScene extends WorldScene {
       }});
     }
 
+    // warlock epilogue state survives scene loads (save/continue, returning from Ashenveil)
+    if (P.char === 'warlock') {
+      if (flags['q-wq2-a-friend-of-the-family'] === 'active') this.spawnPaleCourier();
+      if (flags['q-wq3-the-matron'] && !flags['credits-rolled']) this.addBlackCarriage();
+    }
+
     this.placeCompanions('city');
     this.initEncounterHost(null); // city uses default pit theme (no city fights yet, but host is uniform)
     this.cameras.main.setBounds(0, 0, WPX, HPX).startFollow(this.player, true, 0.12, 0.12);
@@ -264,6 +270,77 @@ class CityScene extends WorldScene {
     CityUI.guildBoard(true, live, note);
   }
 
+  // ===== THE WARLOCK'S EPILOGUE: the White Writ -> the letter -> the alley -> the carriage =====
+  startWhiteWrit() {
+    if (this._writRunning || CityUI.dialogOpen() || this.encounterActive) return;
+    this._writRunning = true;
+    const W = Quests.warlockEpilogue, flags = window.GameState.world.flags;
+    const fight = () => { CityUI.closeDialog();
+      this.startEncounter(W.ambush.banner[0], W.ambush.banner[1], [
+        { type: 'door', x: 560, y: 240, r: 24, hp: 480, maxhp: 480, spd: 95, col: '#d8d2c0', wpn: '#b8b2a0', dmgScale: 1.45 },
+        { type: 'grave', x: 720, y: 240, hp: 400, maxhp: 400, spd: 120, r: 16, col: '#c8c2b0', stance: 'open', stanceT: 1, dmgScale: 1.45 },
+        { type: 'necro', x: 640, y: 180, hp: 340, maxhp: 340, spd: 105, r: 14, col: '#5a4a5a', dmgScale: 1.4 },
+        { type: 'gunner', x: 520, y: 420, hp: 300, maxhp: 300, spd: 150, r: 13, col: '#3a3a44', dmgScale: 1.5 },
+        { type: 'hook', x: 760, y: 420, hp: 360, maxhp: 360, spd: 165, r: 14, col: '#3a3a44', dmgScale: 1.5 },
+      ], win => {
+        this._writRunning = false;
+        if (!win) { this.player.x = 640; this.player.y = 704;
+          this.floatText(this.player.x, this.player.y - 50, W.ambush.lose, '#c8443a'); return; }
+        flags['q-wq1-the-white-writ'] = 'done';
+        flags['q-wq2-a-friend-of-the-family'] = 'active';
+        CityUI.dialog('THE PLAZA, AFTER', W.ambush.winNarr, [{ label: 'Read the letter', fn: () =>
+          CityUI.dialog('A LETTER WITH NO SEAL', W.ambush.letter, [{ label: '"A friend of the family. How... familial."', fn: () => {
+            CityUI.closeDialog();
+            this.spawnPaleCourier();
+            this.floatText(this.player.x, this.player.y - 50, 'JOURNAL UPDATED — A FRIEND OF THE FAMILY', '#3df0c8', 14);
+          }}]) }]);
+      });
+    };
+    CityUI.dialog('SER HALDRIC', W.ambush.haldric, [{ label: '"You\'ve brought a WRIT to a portal fight, Ser."', fn: () =>
+      CityUI.dialog('INQUISITOR SALLOW', W.ambush.sallow, [
+        { label: '"Add one more line to the ledger, inquisitor. Yours."', fn: fight },
+        { label: '"Three professions walk into a plaza. One of them digs."', fn: fight }]) }]);
+  }
+
+  spawnPaleCourier() {
+    if (this._courierAdded) return;
+    this._courierAdded = true;
+    const W = Quests.warlockEpilogue, flags = window.GameState.world.flags;
+    const cx = 12 * 32, cy = 36 * 32; // the alley behind the west wall, where the lamplight gives up
+    const spr = this.add.sprite(cx, cy, 'fr-npc1', 0).setDepth(cy).setTint(0xb8b0c8);
+    this.addLight(cx, cy, 50, false);
+    this.interactables.push({ x: cx, y: cy, label: 'meet the PALE COURIER', fn: () => {
+      const accept = () => {
+        flags['q-wq2-a-friend-of-the-family'] = 'done';
+        flags['q-wq3-the-matron'] = 'active';
+        CityUI.closeDialog();
+        this.addBlackCarriage();
+        this.tweens.add({ targets: spr, alpha: 0, duration: 900, onComplete: () => spr.destroy() });
+        this.interactables = this.interactables.filter(it => it.x !== cx || it.y !== cy);
+        this.floatText(this.player.x, this.player.y - 50, 'JOURNAL UPDATED — THE MATRON · a black carriage waits by the guild', '#3df0c8', 13);
+      };
+      CityUI.dialog(W.courier.name, W.courier.meet, [
+        { label: '"The carriage, then. Dead horses keep secrets."', fn: accept },
+        { label: '"And if I decline the invitation?"', fn: () =>
+          CityUI.dialog(W.courier.name, W.courier.decline, [{ label: '"...The carriage, then."', fn: accept }]) }]);
+    }});
+    this.floatText(cx, cy - 44, 'someone waits where the lamplight gives up', '#9a8f80', 12);
+  }
+
+  addBlackCarriage() {
+    if (this._carriageAdded || !this.guildDoor) return;
+    this._carriageAdded = true;
+    const { dx, dy } = this.guildDoor, cy = dy + 40;
+    const cg = this.add.graphics().setDepth(cy);
+    cg.fillStyle(0x0c0a12); cg.fillRect(dx + 60, cy - 24, 58, 32);          // the black carriage
+    cg.lineStyle(1, 0x9af0c0, 0.5); cg.strokeRect(dx + 60, cy - 24, 58, 32); // grave-light trim
+    cg.fillStyle(0x05040a); cg.fillCircle(dx + 72, cy + 10, 8); cg.fillCircle(dx + 106, cy + 10, 8);
+    this.addLight(dx + 88, cy, 60, false);
+    this.interactables.push({ x: dx + 88, y: cy, label: 'board the BLACK CARRIAGE to the ASHENVEIL', fn: () => {
+      this.scene.start('AshenveilScene');
+    }});
+  }
+
   addVarenholmCoach() {
     if (this._coachAdded || !this.guildDoor) return;
     this._coachAdded = true;
@@ -311,8 +388,10 @@ class CityScene extends WorldScene {
       for (const n of this.npcs) n.pauseT = 1 + Math.random() * 2;
       this.floatText(ax, ay - 60, 'THE ANKUSPAWN CONSPIRACY — it holds. for now.', '#e7b450', 16);
       this.floatText(ax, ay - 30, 'epilogue in your journal (J) · the hunt continues in the campaigns', '#9a8f80', 12);
-      if (window.GameState.player.char === 'warlock')
-        setTimeout(() => CityUI.credits('THE WARLOCK\'S ROAD — what follows him should not fit through doors'), 2600);
+      if (window.GameState.player.char === 'warlock') { // the plaza was the audition: the Order watched
+        flags['q-wq1-the-white-writ'] = 'active';
+        setTimeout(() => this.startWhiteWrit(), 1600);
+      }
       else if (window.GameState.player.char === 'druid') {
         this.addVarenholmCoach();
         setTimeout(() => this.floatText(ax, ay, 'a coach has arrived by the guild. it seems to be waiting for someone GIFTED.', '#3df0c8', 13), 2800);
@@ -340,6 +419,11 @@ class CityScene extends WorldScene {
       this.finaleRan = true;
       this.runFinale();
     }
+    // warlock: the White Writ waits in the plaza until it is answered (retry after a loss / reload)
+    if (window.GameState.player.char === 'warlock' && flags['q-wq1-the-white-writ'] === 'active' &&
+        !this._writRunning && !this.encounterActive && !CityUI.dialogOpen() &&
+        Math.hypot(this.player.x - CityMap.well.x * 32, this.player.y - CityMap.well.y * 32) < 170)
+      this.startWhiteWrit();
 
     // north gate travel
     if (this.player.y < this.gateNorth.y + this.gateNorth.h + 10 &&

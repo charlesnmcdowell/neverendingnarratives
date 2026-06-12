@@ -40,7 +40,7 @@ const config = {
   pixelArt: true,
   physics: { default: 'arcade', arcade: { debug: false } },
   scale: { mode: fillScreen ? Phaser.Scale.ENVELOP : Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-  scene: [ArenaScene, CityScene, GroveScene, DungeonScene, VarenholmScene, MountainScene]
+  scene: [ArenaScene, CityScene, GroveScene, DungeonScene, VarenholmScene, MountainScene, AshenveilScene]
 };
 
 window.game = new Phaser.Game(config);

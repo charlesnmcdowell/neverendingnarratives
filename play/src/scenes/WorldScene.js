@@ -187,7 +187,7 @@ class WorldScene extends Phaser.Scene {
     // a tracked walk continues across zone loads
     if (QuestNav.tracking) this.time.delayedCall(150, () => QuestNav.replan(this));
     // zone music + autosave heartbeat
-    const zoneTrack = { 'karridge-city': 'city', 'thorn-grove': 'grove', 'grove-dungeon': 'dungeon', 'dragonspine': 'mountain' }[window.GameState.world.zone];
+    const zoneTrack = { 'karridge-city': 'city', 'thorn-grove': 'grove', 'grove-dungeon': 'dungeon', 'dragonspine': 'mountain', 'ashenveil': 'ashenveil' }[window.GameState.world.zone];
     if (zoneTrack) MusicMan.play(zoneTrack);
     SaveSystem.save();
     this.time.addEvent({ delay: 10000, loop: true, callback: () => { if (!this.encounterActive) SaveSystem.save(); } });

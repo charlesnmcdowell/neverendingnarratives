@@ -59,10 +59,13 @@ const Quests = {
     return Array.isArray(v) ? v : [v];
   },
 
-  // the Seraphim walks a different road: the journal shows HIS quests, not the conspiracy's
+  // the Seraphim walks a different road: the journal shows HIS quests, not the conspiracy's.
+  // The warlock's journal grows three beats past the plaza (the White Writ arc).
   mainFor() {
     const c = window.GameState && GameState.player && GameState.player.char;
-    return c === 'seraph' ? this.seraph.main : this.main;
+    if (c === 'seraph') return this.seraph.main;
+    if (c === 'warlock') return this.main.concat(this.warlockEpilogue.main);
+    return this.main;
   },
 
   // ---- guild rank ladder (canon: Greyrush iron crew, Bronze rate, Brass Whistle
@@ -167,6 +170,47 @@ const Quests = {
     captureBanner: ['THEY CAME WITH CHAINS', 'not to kill you — to TAKE you'],
     captureSign: 'They knew your routes. They were waiting off the path with sedative oils, a reinforced cart, and a ledger page bearing one word in scribe\'s shorthand: VERDANCE. Underlined. Twice.',
     captureAfter: 'The cart burns. The chains go into the river. But the ledger page is the part you keep: they did not come hunting a pit champion. They came shopping — and you are the listed item. The grove keeper was right. The line runs thin because something is drinking from it, and whatever it is has now tasted your name.',
+  },
+
+  // ===== THE WARLOCK'S ROAD, EXTENDED — the plaza was not the ending. It was the AUDITION. =====
+  // After the Emperor passes: the White Order ambushes him (sanctioned killers, hard fight),
+  // a cult letter finds him, the Pale Courier names the price of peace, and the black carriage
+  // carries him to the Ashenveil — where LADY NYX herself offers the only protection that
+  // outranks a kill-writ: a job. Hunt Ankuspawn. Capture, never kill. The web pays.
+  warlockEpilogue: {
+    main: [
+      { id: 'wq1-the-white-writ', title: 'THE WHITE WRIT',
+        text: 'The Emperor\'s dust had not settled before they came through the crowd — two paladins of the White Order, an inquisitor with a ledger of your summons, and a demon hunter who said nothing and counted his bolts. The writ names you, your portals, and everything that has ever stepped out of them.',
+        objective: 'The plaza empties for a reason. Answer the writ.' },
+      { id: 'wq2-a-friend-of-the-family', title: 'A FRIEND OF THE FAMILY',
+        text: 'A letter with no seal, from no courier anyone saw. They watched the plaza. They know the Order does not stop at one writ. They offer "better arithmetic" — and a meeting in the alley behind the west wall, after dark.',
+        objective: 'The dark alley by the west wall. Come alone. (You were always going to.)' },
+      { id: 'wq3-the-matron', title: 'THE MATRON',
+        text: 'The black carriage waits by the guild, and the horses do not breathe. At the end of the ash road: the Ashenveil academy, the school the rumors only whisper about — and the lady who runs the web your whole hunt has been brushing against.',
+        objective: 'Take the black carriage. Meet Lady Nyx at the Ashenveil academy.' },
+    ],
+    ambush: {
+      banner: ['THE WHITE WRIT', 'paladins, inquisitors, demon hunters — a hard lesson in theology'],
+      haldric: 'They part the dispersing crowd like a blade through wool: two paladins in Writ-white, an inquisitor thin as a margin note, a demon hunter already loading. The lead paladin\'s voice carries court-room calm. "Warlock of Karridge. Ser Haldric, of the White Order. Your menagerie has been weighed, your portals catalogued, your... arch devil... witnessed by two thousand citizens at a sanctioned games." He unrolls nothing; the writ is memorized. "The Order thanks you for the camp you burned. The Order is not in the habit of leaving the instrument lying about after the surgery."',
+      sallow: 'The inquisitor does not look up from the ledger. "Eleven summonings, public. One transformation, public. Zero licenses." A small, terrible smile at the margin. "The arithmetic sentences itself."',
+      lose: 'the Order regroups. the writ stands. (the plaza will host them again)',
+      winNarr: 'It is over by the time the crowd dares to look back. Writ-white does not stay white. The demon hunter\'s last bolt is still in the air when the portal takes you sideways out of its path, and then it is only you, the bodies, and a plaza that has learned a brand-new chant it is too afraid to use. By nightfall, every door in Karridge is locked to you. On your sill, where no courier was seen: a letter with no seal.',
+      letter: '"We watched. Competent work — they were SANCTIONED, warlock, and there will be more writs, then knights, then whatever the Order keeps below the knights. We offer better arithmetic. The alley behind the west wall, after dark. Come alone. — A friend of the family."',
+    },
+    courier: {
+      name: 'THE PALE COURIER',
+      meet: 'She is waiting where the lamplight gives up — elegant, bloodless, dressed like a funeral that money attended. "The plaza was poetry," she says, by way of greeting. "Three professions, one survivor, and the survivor wasn\'t theirs." She does not bow. The cult does not bow to applicants. "My Matron makes problems like yours into careers. The writ on your name? It dies in committee the moment hers signs it. She would like to meet you. The black carriage, by the guild. The horses are patient. They have nowhere better to be — they\'re dead."',
+      decline: '"Decline?" The word seems to amuse her the way weather amuses mountains. "Then we never met, this alley stays dark... and the next writ finds you SLEEPING. The Order forgives nothing. My Matron forgives everything she finds useful." She is already walking away. "The carriage waits either way."',
+    },
+    carriage: 'The carriage is upholstered in a silence that costs more than the inn. The horses do not breathe, do not tire, do not stop. The road runs out of farms, then out of green, then out of birdsong — and the Ashenveil begins: ash-grey fields where the DEAD are working, neat as clockwork, mending fences for a kingdom that officially does not employ them.',
+    nyx: {
+      name: 'LADY NYX',
+      reveal1: 'The academy\'s great hall is colder inside than the night outside, and the woman at the far end of it has been dead longer than the kingdom has had a name. She does not look it — she looks like the portrait of someone\'s beloved queen, if the portrait moved, and chose you, and smiled. "The warlock of Karridge," says Lady Nyx, Matron of every ledger you have been bleeding for a season. "You burned my waystation. Broke my caravan. Freed my inventory. And then unmade a White Writ in open daylight." The smile deepens by one degree. "Most candidates apply with a LETTER."',
+      reveal2: '"Let us be adults about the arithmetic. The Order will not stop — you killed SANCTIONED men, and their god keeps books. You need protection that outranks a writ. There is exactly one signature in this kingdom that does." She does not say her husband\'s name. The whole room says it for her. "And I — I have a procurement problem. The gifted. The Ankuspawn. My collectors keep bruising the merchandise, and the merchandise keeps being RESCUED by talented freelancers." The dead light in her eyes finds yours, amused. "You see the shape of the offer."',
+      offer: '"Hunt the Ankuspawn. CAPTURE — never kill; dead stock is worthless stock. In exchange: my seal on your name. Diplomatic protection, warlock — kill-writs die in committee when the crown\'s own shadow countersigns. The Order may hate you forever. It may do so in WRITING, from very far away." She extends one perfect, room-temperature hand. "Terms?"',
+      done: 'Somewhere north, an Emperor passes through cities like weather. Somewhere east, a grove hums over a line that runs thinner every season. And in the Ashenveil, a warlock signs nothing — the cult does not use paper for the things that matter — and walks out with the only armor the Order cannot pierce: employment. The hunt continues. It simply hunts for the web now.',
+      credits: 'THE WARLOCK\'S ROAD — the writs die in committee, and the web has a new spider',
+    },
   },
 
   // ===== THE SERAPHIM'S ROAD — an angel does not chase rumors. He recruits. =====

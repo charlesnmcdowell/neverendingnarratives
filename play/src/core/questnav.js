@@ -11,7 +11,7 @@ const QuestNav = {
   path: [], pathI: 0,
   autoDialog: false,             // FULL opened the current dialog
   dialogT: 0,
-  _zoneOf: { 'karridge-city': 'CityScene', 'thorn-grove': 'GroveScene', 'grove-dungeon': 'DungeonScene', 'varenholm': 'VarenholmScene', 'dragonspine': 'MountainScene' },
+  _zoneOf: { 'karridge-city': 'CityScene', 'thorn-grove': 'GroveScene', 'grove-dungeon': 'DungeonScene', 'varenholm': 'VarenholmScene', 'dragonspine': 'MountainScene', 'ashenveil': 'AshenveilScene' },
 
   cycleMode() {
     this.setMode((this.mode + 1) % 3);
@@ -63,17 +63,28 @@ const QuestNav = {
       if (GS.world.zone === 'varenholm') return at('varenholm', 896, 1088, true, 'the coach home — your road south');
       return at('karridge-city', 1656, 744, true, 'the heartland coach');
     }
+    // the warlock's epilogue: the White Writ -> the alley -> the black carriage -> the Matron
+    const warlock = GS.player && GS.player.char === 'warlock';
+    if (warlock && !f['credits-rolled']) {
+      if (f['q-wq1-the-white-writ'] === 'active') return at('karridge-city', 35 * T, 25.5 * T, false, 'the plaza — answer the writ');
+      if (f['q-wq2-a-friend-of-the-family'] === 'active') return at('karridge-city', 12 * T, 36 * T, true, 'the dark alley — the Pale Courier');
+      if (f['q-wq3-the-matron'] === 'active') {
+        if (GS.world.zone !== 'ashenveil') return at('karridge-city', 1656, 744, true, 'the black carriage');
+        return at('ashenveil', 1136, 416, true, 'the Ashenveil academy — Lady Nyx');
+      }
+    }
     return null;
   },
 
   // ---- zone graph: next hop from zone A toward zone B ----
   nextHop(from, to) {
     const HOPS = {
-      'karridge-city': { 'thorn-grove': { x: 1120, y: 24, interact: false }, 'grove-dungeon': { x: 1120, y: 24, interact: false }, 'varenholm': { x: 1656, y: 744, interact: true }, 'dragonspine': { x: 1120, y: 24, interact: false } },
+      'karridge-city': { 'thorn-grove': { x: 1120, y: 24, interact: false }, 'grove-dungeon': { x: 1120, y: 24, interact: false }, 'varenholm': { x: 1656, y: 744, interact: true }, 'dragonspine': { x: 1120, y: 24, interact: false }, 'ashenveil': { x: 1656, y: 744, interact: true } },
       'thorn-grove': { 'karridge-city': { x: 1088, y: 1572, interact: false }, 'varenholm': { x: 1088, y: 1572, interact: false }, 'grove-dungeon': { x: 1984, y: 1344, interact: true }, 'dragonspine': { x: 2216, y: 320, interact: false } },
       'grove-dungeon': { 'thorn-grove': { x: 160, y: 96, interact: true }, 'karridge-city': { x: 160, y: 96, interact: true }, 'varenholm': { x: 160, y: 96, interact: true }, 'dragonspine': { x: 160, y: 96, interact: true } },
       'varenholm': { 'karridge-city': { x: 896, y: 1088, interact: true }, 'thorn-grove': { x: 896, y: 1088, interact: true }, 'grove-dungeon': { x: 896, y: 1088, interact: true }, 'dragonspine': { x: 896, y: 1088, interact: true } },
       'dragonspine': { 'thorn-grove': { x: 864, y: 1380, interact: false }, 'karridge-city': { x: 864, y: 1380, interact: false }, 'grove-dungeon': { x: 864, y: 1380, interact: false }, 'varenholm': { x: 864, y: 1380, interact: false } },
+      'ashenveil': { 'karridge-city': { x: 738, y: 992, interact: true }, 'thorn-grove': { x: 738, y: 992, interact: true }, 'grove-dungeon': { x: 738, y: 992, interact: true }, 'varenholm': { x: 738, y: 992, interact: true }, 'dragonspine': { x: 738, y: 992, interact: true } },
     };
     return (HOPS[from] || {})[to] || null;
   },

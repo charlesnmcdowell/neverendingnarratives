@@ -19,7 +19,10 @@ const WorldMapUI = {
         here: zone === 'dragonspine',
         note: window.GameState.player.char === 'seraph' ? 'the spine trail — east past Thorn Grove' : 'treaty lands — dragons' },
       { id: 'kharn', name: 'KHARN-DURAL', x: 14, y: 28, open: false, note: 'the undermountain' },
-      { id: 'ashenveil', name: 'THE ASHENVEIL', x: 80, y: 46, open: false, note: 'the way is barred' },
+      { id: 'ashenveil', name: 'THE ASHENVEIL', x: 80, y: 46,
+        open: window.GameState.player.char === 'warlock' && !!window.GameState.world.flags['q-wq3-the-matron'],
+        here: zone === 'ashenveil',
+        note: window.GameState.player.char === 'warlock' && window.GameState.world.flags['q-wq3-the-matron'] ? 'the black carriage — by the guild' : 'the way is barred' },
     ];
     let h = '<div class="qhead">The Kingdom of Ankunyx — known roads</div><div id="wmcanvas">';
     h += '<svg viewBox="0 0 100 80" style="width:100%;height:100%">';
