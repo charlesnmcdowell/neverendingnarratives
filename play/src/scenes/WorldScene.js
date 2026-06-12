@@ -50,11 +50,15 @@ class WorldScene extends Phaser.Scene {
     const sctx = scratch.getContext('2d');
     const render = createPitCombat({ width: 72, height: 72, ctx: sctx, ui: {} });
     const DIRS = 8, PH = 4;
+    // the player's look only changes with character/blade-tier — NEVER destroy a texture
+    // a live sprite is using (that's a black screen on WebGL)
+    const frSig = GSP.char + ':' + (GSP.bladeTier || 0);
     for (const [key, look] of Object.entries(looks)) {
       if (this.textures.exists(key)) {
-        if (key !== 'fr-player') continue;
-        this.textures.remove(key); // player look can change between runs (blade tier)
+        if (key !== 'fr-player' || window.__frPlayerSig === frSig) continue;
+        this.textures.remove(key); // look genuinely changed (new run) — safe: no sprite exists yet
       }
+      if (key === 'fr-player') window.__frPlayerSig = frSig;
       const sheet = document.createElement('canvas'); sheet.width = 72 * DIRS; sheet.height = 72 * PH;
       const shctx = sheet.getContext('2d');
       for (let d = 0; d < DIRS; d++) for (let p = 0; p < PH; p++) {
