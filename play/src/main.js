@@ -12,6 +12,12 @@ window.GameState = {
   meta: { playtimeMs: 0, kills: 0 }
 };
 
+// Phones: fill the whole screen instead of letterboxing (ENVELOP crops the 16:9
+// frame to the device's shape — the action gets ~25% bigger, the black bars go).
+// The DOM HUD/buttons sit on the real screen, so nothing important is cropped.
+window.IS_PHONE = Math.min(window.innerWidth, window.innerHeight) <= 520;
+const fillScreen = window.IS_PHONE && window.innerWidth > window.innerHeight; // landscape phones
+
 const config = {
   type: Phaser.AUTO,
   width: 1280,
@@ -20,7 +26,7 @@ const config = {
   backgroundColor: '#0a0808',
   pixelArt: true,
   physics: { default: 'arcade', arcade: { debug: false } },
-  scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+  scale: { mode: fillScreen ? Phaser.Scale.ENVELOP : Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
   scene: [ArenaScene, CityScene, GroveScene, DungeonScene, VarenholmScene, MountainScene]
 };
 

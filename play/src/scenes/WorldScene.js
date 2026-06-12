@@ -182,6 +182,8 @@ class WorldScene extends Phaser.Scene {
     CityUI._onTrackQuest = () => { this.qlogOpen = false; CityUI.questlog(false);
       QuestNav.startTracking(this); };
     CityUI.syncAutoBtn();
+    // phones: lean the camera in a touch so the world reads at arm's length
+    if (window.IS_PHONE) this.cameras.main.setZoom(1.18);
     // a tracked walk continues across zone loads
     if (QuestNav.tracking) this.time.delayedCall(150, () => QuestNav.replan(this));
     // zone music + autosave heartbeat
@@ -445,6 +447,7 @@ class WorldScene extends Phaser.Scene {
     const fs = this.fieldScale();
     pack = pack.map(e => Object.assign({}, e, { hp: Math.round(e.hp * fs), maxhp: Math.round((e.maxhp || e.hp) * fs) }));
     this.encounterActive = true;
+    if (window.IS_PHONE) this.cameras.main.setZoom(1); // the arena frame needs the full window
     this.encImg.setVisible(true);
     this.encCombat.setPlayerSnapshot(P);
     this.encCombat.setMods(this.artifactMods());
@@ -462,6 +465,7 @@ class WorldScene extends Phaser.Scene {
       CityUI.setIdentity(P.nickname); CityUI.belt(P.belt);
       this.encounterActive = false;
       this.encImg.setVisible(false);
+      if (window.IS_PHONE) this.cameras.main.setZoom(1.18); // lean back in for the road
       document.getElementById('hud').style.display = 'none';
       document.getElementById('controls').style.display = 'none';
       onEnd(win);
