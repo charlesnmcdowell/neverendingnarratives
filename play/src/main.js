@@ -12,6 +12,19 @@ window.GameState = {
   meta: { playtimeMs: 0, kills: 0 }
 };
 
+// Version-skew self-heal: if the browser served a STALE cached index.html with
+// fresh scripts (CDN/browser cache mismatch after a deploy), required DOM nodes
+// are missing and the game would crash at boot. Detect it and reload once,
+// cache-busted — the player sees a quick refresh instead of a frozen title.
+(function () {
+  try {
+    if (!document.getElementById('seraphBtn') && !sessionStorage.getItem('ss-skew-reload')) {
+      sessionStorage.setItem('ss-skew-reload', '1');
+      location.replace(location.pathname + '?fresh=' + Date.now());
+    } else if (document.getElementById('seraphBtn')) sessionStorage.removeItem('ss-skew-reload');
+  } catch (e) {}
+})();
+
 // Phones: fill the whole screen instead of letterboxing (ENVELOP crops the 16:9
 // frame to the device's shape — the action gets ~25% bigger, the black bars go).
 // The DOM HUD/buttons sit on the real screen, so nothing important is cropped.

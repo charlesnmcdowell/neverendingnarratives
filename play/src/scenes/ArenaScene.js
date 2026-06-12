@@ -144,16 +144,17 @@ class ArenaScene extends Phaser.Scene {
     bindBtn('bHeavy', () => this.combat.doHeavy(), () => this.combat.heavyRelease());
     bindBtn('bParry', () => this.combat.doParry());
 
-    // screen buttons
-    $('startBtn').addEventListener('pointerdown', () => this.combat.startIntro('ronin'));
-    $('druidBtn').addEventListener('pointerdown', () => this.combat.startIntro('druid'));
-    $('warlockBtn').addEventListener('pointerdown', () => this.combat.startIntro('warlock'));
-    $('seraphBtn').addEventListener('pointerdown', () => this.combat.startIntro('seraph'));
-    $('enterBtn').addEventListener('pointerdown', () => this.combat.endIntro());
-    $('fightBtn').addEventListener('pointerdown', () => this.combat.startFight());
-    $('againBtn').addEventListener('pointerdown', () => this.combat.fullReset());
-    $('vicBtn').addEventListener('pointerdown', () => this.combat.fullReset());
-    $('leaveBtn').addEventListener('pointerdown', () => {
+    // screen buttons — null-safe: a missing node (stale cached HTML) must NEVER freeze the boot
+    const on = (id, fn) => { const el = $(id); if (el) el.addEventListener('pointerdown', fn); };
+    on('startBtn', () => this.combat.startIntro('ronin'));
+    on('druidBtn', () => this.combat.startIntro('druid'));
+    on('warlockBtn', () => this.combat.startIntro('warlock'));
+    on('seraphBtn', () => this.combat.startIntro('seraph'));
+    on('enterBtn', () => this.combat.endIntro());
+    on('fightBtn', () => this.combat.startFight());
+    on('againBtn', () => this.combat.fullReset());
+    on('vicBtn', () => this.combat.fullReset());
+    on('leaveBtn', () => {
       for (const s of screens()) s.classList.remove('show');
       ui.hud(false); ui.controls(false); ui.boss(false, '');
       this.scene.start('CityScene');
