@@ -20,6 +20,11 @@ const VoiceMan = {
       'THE NIGHT SHIPMENT': 'NARRATOR', 'THE CRATES OPEN': 'NARRATOR', 'AN EMPTY ROAD': 'NARRATOR',
       'LEY-LINE NODE': 'NARRATOR', 'THE DRAGON EMPEROR': 'ANKUNYX',
       'A STRANGER IN THE TREELINE': 'SHEN SAMA',
+      // the Seraphim's road
+      'THE TREATY STONE': 'NARRATOR', 'THE SPINE TRAIL': 'NARRATOR', 'THE SKYREACH SHRINE': 'NARRATOR',
+      'KARGOTH': 'KARGOTH', 'SKARVA RED-BLADE': 'SKARVA',
+      'KING NIBNOB THE THRICE-CROWNED': 'NIBNOB', 'VESSHK OF THE HIGH WIND': 'NARRATOR', // she speaks like weather: the narrator carries her
+      'AURVAETH THE TREATY-BOUND': 'AURVAETH',
     };
     return MAP[n] || n;
   },

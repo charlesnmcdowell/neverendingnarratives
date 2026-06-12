@@ -59,6 +59,12 @@ const Quests = {
     return Array.isArray(v) ? v : [v];
   },
 
+  // the Seraphim walks a different road: the journal shows HIS quests, not the conspiracy's
+  mainFor() {
+    const c = window.GameState && GameState.player && GameState.player.char;
+    return c === 'seraph' ? this.seraph.main : this.main;
+  },
+
   // ---- guild rank ladder (canon: Greyrush iron crew, Bronze rate, Brass Whistle
   // silver-tier, Platinum contracting, Diamond-tier Vanguard Hall) ----
   guildRanks: [
@@ -161,6 +167,114 @@ const Quests = {
     captureBanner: ['THEY CAME WITH CHAINS', 'not to kill you — to TAKE you'],
     captureSign: 'They knew your routes. They were waiting off the path with sedative oils, a reinforced cart, and a ledger page bearing one word in scribe\'s shorthand: VERDANCE. Underlined. Twice.',
     captureAfter: 'The cart burns. The chains go into the river. But the ledger page is the part you keep: they did not come hunting a pit champion. They came shopping — and you are the listed item. The grove keeper was right. The line runs thin because something is drinking from it, and whatever it is has now tasted your name.',
+  },
+
+  // ===== THE SERAPHIM'S ROAD — an angel does not chase rumors. He recruits. =====
+  // Backstory (player-facing): great evil brews in the land; he serves the place above
+  // and has come to gather the worthy. (What the gods of death and creation actually
+  // want with five mortal champions is between him and his two patrons.)
+  seraph: {
+    main: [
+      { id: 'sq1-the-host-below', title: 'THE HOST BELOW',
+        text: 'The Pit cheered a creature out of scripture and called it sport. Great evil brews in this land — you have tasted its smoke on the wind since you landed. The campaign above needs warriors. The Pit\'s were... adequate.',
+        objective: 'Ask the innkeeper of the Last Lantern where TRUE strength lives.' },
+      { id: 'sq2-where-strength-lives', title: 'WHERE STRENGTH LIVES',
+        text: 'The innkeeper would not take your coin and would not stop bowing. But he answered: Dragonspine. The treaty lands — where everything too proud or too heavy for the valley went up to become a legend about itself. Ogres. Orc blade-saints. A goblin king. The wyvern brood-mother. And older, treaty-bound things.',
+        objective: 'Take the spine trail east past Thorn Grove. The treaty stone will read what you are, and let you pass.' },
+      { id: 'sq3-five-banners', title: 'FIVE BANNERS',
+        text: 'Five names rule the high passes, and the mountain defers to all of them. The campaign needs ONE — the worthiest. There is only one way the Spine measures worth, and it is not conversation.',
+        objective: 'Challenge the champions of the Spine to single combat. One of them will fly with you.' },
+      { id: 'sq4-the-chosen', title: 'THE CHOSEN',
+        text: 'A champion of the Spine has taken your banner. The chains at your waist have begun to hum — the two you serve are leaning closer, the one who closes doors and the one who opens them. It is time.',
+        objective: 'Bring your chosen to the Skyreach shrine at the peak.' },
+    ],
+    marlow: {
+      greet: 'Marlow does not reach for a tankard. He reaches, slowly, for his BEST one. "We don\'t— I haven\'t—" He stops. Starts over, quieter. "Welcome to the Last Lantern, holy one. First drink\'s free. All the drinks are free. Please don\'t unmake the inn."',
+      ask: '"Peace, innkeeper. I seek warriors. The Pit\'s were adequate. Where does true strength live?"',
+      answer: '"Adequate. The PIT. Adequate." He laughs the way men laugh near cliff edges. "Dragonspine, holy one. The treaty lands — east past Thorn Grove, up the spine trail. Where the dragons signed their peace, and everything too proud or too heavy for the valley went up to be a LEGEND about it. Ogres that carry hills. An orc whose blade keeps a funeral ledger. A goblin king — gods help us — with three crowns. The wyvern brood-mother. And older things. Treaty things." He slides your silver back across the bar with one finger. "I am not charging Heaven five silver. Tell the mountain Marlow sent you. Tell it GENTLY."',
+      done: '"Still here, holy one? Mountain\'s east, past the grove. Drink\'s still free. Knees still shaking. Some things don\'t improve with practice."',
+    },
+    treatyStone: {
+      barred: 'THE TREATY STONE — a slab of grey law older than the kingdom. Runes crawl across it as you approach, read what you are, and go dark. The way is barred. Whatever the Spine is waiting for, it is not you.',
+      opens: 'The stone hums as you approach — then BOWS, runes flaring gold, the whole slab tilting a hand\'s width like a herald stepping aside. It has been a long age since one of the Above walked the spine trail. The wards remember the courtesy. The way is open.',
+    },
+    arrival: 'DRAGONSPINE — the treaty lands. The air is thin, bright, and rude. Below: the whole conspiracy-riddled valley, small enough to cover with a thumb. Ahead: five banners, and the worthy.',
+    candidates: [
+      { id: 'kargoth', name: 'KARGOTH, WHO CARRIES THE HILL', short: 'Kargoth, the ogre warchief',
+        spot: [14, 30], look: { col: '#5a4a38', o: { hulk: true, headCol: '#4a3a28' }, r: 17 },
+        banner: ['THE HILL ANSWERS', 'no wings past the cairn line'],
+        intro: 'An ogre the size of a toll-house sits braiding a rope from whole pines. He looks up without alarm — very little alarms a hill. "Little god," he rumbles. "The stone said something bright was coming up the trail." He stands. The mountain adjusts. "Kargoth knows why the bright ones come. Single combat. No wings past the cairn line. Win, and Kargoth listens."',
+        challenge: '"Then stand, Kargoth. The cairn line it is."',
+        pack: [{ type: 'door', x: 640, y: 250, r: 32, hp: 760, maxhp: 760, spd: 56, col: '#5a4a38', wpn: '#3a2f24', dmgScale: 1.5 }],
+        win: 'He sits down where he fell, laughing — an avalanche learning to chuckle. "STRONG little god. Nobody has knocked Kargoth onto his own rope in a hundred years."',
+        recruit: '"The sky calls, Kargoth. Carry a hill up THERE."',
+        spare: '"Keep your mountain. I am not done looking."',
+        recruited: '"Kargoth comes. Kargoth has always wondered what hills look like from above."',
+        ending: 'Kargoth ducks under the doorway of air out of habit — nothing above has lintels. "Little god," he rumbles, one mountain to another, "if this is a trick, know that I am very heavy, and very patient." The altar takes his measure without flinching. First thing in nine hundred years that hasn\'t.' },
+      { id: 'skarva', name: 'SKARVA RED-BLADE', short: 'Skarva, the orc blade-saint',
+        spot: [30, 12], look: { col: '#3a5a40', o: { wpnLen: 40, wpnCol: '#c8443a', headCol: '#5a7a50' } },
+        banner: ['THE FUNERAL LEDGER', 'page one, or page last'],
+        intro: 'She is sharpening a blade that is already sharp on a whetstone cut from a tombstone. "I keep a ledger," she says, not looking up. "Every name this blade has closed. Page one was my warlord. Page last is whoever asks." She looks up. Three heads look back at her. She grins like a drawn sword. "FINALLY. Something the ledger might not fit."',
+        challenge: '"Sharpen it once more, Skarva. Then try the page."',
+        pack: [{ type: 'grave', x: 640, y: 250, hp: 620, maxhp: 620, spd: 130, r: 16, col: '#3a5a40', stance: 'open', stanceT: 1, dmgScale: 1.5 }],
+        win: '"Hm." She studies the disarm from the ground, professionally, the way surgeons study scars. "That one goes in the ledger in CAPITALS."',
+        recruit: '"Your blade is wasted on names, Skarva. Come close a WAR."',
+        spare: '"Keep your ledger. I am not done looking."',
+        recruited: '"One condition, angel: when your war is done, the last page is MINE to write."',
+        ending: 'Skarva sheathes her blade for the climb — the first rest the whetstone has had in a decade. "New ledger," she says, to no one in particular, to everyone below. "Page one: the sky."' },
+      { id: 'nibnob', name: 'KING NIBNOB THE THRICE-CROWNED', short: 'Nibnob, the goblin king',
+        spot: [48, 16], look: { col: '#4a6a3a', o: { headCol: '#7a9a5a' }, r: 9 },
+        banner: ['CROWN RULES', 'kings don\'t have fair. kings have SUBJECTS'],
+        intro: 'A goblin in three crowns — one iron, one gold, one suspiciously municipal — receives you from a throne of stolen saddles. "ANOTHER recruiter!" he shrieks, delighted. "Oh, I\'ve HEARD about you sky-folk. First it\'s cleanse the great evil, then it\'s build my temple, then it\'s meet my seventeen brides. NO SALE." He claps twice anyway. "But a DUEL? A duel the king will take. Crown rules: my guard fights too. Kings don\'t have FAIR. Kings have SUBJECTS."',
+        challenge: '"Crown rules, then. Bring your subjects, little king."',
+        pack: [{ type: 'necro', x: 640, y: 240, hp: 480, maxhp: 480, spd: 110, r: 14, col: '#4a6a3a', dmgScale: 1.4 },
+               { type: 'skel', x: 540, y: 320, hp: 220, maxhp: 220, spd: 150, r: 11, col: '#5a7a4a', dmgScale: 1.35 },
+               { type: 'skel', x: 740, y: 320, hp: 220, maxhp: 220, spd: 150, r: 11, col: '#5a7a4a', dmgScale: 1.35 }],
+        win: 'He surrenders from inside a barrel, all three crowns askew. "FINE! FINE. The king concedes the field. STOP GLOWING AT ME."',
+        recruit: '"Bring the crowns, little king. The sky needs cunning more than it admits."',
+        spare: '"Keep your throne. I am not done looking."',
+        recruited: '"The SKY kingdom. Yes. YES. Do they have an army? Do they have a TREASURY? Don\'t answer. Crown me up, featherbeard."',
+        ending: 'Nibnob wears all three crowns at once for the occasion, and somewhere between the last step and the altar he steals a FOURTH — a circlet of cold starlight that was not, strictly, on offer. Heaven will notice eventually. He is counting on it.' },
+      { id: 'vesshk', name: 'VESSHK OF THE HIGH WIND', short: 'Vesshk, the wyvern matriarch',
+        spot: [54, 32], look: { col: '#7a3a4a', o: { quad: true }, r: 16 },
+        banner: ['THE QUEEN\'S COLUMN', 'you are standing in her air'],
+        intro: 'The brood-mother does not speak the way people do. She speaks the way weather does — a shift of wing, a heat across the ledge, a patience older than the treaty. The meaning arrives anyway, pressed into the thin air between you: the sky already has a queen up here. You are standing in her column of it. Prove you belong.',
+        challenge: 'Spread your wings slowly. Answer weather with weather.',
+        pack: [{ type: 'pyre', x: 640, y: 250, hp: 640, maxhp: 640, spd: 165, r: 15, col: '#7a3a4a', dmgScale: 1.5 }],
+        win: 'She folds her wings — slowly, deliberately, the way a banner comes down with honors. The heat across the ledge dims to something very near respect.',
+        recruit: 'Open the way skyward. Let the queen see the war above her weather.',
+        spare: 'Fold your wings. Leave her the ledge. You are not done looking.',
+        recruited: 'A single beat of wing — agreement, and a warning: she follows the war, not the angel. The brood will hold the Spine until the weather returns.',
+        ending: 'Vesshk rises beside you without being carried — the first updraft of a war-sky reaching down to meet her. Below, the brood keens the long note they save for queens who go where the weather can\'t follow.' },
+      { id: 'aurvaeth', name: 'AURVAETH THE TREATY-BOUND', short: 'Aurvaeth, the dragon',
+        spot: [32, 7], look: { col: '#39414a', o: { hood: true }, r: 13 },
+        banner: ['THE OLD WAY', 'the treaty says nothing about duels'],
+        intro: 'At the highest cairn waits a grey-eyed traveler who was never a traveler. The shape is a polite fiction; the shadow it throws is not. "Seraphim." The voice has strata. "I signed a treaty to keep my fire out of the valley. And here you stand, smelling of two gods and one war, come to talk me into breaking it upward." A pause, geological. "...Convince me the old way. The treaty says nothing about duels."',
+        challenge: '"The old way, then, treaty-keeper. Wear whichever shape loses best."',
+        pack: [{ type: 'master', x: 640, y: 250, hp: 880, maxhp: 880, spd: 150, r: 16, col: '#39414a', dmgScale: 1.6 }],
+        win: 'The traveler-shape dusts itself off. The grey eyes have gone molten amber, and pleased. "Adequate," the dragon says — in exactly the tone you once used about the Pit.',
+        recruit: '"The treaty bound your fire to the valley, Aurvaeth. The sky above it was never named."',
+        spare: '"Keep your treaty. I am not done looking."',
+        recruited: '"Clever. The valley keeps its peace, and heaven inherits my fire. I begin to see why two gods share you." The traveler-shape smiles with too many years.',
+        ending: 'Aurvaeth drops the traveler-shape on the last step, because treaties end where the valley does. What ascends beside you is the reason the word WYRM still has weight — wings like weather fronts, a patience like strata, fire signed over to a new and higher jurisdiction.' },
+    ],
+    shrine: {
+      closed: 'THE SKYREACH SHRINE — wind-scoured steps ending at an altar of nothing: a doorway of cold bright air. It does not open for you yet. The campaign needs its champion first.',
+      frame: 'The Skyreach shrine is older than the treaty, older than the kingdom whose maps forgot it. Wind-scoured steps end at an altar made of nothing — a standing doorway of cold, bright air. The runic chains at your waist and chest hum against it like struck bells. Somewhere above, your two patrons lean closer: the one who closes doors, and the one who opens them.',
+      closing: 'The land below keeps its conspiracies. The taint keeps brewing in the Ashenveil; the ledgers keep their four small letters; the war you spoke of is real, whatever else you are. The Pit\'s crowds will tell it their own way for a hundred years — the night the angel and his champion walked into the sky. The light takes you both. The mountain keeps the story.',
+      credits: 'THE SERAPHIM\'S ROAD — the sky took two, and heaven kept its reasons',
+    },
+    chatter: [
+      'Don\'t stare at the middle head. Don\'t stare at ANY of the heads.',
+      'My nan swore angels had one head. Somebody\'s nan owes my nan an apology.',
+      'It blessed my cart. Wheel still squeaks, but HOLIER now.',
+      'The temple took one look and started repainting their ceiling.',
+      'Three heads, and not one of them pays the gate toll. I\'m just saying.',
+      '{N}, the Pit named it. The Pit named an ANGEL. We are all going somewhere warm.',
+      'I sold it an apple. It paid with a feather. The feather won\'t stop humming.',
+      'The guard tried to ask it for papers. The middle head LOOKED at him.',
+    ],
+    guildNote: 'The clerk has been holding the same quill, unmoving, since you walked in. "The board\'s... contracts are for mortals, honored one. The mountain you want is east. Please tell the Spine the guild sends its respects and also please leave the quill alone it\'s my LUCKY one."',
   },
 
   cult: {

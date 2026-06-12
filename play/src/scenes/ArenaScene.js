@@ -148,6 +148,7 @@ class ArenaScene extends Phaser.Scene {
     $('startBtn').addEventListener('pointerdown', () => this.combat.startIntro('ronin'));
     $('druidBtn').addEventListener('pointerdown', () => this.combat.startIntro('druid'));
     $('warlockBtn').addEventListener('pointerdown', () => this.combat.startIntro('warlock'));
+    $('seraphBtn').addEventListener('pointerdown', () => this.combat.startIntro('seraph'));
     $('enterBtn').addEventListener('pointerdown', () => this.combat.endIntro());
     $('fightBtn').addEventListener('pointerdown', () => this.combat.startFight());
     $('againBtn').addEventListener('pointerdown', () => this.combat.fullReset());

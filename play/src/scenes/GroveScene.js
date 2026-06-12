@@ -40,7 +40,8 @@ class GroveScene extends WorldScene {
     };
     treeWall(0, 0, WPX, T * 2);                       // north (deepwood teaser)
     treeWall(0, 0, T * 2, HPX);
-    treeWall(WPX - T * 2, 0, T * 2, HPX);
+    treeWall(WPX - T * 2, 0, T * 2, 8 * T);           // east, gap at 8-12: the spine trail
+    treeWall(WPX - T * 2, 12 * T, T * 2, HPX - 12 * T);
     treeWall(0, HPX - T * 1.5, 31 * T, T * 1.5);      // south, gap at gate
     treeWall(37 * T, HPX - T * 1.5, WPX - 37 * T, T * 1.5);
     // scattered groves
@@ -149,6 +150,23 @@ class GroveScene extends WorldScene {
         this.grantLoot(c.loot, c.x * T, c.y * T);
       }});
     }
+
+    // ---------- the treaty stone: the spine trail east, up to Dragonspine ----------
+    const tsX = 66 * T, tsY = 10 * T;
+    const tsg = this.add.graphics().setDepth(tsY);
+    tsg.fillStyle(0x2a2e3a); tsg.fillRect(tsX - 16, tsY - 40, 32, 48);   // the grey slab of law
+    tsg.fillStyle(0x1c1f28); tsg.fillRect(tsX - 12, tsY - 36, 24, 40);
+    const seraphHere = GS.player.char === 'seraph';
+    if (seraphHere) { tsg.lineStyle(2, 0xffe9a8, 0.8); tsg.strokeRect(tsX - 12, tsY - 36, 24, 40); }
+    this.addLight(tsX, tsY, 80, false);
+    this.solid(tsX - 16, tsY - 40, 32, 48);
+    this.interactables.push({ x: tsX, y: tsY + 14, label: 'read the TREATY STONE', fn: () => {
+      const TS = Quests.seraph.treatyStone;
+      if (!seraphHere) { this.signDialog('THE TREATY STONE', TS.barred); return; }
+      GS.world.flags['treaty-stone-read'] = true;
+      this.signDialog('THE TREATY STONE', TS.opens);
+    }});
+    this.gateEast = { x: WPX - T * 2, y: 8 * T, w: T * 2, h: 4 * T };
 
     // ---------- main quest: cult camp / Shen Sama / caravan ----------
     this.buildConspiracy(T);
@@ -336,6 +354,14 @@ class GroveScene extends WorldScene {
           CityUI.dialog('VERDANCE', D.captureAfter, [{ label: 'They tasted your name', fn: () => CityUI.closeDialog() }]);
         }}]);
       });
+    }
+
+    // east gate → the spine trail (the treaty stone reads what you are)
+    if (this.player.x > this.gateEast.x + 24 &&
+        this.player.y > this.gateEast.y - 8 && this.player.y < this.gateEast.y + this.gateEast.h + 8) {
+      if (GS2.player.char === 'seraph') { this.scene.start('MountainScene'); return; }
+      this.player.x = this.gateEast.x - 20; // the wards push the unworthy back, politely
+      this.floatText(this.player.x, this.player.y - 50, 'the treaty stone bars the way', '#8a93a8', 12);
     }
 
     // south gate → city

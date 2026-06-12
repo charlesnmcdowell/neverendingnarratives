@@ -59,7 +59,8 @@ function usePotion(type){
   popup(P.x,P.y-48,k+' +25% — 60s','#3df0c8',14);flashFx(.1);return true;}
 const maxHP=()=>Math.round(((P.char==='ronin'?38:45)+(stat('CON')-10)*5)*MODS.maxhp);
 const UNLOCKS={druid:{3:'BEAR FORM UNLOCKED',6:'WOLF FORM UNLOCKED'},
-               warlock:{3:'BONE DRAGON UNLOCKED',5:'SUCCUBI UNLOCKED',8:'ARCH DEVIL UNLOCKED'}};
+               warlock:{3:'BONE DRAGON UNLOCKED',5:'SUCCUBI UNLOCKED',8:'ARCH DEVIL UNLOCKED'},
+               seraph:{3:'CHAINS OF DECREE',6:'TRIUNE MAW',8:'HALO JUDGEMENT'}};
 function gainLevel(){ // +1.5 levels per kill, max 10
   if(P.char==='ronin')return;
   const ol=lvl();
@@ -109,6 +110,7 @@ function doSlash(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.atkRecover>0|
     if(P.devilT>0){devilClaw();return;} // CLAW — rolls to the target, then massive hit
     autoFace();hexBolt();return;}
   if(P.char==='druid'){autoFace();druidSlash();return;}
+  if(P.char==='seraph'){autoFace();seraphSlash();return;}
   autoFace();P.atkRecover=atkRec();P.ft.slash++;
   if(P.comboT<=0)P.combo=0;
   const st=P.combo;P.atkPose=st;P.combo=(P.combo+1)%3;P.comboT=1.1;
@@ -121,6 +123,7 @@ function doParry(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.rollT>0||P.he
   if(P.char==='druid'){cycleForm();return;}
   if(P.parryCD>0)return;
   if(P.char==='warlock'){portal();return;}
+  if(P.char==='seraph'){ascend();return;}
   autoFace();P.parryT=2.3*MODS.parryWin;P.parryCD=1.4;}
 
 /* ============ DRUID ============ */
@@ -131,6 +134,8 @@ function updateLabels(){
     if(P.devilT>0){setBtnLabel('bSlash','CLAW');setBtnLabel('bHeavy','BITE');}
     else{setBtnLabel('bSlash','HEX');setBtnLabel('bHeavy','SUMMON');}
     setBtnLabel('bParry','PORTAL');setBtnLabel('bRoll','BLINK');return;}
+  if(P.char==='seraph'){setBtnLabel('bSlash','SPEAR');setBtnLabel('bHeavy','HALO RAY');
+    setBtnLabel('bParry','ASCEND');setBtnLabel('bRoll','ROLL');return;}
   setBtnLabel('bParry','FORM');setBtnLabel('bRoll','ROLL');
   if(P.form==='human'){setBtnLabel('bSlash','GLAIVE');setBtnLabel('bHeavy','VINES');}
   else if(P.form==='bear'){setBtnLabel('bSlash','CLAW');setBtnLabel('bHeavy','ROAR');}
@@ -504,6 +509,67 @@ function blink(){
   P.x-=Math.cos(P.face)*150;P.y-=Math.sin(P.face)*150;clampArena(P);
   leafBurst(P.x,P.y,10,'#b070f0');
   S.shake=Math.max(S.shake,4);vib(30);flashFx(.1);}
+/* ============ SERAPHIM — the visitor from the place above ============ */
+let rays=[]; // {x,y,a,len,w,t,judge}
+function seraphSlash(){ // angelic spear: thrust, sweep, and at lvl 6 the three heads feed
+  P.atkRecover=atkRec();P.ft.slash++;
+  if(P.comboT<=0)P.combo=0;
+  const st=P.combo;P.atkPose=st;P.combo=(P.combo+1)%3;P.comboT=1.2;
+  if(st===2&&lvl()>=6){ // TRIUNE MAW — all three heads lunge and bite; the spear rests
+    P.atkRecover=atkRec()*1.25;
+    const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*1.35);
+    swings.push({x:P.x,y:P.y,a:P.face,arc:2.4,range:74,t:.16,heavy:true,col:'#ffe9a8'});
+    let dealt=0;
+    for(const e of enemies){if(e.dead)continue;
+      const d=dist(P,e);if(d>74+e.r)continue;
+      let da=Math.atan2(e.y-P.y,e.x-P.x)-P.face;
+      while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;
+      if(Math.abs(da)>1.2)continue;
+      dealt+=dmg;hitEnemy(e,dmg,true,P.face);}
+    if(dealt>0){const hl=Math.max(3,Math.round(dealt*0.2));
+      P.hp=Math.min(maxHP(),P.hp+hl);popup(P.x,P.y-56,'+'+hl+' — the heads are fed','#ffe9a8',12);}
+    S.shake=Math.max(S.shake,6);vib(30);return;}
+  // thrust (long, narrow) then sweep (wide)
+  const arc=st===1?1.9:0.7, range=st===1?92:108, mult=st===1?1:1.1;
+  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*mult*0.92);
+  swings.push({x:P.x,y:P.y,a:P.face,arc,range,t:.14,heavy:false,col:'#f0ead0',style:st===1?0:2});
+  strike(P.face,arc,range,dmg,false);}
+function fireRay(){ // the halo unmakes in a line — a lance of dawn through everything
+  autoFace();
+  const judge=lvl()>=8, w=judge?70:44, len=900;
+  const dmg=Math.round((rollDice(diceN()*2,8)+dmgBonus())*(judge?1.6:1.15));
+  rays.push({x:P.x,y:P.y-14,a:P.face,len,w,t:.45,judge});
+  flashFx(judge?.3:.18);S.shake=Math.max(S.shake,judge?12:8);vib(judge?[50,40,90]:40);
+  showBanner(judge?'HALO JUDGEMENT':'HALO RAY',judge?'the verdict is wide':'',900,'#ffe9a8');
+  const ca=Math.cos(P.face),sa=Math.sin(P.face);
+  for(const e of enemies){if(e.dead)continue;
+    const rx=e.x-P.x,ry=(e.y-14)-(P.y-14);
+    const proj=rx*ca+ry*sa, perp=Math.abs(-rx*sa+ry*ca);
+    if(proj<-e.r||proj>len||perp>w/2+e.r)continue;
+    e.hp-=dmg;e.flash=.18;blood(e.x,e.y,8);
+    popup(e.x,e.y-30,dmg,'#ffe9a8',17);
+    if(lvl()>=3&&e.hp>0){e.stunT=Math.max(e.stunT||0,1.6); // CHAINS OF DECREE
+      popup(e.x,e.y-46,'CHAINED','#ffd870',12);}
+    if(e.hp<=0)killEnemy(e,true);}
+  for(let k=0;k<22&&particles.length<240;k++){const pd=rnd(20,len*0.6);
+    particles.push({x:P.x+ca*pd+rnd(-w/2,w/2)*-sa,y:P.y-14+sa*pd+rnd(-w/2,w/2)*ca,
+      vx:rnd(-30,30),vy:rnd(-60,-10),t:rnd(.3,.6),col:k%2?'#ffe9a8':'#fff6dc',r:rnd(1.5,3),noG:true});}}
+function ascend(){ // the wings answer: above the sand, above the blades
+  autoFace();P.parryCD=6;P.ascendT=1.1;P.wardT=1.5;P.ft.rolls++;
+  leafBurst(P.x,P.y,16,'#fff6dc');
+  popup(P.x,P.y-58,'ASCEND','#ffe9a8',14);
+  S.shake=Math.max(S.shake,4);vib(25);flashFx(.1);}
+function seraphSlam(){ // the landing is the sentence
+  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*1.2);
+  swings.push({x:P.x,y:P.y,a:0,arc:7,range:120,t:.2,heavy:true,col:'#ffe9a8',ring:true});
+  S.shake=Math.max(S.shake,9);vib([40,40,70]);flashFx(.16);
+  leafBurst(P.x,P.y,20,'#ffe9a8');
+  for(const e of enemies){if(e.dead)continue;
+    if(dist(P,e)>120+e.r)continue;
+    const pa=ang(P,e);e.x+=Math.cos(pa)*60;e.y+=Math.sin(pa)*60;clampArena(e);
+    e.stunT=Math.max(e.stunT||0,0.8);
+    hitEnemy(e,dmg,true,pa);}}
+function updRays(dt){for(let i=rays.length-1;i>=0;i--){rays[i].t-=dt;if(rays[i].t<=0)rays.splice(i,1);}}
 function updWolves(dt){
   for(let i=wolves.length-1;i>=0;i--){const w=wolves[i];
     w.life-=dt;
@@ -531,6 +597,9 @@ function doHeavy(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.heavyWind>0||
   if(P.char==='warlock'){
     if(P.devilT>0){devilStrike(1.0,true);return;} // BITE — moderate, feeds him
     startChannel();return;}
+  if(P.char==='seraph'){ // HALO RAY: the crown leaves his brow and charges
+    autoFace();P.heavyWind=.55;P.heavyCD=5;P.heavyCDmax=5;P.ft.heavy++;
+    popup(P.x,P.y-52,'THE HALO RISES','#ffe9a8',12);return;}
   autoFace();P.heavyWind=.55;P.heavyCD=2.2;P.heavyCDmax=2.2;}
 function heavyRelease(){if(P.char==='warlock')releaseChannel();}
 function heavyLand(){P.ft.heavy++;
@@ -1040,9 +1109,11 @@ function statRows(prevK,nowK){
     return rows;}
   const L=lvl(),pl=Math.min(10,Math.floor(1+prevK*1.5));
   rows.push(['LEVEL',L+' / 10',L>pl?'+'+(L-pl)+' \u25b2':'']);
-  rows.push([P.char==='druid'?'GLAIVE':'SPELLS',diceN()+'d8','']);
+  rows.push([P.char==='druid'?'GLAIVE':P.char==='seraph'?'SPEAR':'SPELLS',diceN()+'d8','']);
   rows.push(['MAX HP',''+maxHP(),'']);
-  const UL=P.char==='druid'?[['BEAR FORM',3],['WOLF FORM',6]]:[['BONE DRAGON',3],['SUCCUBI',5],['ARCH DEVIL',8]];
+  const UL=P.char==='druid'?[['BEAR FORM',3],['WOLF FORM',6]]
+    :P.char==='seraph'?[['CHAINS OF DECREE',3],['TRIUNE MAW',6],['HALO JUDGEMENT',8]]
+    :[['BONE DRAGON',3],['SUCCUBI',5],['ARCH DEVIL',8]];
   for(const[nm,req]of UL){const got=L>=req;
     rows.push([nm,got?'UNLOCKED':'level '+req,got?'\u2713':'']);}
   return rows;}
@@ -1086,7 +1157,15 @@ const NICKBANKS={
    breath:['THE SHORT CONTRACT','SIGNED IN SECONDS','THE QUICK CLAUSE','INSTANT TERMS'],
    corpse:['THE BAD INVESTMENT','STILL OWED A SOUL','THE UNCOLLECTED DEBT','FORECLOSURE PENDING'],
    mirror:['THE REFLECTED CURSE','THE RETURN POLICY','SENDER UNKNOWN','PAID IN KIND']},
-  fallback:['THE DARK ELF','THE BOOKKEEPER','THE PIT\'S LAWYER','MANAGEMENT']}};
+  fallback:['THE DARK ELF','THE BOOKKEEPER','THE PIT\'S LAWYER','MANAGEMENT']},
+ seraph:{styles:{
+   untouched:['NOT OF THIS SAND','THE SPOTLESS WING','NO BLOOD ABOVE','THE UNTOUCHED HOST'],
+   headsman:['THE VERDICT','THE LAST LIGHT','HEAVEN\'S SENTENCE','THE FINAL PSALM'],
+   quicksand:['THE WHITE BLUR','BETWEEN WINGBEATS','THE PASSING LIGHT','GONE GLORYWARD'],
+   breath:['ONE PSALM','THE SHORT SERMON','AMEN ALREADY','BEFORE THE CHOIR'],
+   corpse:['THE STUBBORN MIRACLE','NOT TODAY EITHER','THE UNFALLEN','GRACE WITH SCARS'],
+   mirror:['THE TURNED CHEEK','THE ANSWERED PRAYER','WRATH RETURNED','THE GATE THAT HOLDS']},
+  fallback:['THE VISITOR','THE THREE-HEADED SAINT','THE CROWD\'S NEW RELIGION','THE PIT\'S OWN ANGEL']}};
 function computeNickname(){
   const t=(NOW()-P.ft.t0)/1000;
   // decay old scores so recent fights drive the name — names evolve instead of sticking
@@ -1119,6 +1198,7 @@ function startEncounter(list,cb){
   P.x=arena.x;P.y=arena.y+arena.r*0.55;P.hp=maxHP();P.dead=false;P.rollT=0;P.rollCD=0;P.heavyCD=0;P.heavyWind=0;
   P.parryT=0;P.parryCD=0;P.ripoT=0;P.combo=0;P.comboT=0;
   P.hexCD=0;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;P.humanCD=0;P.wolfCD=0;P.formCD=0; // all skills fresh each fight (Hiro)
+  P.ascendT=0;rays=[]; // the angel lands; the light fades
   P.ft={dmgTaken:0,heavy:0,slash:0,rolls:0,parries:0,t0:NOW(),low:false};
   S.mode='fight';UI.hud(true);UI.controls(true);UI.name(nickname);
   UI.stats(diceN()+'d8',(P.char==='ronin'?'':'LV '+lvl()+' · ')+'KILLS '+P.kills);
@@ -1159,13 +1239,17 @@ function lose(){
          +'Human form: VINES traps everyone near you while you hop to safety.',
     warlock:'HINTS — PORTAL grants 3s of immunity after the swap. BLINK stuns everything around your departure point. '
          +'HOLD the summon button: demons arrive at 3s / 4s / 6s in one channel. '
-         +'As the ARCH DEVIL, bite a succubus to ascend her — faster, and she explodes where she stands.'};
+         +'As the ARCH DEVIL, bite a succubus to ascend her — faster, and she explodes where she stands.',
+    seraph:'HINTS — HALO RAY pierces every foe in the line; from level 3 it CHAINS what it touches. '
+         +'ASCEND lifts you above harm — the landing staggers the circle. '
+         +'At level 6 the spear\'s third strike becomes the TRIUNE MAW: three heads bite, and you are fed.'};
   show('death',{stats:_deathStats,quote:_deathQuote,hints:HINTS[P.char]||''});}
 /* ============ CHARACTER INTROS (automated demos) ============ */
 const BIOS={
  ronin:'The wandering samurai — said to have never lost a duel. He has traveled from the far east to become the greatest swordsman in the world. No magic. No levels. No enchantments or tricks. Just pure skill, and the vigor of defeated foes.',
  druid:'From a grove far away, she comes seeking what nature could not teach her. She hates the city — but she has strength to prove, and there is no better place than the kitchen… I mean, the arena…',
- warlock:'A dark elf from even darker realms, beneath the dark recesses of the land. His book is disconcerting. His staff is ominous. More lurks behind his portals than the city guard should logically allow. Welp — too late. He\'s in the arena.'};
+ warlock:'A dark elf from even darker realms, beneath the dark recesses of the land. His book is disconcerting. His staff is ominous. More lurks behind his portals than the city guard should logically allow. Welp — too late. He\'s in the arena.',
+ seraph:'He is not from the city. He is from the place above, as most angels are. Giant wings. Runic chains. Three heads, and every one of them watching a different sin. He says great evil brews in the land and he has come to find warriors worthy of the cleansing. The crowd believes him completely. Bellow, privately, is not so sure.'};
 const demo={char:'',t:0,step:0,script:null};
 function demoFoe(dx,dy,hp){enemies.push(mkEnemy({type:'hook',x:arena.x+dx,y:arena.y+dy,
   hp:hp||220,maxhp:hp||220,spd:85,r:14,col:'#8a6a4a',dmgScale:.4}));}
@@ -1215,13 +1299,26 @@ const DEMOS={
    run:()=>{const sc2=demons.find(d=>d.type==='succubus'&&d.hp>0);
      if(sc2){P.x=sc2.x-34;P.y=sc2.y;}devilStrike(1.0,true);}},
   {at:18.4,cap:'She holds her ground. Seven seconds later — she BURSTS.'},
-  {at:25,cap:'Welp. Too late — he\'s in the arena. — tap ENTER THE PIT'}]};
+  {at:25,cap:'Welp. Too late — he\'s in the arena. — tap ENTER THE PIT'}],
+ seraph:[
+  {at:.2,cap:'THE SERAPHIM — the place above sent a recruiter.',run:()=>{demoFoe(150,-40,320);demoFoe(160,50,320);}},
+  {at:1.6,cap:'SPEAR — a thrust longer than any blade in the Pit.',run:()=>seraphSlash()},
+  {at:2.3,run:()=>seraphSlash()},
+  {at:3.6,cap:'HALO RAY — the crown leaves his brow and UNMAKES the line.',run:()=>doHeavy()},
+  {at:6.2,cap:'From level 3 the ray binds — CHAINS OF DECREE hold what it touches.',run:()=>{demoFoe(170,-60,300);demoFoe(180,0,300);}},
+  {at:7.4,run:()=>doHeavy()},
+  {at:9.8,cap:'ASCEND — the wings answer. Above the sand, above the blades.',run:()=>ascend()},
+  {at:11.4,cap:'The landing is the sentence.'},
+  {at:13.2,cap:'TRIUNE MAW — at level 6, all three heads lunge. And are fed.',run:()=>{P.combo=2;P.comboT=1;seraphSlash();}},
+  {at:15,run:()=>{P.combo=2;P.comboT=1;seraphSlash();}},
+  {at:17,cap:'He seeks the worthy. The Pit will do for a start. — tap ENTER THE PIT'}]};
 function demoReset(){
   const ch=demo.char;
   P.char=ch;P.kills=0;P.level=ch==='ronin'?1:10;P.bladeTier=0;P.form='human';P.r=16;
   P.dead=false;P.channel=null;P.glaive=null;P.devilT=0;P.wardT=0;P.slowT=0;P.paralyzeT=0;
   P.formT=0;P.humanCD=0;P.wolfCD=0;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;
   P.parryCD=0;P.parryT=0;P.heavyCD=0;P.heavyWind=0;P.rollCD=0;P.rollT=0;P.atkRecover=0;P.flash=0;P.hexCD=0;
+  P.ascendT=0;rays=[];
   P.combo=0;P.comboT=0;P.ft={dmgTaken:0,heavy:0,slash:0,rolls:0,parries:0,t0:NOW(),low:false};
   P.hp=maxHP();
   wolves=[];demons=[];fireballs=[];tracers=[];enemies=[];zones=[];swings=[];particles=[];popups=[];bullets=[];limbs=[];
@@ -1237,9 +1334,9 @@ function startIntro(ch){
   show(null);
   demoReset();
   UI.hud(true);UI.controls(false);UI.boss(false,'');
-  UI.name({ronin:'THE RONIN',druid:'THE DRUID',warlock:'THE WARLOCK'}[ch]);
+  UI.name({ronin:'THE RONIN',druid:'THE DRUID',warlock:'THE WARLOCK',seraph:'THE SERAPHIM'}[ch]);
   UI.demoCap('');
-  UI.intro(true,{name:{ronin:'THE RONIN',druid:'THE DRUID',warlock:'THE WARLOCK'}[ch],bio:BIOS[ch]});}
+  UI.intro(true,{name:{ronin:'THE RONIN',druid:'THE DRUID',warlock:'THE WARLOCK',seraph:'THE SERAPHIM'}[ch],bio:BIOS[ch]});}
 function endIntro(){
   UI.intro(false);
   S.mode='title';
@@ -1247,7 +1344,7 @@ function endIntro(){
 function fullReset(ch){
   S.fight=0;P.kills=0;prevKills=0;nickname='NOBODY';
   if(ch)P.char=ch;
-  P.form='human';P.r=16;P.wolfCD=0;P.formT=0;P.humanCD=0;P.bladeTier=0;P.slowT=0;P.paralyzeT=0;P.wardT=0;P.devilT=0;P.hexCD=0;P.level=1;P.unlockMsg=null;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;wolves=[];demons=[];fireballs=[];P.channel=null;P.glaive=null;
+  P.form='human';P.r=16;P.wolfCD=0;P.formT=0;P.humanCD=0;P.bladeTier=0;P.slowT=0;P.paralyzeT=0;P.wardT=0;P.devilT=0;P.hexCD=0;P.level=1;P.unlockMsg=null;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;wolves=[];demons=[];fireballs=[];P.channel=null;P.glaive=null;P.ascendT=0;rays=[];
   styleScore={untouched:0,headsman:0,quicksand:0,breath:0,corpse:0,mirror:0};
   updateLabels();
   dctx.clearRect(0,0,W,H);toBoard();}
@@ -1296,7 +1393,8 @@ function tick(now){
       if(P.form!=='human'){P.formT-=dt;if(P.formT<=0)revertToHuman();}}
     P.ripoT=Math.max(0,P.ripoT-dt);P.comboT=Math.max(0,P.comboT-dt);
     P.atkRecover=Math.max(0,P.atkRecover-dt);P.flash=Math.max(0,P.flash-dt);
-    if(P.heavyWind>0){P.heavyWind-=dt;autoFace();if(P.heavyWind<=0)heavyLand();}
+    if(P.heavyWind>0){P.heavyWind-=dt;autoFace();if(P.heavyWind<=0){if(P.char==='seraph')fireRay();else heavyLand();}}
+    if(P.char==='seraph'&&P.ascendT>0){P.ascendT-=dt;if(P.ascendT<=0)seraphSlam();}
     if(P.channel){const c=P.channel;c.t+=dt;
       if(c.t>=3&&!c.b){c.b=true;
         if(!demons.some(d=>d.type==='brute'&&d.hp>0)){c.any=true;summonDemons('brute');}
@@ -1334,7 +1432,7 @@ function tick(now){
   // spirit wolves
   updWolves(dt);
   // demons & their projectiles
-  updDemons(dt);updFireballs(dt);
+  updDemons(dt);updFireballs(dt);updRays(dt);
   for(let i=tracers.length-1;i>=0;i--){tracers[i].t-=dt;if(tracers[i].t<=0)tracers.splice(i,1);}
   // thrown glaive
   updGlaive(dt);
@@ -1402,6 +1500,7 @@ function tick(now){
     parry:(()=>{let pv=P.parryCD,pm=1.4;
       if(P.char==='druid'){pv=P.form==='human'?P.humanCD:0;pm=5;}
       else if(P.char==='warlock')pm=3;
+      else if(P.char==='seraph')pm=6;
       return pv>0?pv/pm:0;})()
   });
   draw();
@@ -1441,6 +1540,18 @@ function drawFighter(x,y,r,face,col,o={}){
     ctx.beginPath();ctx.arc(0,0,r*.55,3.6,5.7);ctx.stroke();
     ctx.restore();return;}
   const perp=face+Math.PI/2;
+  /* ---- blob (mountain slimes) ---- */
+  if(o.blob){
+    const sq=1+Math.sin(t*4+x*.05)*.12; // idle wobble
+    ctx.fillStyle=C(col);ctx.strokeStyle='#000';ctx.lineWidth=2;
+    ctx.globalAlpha=.92;
+    ctx.beginPath();ctx.ellipse(0,r*.15,r*1.05*sq,r*.8/sq,0,0,7);ctx.fill();ctx.stroke();
+    ctx.globalAlpha=.55;ctx.fillStyle=C('#ffffff');
+    ctx.beginPath();ctx.ellipse(-r*.3,-r*.15,r*.22,r*.14,-.5,0,7);ctx.fill(); // glisten
+    ctx.globalAlpha=1;
+    ctx.fillStyle=C('#1a141e'); // something half-digested floats inside
+    ctx.beginPath();ctx.arc(r*.15,r*.1,r*.16,0,7);ctx.fill();
+    ctx.restore();return;}
   /* ---- quadruped (hounds) ---- */
   if(o.quad){ctx.rotate(face);
     ctx.fillStyle=C('#15100c');
@@ -1644,6 +1755,41 @@ function drawFighter(x,y,r,face,col,o={}){
     ctx.strokeStyle=C('#7fbf6a');ctx.lineWidth=1.6; // circlet
     ctx.beginPath();ctx.arc(hx,hy-r*.04,r*.44,Math.PI*1.05,Math.PI*1.95);ctx.stroke();
     ctx.fillStyle=C('#7fbf6a');ctx.fillRect(hx-1.5,hy-r*.5,3,3);}
+  if(o.seraphim){ // giant wings, halo, runic chains, and the two other heads
+    const wf=Math.sin(t*(o.flying?13:4))*(o.flying?6:2.5);
+    ctx.fillStyle=C('#efe9da');ctx.strokeStyle='#000';ctx.lineWidth=1.5;
+    for(const s of[-1,1]){ // feathered wings sweeping back from the shoulders
+      const ax=Math.cos(perp)*r*.7*s,ay=Math.sin(perp)*r*.7*s;
+      const bx2=ax+Math.cos(perp)*r*1.5*s-Math.cos(face)*r*.9,
+            by2=ay+Math.sin(perp)*r*1.5*s-Math.sin(face)*r*.9-(8+wf);
+      const cx2=ax+Math.cos(perp)*r*.9*s-Math.cos(face)*r*1.6,
+            cy2=ay+Math.sin(perp)*r*.9*s-Math.sin(face)*r*1.6+2;
+      ctx.beginPath();ctx.moveTo(ax,ay);
+      ctx.quadraticCurveTo(bx2,by2,cx2,cy2);
+      ctx.quadraticCurveTo(ax+Math.cos(perp)*r*.7*s-Math.cos(face)*r*.7,ay+Math.sin(perp)*r*.7*s-Math.sin(face)*r*.7+4,ax,ay);
+      ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle=C('#cfc6ae');ctx.lineWidth=1; // feather lines
+      ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo((ax+cx2)/2,(ay+cy2)/2-3);ctx.stroke();
+      ctx.strokeStyle='#000';ctx.lineWidth=1.5;ctx.fillStyle=C('#efe9da');}
+    ctx.strokeStyle=C('#e7b450');ctx.lineWidth=1.6; // runic chains: waist, chest, arms
+    ctx.setLineDash([3,2]);
+    ctx.beginPath();ctx.arc(0,0,r*.7,0,7);ctx.stroke();
+    ctx.beginPath();ctx.arc(0,-r*.2,r*.55,0,7);ctx.stroke();
+    ctx.setLineDash([]);
+    for(const s of[-1,1]){ // the flanking hound heads (sister-heads of the cerberus)
+      const dhx=hx+Math.cos(perp)*r*.62*s,dhy=hy+Math.sin(perp)*r*.62*s+r*.1;
+      ctx.fillStyle=C(o.headCol||'#e8e4da');ctx.strokeStyle='#000';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.arc(dhx,dhy,r*.26,0,7);ctx.fill();ctx.stroke();
+      ctx.beginPath();ctx.ellipse(dhx+Math.cos(face)*r*.2,dhy+Math.sin(face)*r*.2,r*.13,r*.09,face,0,7);ctx.fill();ctx.stroke(); // muzzle
+      ctx.fillStyle=C('#9a8f80'); // ears
+      ctx.beginPath();ctx.ellipse(dhx-Math.cos(face)*r*.12,dhy-Math.sin(face)*r*.12-r*.2,r*.08,r*.14,0,0,7);ctx.fill();
+      ctx.fillStyle=flash?'#fff':'#ffd870';
+      ctx.fillRect(dhx+Math.cos(face)*r*.1-1,dhy+Math.sin(face)*r*.1-1,2,2);}
+    const hg=0.55+0.25*Math.sin(t*3); // the halo (dims while the ray is loose)
+    if(!o.haloGone){ctx.strokeStyle='rgba(255,222,120,'+hg+')';ctx.lineWidth=2.5;
+      ctx.beginPath();ctx.ellipse(hx,hy-r*.72,r*.5,r*.16,0,0,7);ctx.stroke();
+      ctx.strokeStyle='rgba(255,246,220,.35)';ctx.lineWidth=5;
+      ctx.beginPath();ctx.ellipse(hx,hy-r*.72,r*.5,r*.16,0,0,7);ctx.stroke();}}
   if(o.samurai){ // kabuto crest + brim
     ctx.strokeStyle=C('#e7b450');ctx.lineWidth=o.armor>=2?3.5:2;
     ctx.beginPath();ctx.arc(hx,hy,r*(o.armor>=2?.6:.52),Math.PI*1.1,Math.PI*1.9);ctx.stroke();
@@ -1892,9 +2038,32 @@ function draw(){
       g2.addColorStop(0,col);g2.addColorStop(1,'transparent');
       ctx.fillStyle=g2;ctx.beginPath();ctx.arc(b.x,b.y,b.r*2.6,0,7);ctx.fill();
       ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(b.x,b.y,b.r*.5,0,7);ctx.fill();}
+    // halo rays — lances of dawn (drawn under the fighters)
+    for(const ry of rays){
+      const pr=ry.t/.45,ca2=Math.cos(ry.a),sa2=Math.sin(ry.a);
+      const ex2=ry.x+ca2*ry.len,ey2=ry.y+sa2*ry.len;
+      ctx.save();ctx.globalAlpha=pr;
+      ctx.strokeStyle=ry.judge?'#fff6dc':'#ffe9a8';ctx.lineWidth=ry.w*pr;
+      ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(ry.x,ry.y);ctx.lineTo(ex2,ey2);ctx.stroke();
+      ctx.strokeStyle='#fff';ctx.lineWidth=Math.max(2,ry.w*.3*pr);
+      ctx.beginPath();ctx.moveTo(ry.x,ry.y);ctx.lineTo(ex2,ey2);ctx.stroke();
+      ctx.restore();}
     const pmv=Math.hypot(P.x-(P._lx??P.x),P.y-(P._ly??P.y));
     P.walkP=(P.walkP||0)+pmv*.18;P._mv=pmv>0.25;P._lx=P.x;P._ly=P.y;
-    if(P.char==='warlock'&&P.devilT>0){
+    if(P.char==='seraph'){
+      const lift=P.ascendT>0?Math.sin(Math.min(Math.PI,(1.1-P.ascendT)/1.1*Math.PI))*26:0;
+      if(P.wardT>0&&P.ascendT<=0){ // grace lingers after the landing
+        ctx.strokeStyle='rgba(255,233,168,'+(0.4+0.2*Math.sin(S.time*9))+')';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+15,0,7);ctx.stroke();}
+      if(lift>2){ctx.save();ctx.globalAlpha=.4; // shadow stays on the sand
+        ctx.fillStyle='#000';ctx.beginPath();ctx.ellipse(P.x,P.y+P.r*.6,P.r*.9,P.r*.34,0,0,7);ctx.fill();ctx.restore();}
+      drawFighter(P.x,P.y-lift,P.r,P.face,'#cfd6e4',{seraphim:true,robe:true,flash:P.flash,
+        dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,
+        flying:P.ascendT>0,haloGone:P.heavyCD>3.8,
+        wpnLen:42,wpnCol:'#f0ead0',twoHand:false,headCol:'#e8e4da',
+        wpnSwing:P.heavyWind>0?-1.0:(P.atkRecover>0?[0.7,-0.7,-1.5][P.atkPose||0]:0)});
+    }else if(P.char==='warlock'&&P.devilT>0){
       // ARCH DEVIL: hulking horned thing where the dark elf stood
       const fl2=Math.sin(S.time*7)*.5;
       ctx.strokeStyle='rgba(208,58,74,.9)';ctx.lineWidth=3;ctx.lineCap='round';

@@ -11,7 +11,7 @@ const QuestNav = {
   path: [], pathI: 0,
   autoDialog: false,             // FULL opened the current dialog
   dialogT: 0,
-  _zoneOf: { 'karridge-city': 'CityScene', 'thorn-grove': 'GroveScene', 'grove-dungeon': 'DungeonScene', 'varenholm': 'VarenholmScene' },
+  _zoneOf: { 'karridge-city': 'CityScene', 'thorn-grove': 'GroveScene', 'grove-dungeon': 'DungeonScene', 'varenholm': 'VarenholmScene', 'dragonspine': 'MountainScene' },
 
   cycleMode() {
     this.setMode((this.mode + 1) % 3);
@@ -33,6 +33,19 @@ const QuestNav = {
   objective() {
     const GS = window.GameState, f = GS.world.flags, T = 32, druid = GS.player && GS.player.char === 'druid';
     const at = (zone, x, y, interact, label) => ({ zone, x, y, interact: !!interact, label });
+    if (GS.player && GS.player.char === 'seraph') { // the angel's road: inn -> spine trail -> five banners -> the shrine
+      if (!f['q-sq1-the-host-below']) return null;
+      if (f['q-sq1-the-host-below'] === 'active' || !f['q-sq2-where-strength-lives'])
+        return at('karridge-city', 640, 704, true, 'the Last Lantern — Marlow');
+      if (f['q-sq2-where-strength-lives'] === 'active')
+        return at('dragonspine', 27 * T, 39 * T, false, 'the spine trail — Dragonspine');
+      if (f['q-sq3-five-banners'] === 'active') {
+        const c = Quests.seraph.candidates.find(x => !f['duel-' + x.id]) || Quests.seraph.candidates[0];
+        return at('dragonspine', c.spot[0] * T, c.spot[1] * T, true, c.short);
+      }
+      if (f['q-sq4-the-chosen'] === 'active') return at('dragonspine', 32 * T, 5 * T, true, 'the Skyreach shrine');
+      return null;
+    }
     if (!f['q-mq1-empty-cell']) return null;
     if (f['q-mq1-empty-cell'] === 'active' || (f['q-mq1-empty-cell'] === 'done' && !f['q-mq2-listening-room']))
       return at('karridge-city', 640, 704, true, 'the Last Lantern — Marlow');
@@ -51,10 +64,11 @@ const QuestNav = {
   // ---- zone graph: next hop from zone A toward zone B ----
   nextHop(from, to) {
     const HOPS = {
-      'karridge-city': { 'thorn-grove': { x: 1120, y: 24, interact: false }, 'grove-dungeon': { x: 1120, y: 24, interact: false }, 'varenholm': { x: 1656, y: 744, interact: true } },
-      'thorn-grove': { 'karridge-city': { x: 1088, y: 1572, interact: false }, 'varenholm': { x: 1088, y: 1572, interact: false }, 'grove-dungeon': { x: 1984, y: 1344, interact: true } },
-      'grove-dungeon': { 'thorn-grove': { x: 160, y: 96, interact: true }, 'karridge-city': { x: 160, y: 96, interact: true }, 'varenholm': { x: 160, y: 96, interact: true } },
-      'varenholm': { 'karridge-city': { x: 896, y: 1088, interact: true }, 'thorn-grove': { x: 896, y: 1088, interact: true }, 'grove-dungeon': { x: 896, y: 1088, interact: true } },
+      'karridge-city': { 'thorn-grove': { x: 1120, y: 24, interact: false }, 'grove-dungeon': { x: 1120, y: 24, interact: false }, 'varenholm': { x: 1656, y: 744, interact: true }, 'dragonspine': { x: 1120, y: 24, interact: false } },
+      'thorn-grove': { 'karridge-city': { x: 1088, y: 1572, interact: false }, 'varenholm': { x: 1088, y: 1572, interact: false }, 'grove-dungeon': { x: 1984, y: 1344, interact: true }, 'dragonspine': { x: 2216, y: 320, interact: false } },
+      'grove-dungeon': { 'thorn-grove': { x: 160, y: 96, interact: true }, 'karridge-city': { x: 160, y: 96, interact: true }, 'varenholm': { x: 160, y: 96, interact: true }, 'dragonspine': { x: 160, y: 96, interact: true } },
+      'varenholm': { 'karridge-city': { x: 896, y: 1088, interact: true }, 'thorn-grove': { x: 896, y: 1088, interact: true }, 'grove-dungeon': { x: 896, y: 1088, interact: true }, 'dragonspine': { x: 896, y: 1088, interact: true } },
+      'dragonspine': { 'thorn-grove': { x: 864, y: 1380, interact: false }, 'karridge-city': { x: 864, y: 1380, interact: false }, 'grove-dungeon': { x: 864, y: 1380, interact: false }, 'varenholm': { x: 864, y: 1380, interact: false } },
     };
     return (HOPS[from] || {})[to] || null;
   },

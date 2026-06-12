@@ -79,6 +79,19 @@ const Autopilot = {
         combat.doSlash();                                          // BITE lunges
       }
       if (foe.attacking && foe.tele < 0.15 && dFoe < 100 && P.rollCD <= 0 && P.form === 'human') combat.doRoll();
+    } else if (P.char === 'seraph') {
+      // spear pressure at lance range, the ray when foes line up, wings out of a surround
+      if (dFoe > 85) moveTo(foe.x, foe.y);
+      else moveTo(P.x + (P.x - foe.x), P.y + (P.y - foe.y)); // keep the spear's reach
+      combat.doSlash();
+      const ca = Math.cos(P.face), sa = Math.sin(P.face);
+      const lined = foes.filter(e => { const rx = e.x - P.x, ry = e.y - P.y;
+        const proj = rx * ca + ry * sa, perp = Math.abs(-rx * sa + ry * ca);
+        return proj > 0 && proj < 900 && perp < 40; }).length;
+      if (P.heavyCD <= 0 && P.heavyWind <= 0 && (lined >= 2 || (foes.length === 1 && dFoe < 320))) combat.doHeavy();
+      const crowd = foes.filter(e => dist(P, e) < 110).length;
+      if (P.parryCD <= 0 && (crowd >= 2 || (P.hp / combat.maxHP() < 0.45 && dFoe < 100))) combat.doParry(); // ASCEND
+      if (foe.attacking && foe.tele < 0.15 && dFoe < 100 && P.rollCD <= 0 && !(P.ascendT > 0)) combat.doRoll();
     } else { // ronin
       moveTo(foe.x - Math.cos(foe.face) * 55, foe.y - Math.sin(foe.face) * 55);
       if (foe.attacking && foe.tele > 0 && dFoe < 140) combat.doParry();

@@ -37,6 +37,7 @@ class WorldScene extends Phaser.Scene {
     const looks = Object.assign({
       'fr-player': GSP.char === 'druid' ? { col: '#2c4430', o: { druid: true, wpnLen: 26, wpnCol: '#d8e4d0', twin: true } }
         : GSP.char === 'warlock' ? { col: '#241a30', o: { warlock: true, robe: true, wpnLen: 30, wpnCol: '#3a3046', staffTip: true, tipCol: '#b070f0', twoHand: false, headCol: '#9a9ab0' } }
+        : GSP.char === 'seraph' ? { col: '#cfd6e4', o: { seraphim: true, robe: true, wpnLen: 42, wpnCol: '#f0ead0', twoHand: false, headCol: '#e8e4da' } }
         : { col: '#2c3440', o: { samurai: true, armor: GSP.bladeTier || 0, wpnLen: (GSP.bladeTier === 2 ? 62 : GSP.bladeTier === 1 ? 46 : 30), wpnCol: '#e7d9a8', thickWpn: GSP.bladeTier === 2 } },
       'fr-npc0': { col: '#4a3c30', o: {} }, 'fr-npc1': { col: '#39414a', o: { hood: true } },
       'fr-npc2': { col: '#4a2f33', o: { robe: true, headCol: '#caa27a' } }, 'fr-npc3': { col: '#3c4434', o: {} },
@@ -157,7 +158,7 @@ class WorldScene extends Phaser.Scene {
     this.keys = this.input.keyboard.addKeys('W,A,S,D,E,J,M,ESC,ONE,TWO,THREE,FOUR,FIVE,SIX,SEVEN,EIGHT');
     this.input.keyboard.on('keydown-E', () => { if (!this.encounterActive) this.tryInteract(); });
     this.input.keyboard.on('keydown-J', () => { if (this.encounterActive) return;
-      this.qlogOpen = !this.qlogOpen; CityUI.questlog(this.qlogOpen, Quests.main, window.GameState.world.flags); });
+      this.qlogOpen = !this.qlogOpen; CityUI.questlog(this.qlogOpen, Quests.mainFor(), window.GameState.world.flags); });
     this.input.keyboard.on('keydown-M', () => { if (!this.encounterActive) WorldMapUI.toggle(); });
     this.input.keyboard.on('keydown-F10', () => {
       const label = QuestNav.cycleMode();
@@ -177,14 +178,14 @@ class WorldScene extends Phaser.Scene {
     CityUI._onPrompt = () => { if (!this.encounterActive) this.tryInteract(); };
     CityUI._onBelt = i => this.useBeltSlot(i, this.encounterActive);
     CityUI._onJournal = () => { this.qlogOpen = !this.qlogOpen;
-      CityUI.questlog(this.qlogOpen, Quests.main, window.GameState.world.flags); };
+      CityUI.questlog(this.qlogOpen, Quests.mainFor(), window.GameState.world.flags); };
     CityUI._onTrackQuest = () => { this.qlogOpen = false; CityUI.questlog(false);
       QuestNav.startTracking(this); };
     CityUI.syncAutoBtn();
     // a tracked walk continues across zone loads
     if (QuestNav.tracking) this.time.delayedCall(150, () => QuestNav.replan(this));
     // zone music + autosave heartbeat
-    const zoneTrack = { 'karridge-city': 'city', 'thorn-grove': 'grove', 'grove-dungeon': 'dungeon' }[window.GameState.world.zone];
+    const zoneTrack = { 'karridge-city': 'city', 'thorn-grove': 'grove', 'grove-dungeon': 'dungeon', 'dragonspine': 'mountain' }[window.GameState.world.zone];
     if (zoneTrack) MusicMan.play(zoneTrack);
     SaveSystem.save();
     this.time.addEvent({ delay: 10000, loop: true, callback: () => { if (!this.encounterActive) SaveSystem.save(); } });

@@ -14,7 +14,10 @@ const WorldMapUI = {
         open: window.GameState.world.flags['q-mq5-ash-and-silence'] === 'done' && window.GameState.player.char === 'druid',
         here: zone === 'varenholm', note: window.GameState.player.char === 'druid' ? 'the heartland — coach from Karridge' : 'the heartland — another champion\'s road' },
       { id: 'deepwood', name: 'DEEPWOOD INTERIOR', x: 38, y: 16, open: false, note: 'the Eldest do not invite' },
-      { id: 'dragonspine', name: 'DRAGONSPINE', x: 72, y: 10, open: false, note: 'treaty lands — dragons' },
+      { id: 'dragonspine', name: 'DRAGONSPINE', x: 72, y: 10,
+        open: window.GameState.player.char === 'seraph',
+        here: zone === 'dragonspine',
+        note: window.GameState.player.char === 'seraph' ? 'the spine trail — east past Thorn Grove' : 'treaty lands — dragons' },
       { id: 'kharn', name: 'KHARN-DURAL', x: 14, y: 28, open: false, note: 'the undermountain' },
       { id: 'ashenveil', name: 'THE ASHENVEIL', x: 80, y: 46, open: false, note: 'the way is barred' },
     ];

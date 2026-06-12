@@ -14,7 +14,9 @@ class CityScene extends WorldScene {
     this.worldInit();
     const GS = window.GameState, P = GS.player;
     GS.world.zone = 'karridge-city';
-    if (!GS.world.flags['q-mq1-empty-cell']) GS.world.flags['q-mq1-empty-cell'] = 'active';
+    if (P.char === 'seraph') { // the angel walks a different road — no cold cells, no rumors
+      if (!GS.world.flags['q-sq1-the-host-below']) GS.world.flags['q-sq1-the-host-below'] = 'active';
+    } else if (!GS.world.flags['q-mq1-empty-cell']) GS.world.flags['q-mq1-empty-cell'] = 'active';
 
     // props frames
     const propsTex = this.textures.get('cainos-props');
@@ -183,6 +185,7 @@ class CityScene extends WorldScene {
   }
 
   innDialog() {
+    if (window.GameState.player.char === 'seraph') { this.innDialogSeraph(); return; }
     const GS = window.GameState, P = GS.player, I = Quests.innkeeper, flags = GS.world.flags;
     const N = t => t.replace('{N}', P.nickname);
     const close = () => CityUI.closeDialog();
@@ -210,6 +213,23 @@ class CityScene extends WorldScene {
     CityUI.dialog(I.name, N(I.greet), opts, this.portraitInn);
   }
 
+  innDialogSeraph() {
+    const flags = window.GameState.world.flags, M = Quests.seraph.marlow, close = () => CityUI.closeDialog();
+    const opts = [];
+    if (flags['q-sq1-the-host-below'] === 'active' || !flags['q-sq2-where-strength-lives'])
+      opts.push({ label: M.ask, fn: () => {
+        flags['q-sq1-the-host-below'] = 'done';
+        flags['q-sq2-where-strength-lives'] = 'active';
+        CityUI.dialog(M.name || 'MARLOW', M.answer, [{ label: '"Gently, then. You have my word, innkeeper."', fn: () => {
+          close();
+          this.floatText(this.player.x, this.player.y - 50, 'JOURNAL UPDATED — WHERE STRENGTH LIVES', '#3df0c8', 14);
+        }}], this.portraitInn);
+      }});
+    else opts.push({ label: 'Anything else?', fn: () => CityUI.dialog('MARLOW', M.done, [{ label: 'Leave', fn: close }], this.portraitInn) });
+    opts.push({ label: 'Leave him his knees', fn: close });
+    CityUI.dialog('MARLOW', M.greet, opts, this.portraitInn);
+  }
+
   guildBoard() {
     const GS = window.GameState, P = GS.player, flags = GS.world.flags, counts = GS.world.questCounts;
     P.guildHunts = P.guildHunts || 0;
@@ -234,7 +254,7 @@ class CityScene extends WorldScene {
     const nextR = Quests.guildRanks.find(g => g.at > P.guildHunts);
     const rankLine = `<div class="qobj" style="margin-bottom:8px">GUILD RANK: <span style="color:#e7b450">${rank.name}</span> · ${P.guildHunts} hunts · payouts ×${rank.mult}` +
       (nextR ? ` · ${nextR.at - P.guildHunts} more to ${nextR.name}` : ' · the Vanguard Hall pours when you enter') + '</div>';
-    const note = rankLine + (flags['q-mq2-listening-room'] === 'active'
+    const note = rankLine + (P.char === 'seraph' ? Quests.seraph.guildNote : flags['q-mq2-listening-room'] === 'active'
       ? 'The road ledger confirms it: three travelers logged in, never logged out — all near Thorn Grove. The clerk leans close: "The wood-elves found a camp that shouldn\'t be there. Ley-side. You didn\'t hear it from the guild." (Thorn Grove — the grove keeper knows more)'
       : 'The board creaks with contracts. The clerk eyes your blood-crusted boots with professional approval.') + turnedIn;
     const live = Quests.guildBoard.map(q => Object.assign({}, q, {
@@ -335,8 +355,13 @@ class CityScene extends WorldScene {
       const near = this.npcs.filter(n => Math.abs(n.spr.x - this.player.x) < 400 && Math.abs(n.spr.y - this.player.y) < 280);
       if (near.length) {
         const n = near[Math.floor(Math.random() * near.length)];
-        const line = CityMap.chatter[Math.floor(Math.random() * CityMap.chatter.length)].replace('{N}', window.GameState.player.nickname);
+        const bank = window.GameState.player.char === 'seraph' ? Quests.seraph.chatter : CityMap.chatter;
+        const line = bank[Math.floor(Math.random() * bank.length)].replace('{N}', window.GameState.player.nickname);
         this.floatText(n.spr.x, n.spr.y - 46, '“' + line + '”', '#9a8f80', 11);
+        if (window.GameState.player.char === 'seraph' && Math.hypot(n.spr.x - this.player.x, n.spr.y - this.player.y) < 200) {
+          n.pauseT = Math.max(n.pauseT, 2.5); // the crowd stops and stares. and maybe kneels a little.
+          n.spr.setFrame(this.frameFor(Math.atan2(this.player.y - n.spr.y, this.player.x - n.spr.x), 0, false));
+        }
       }
     }
   }
