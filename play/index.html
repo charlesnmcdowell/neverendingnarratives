@@ -77,6 +77,10 @@
   #cityName{font-size:15px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;font-weight:bold;text-shadow:0 1px 0 #000}
   #cityPurse{font-size:13px;color:var(--torch);font-family:monospace}
   #cityHint{margin-left:auto;font-size:11px;color:var(--ash)}
+  .hudbtn{pointer-events:auto;cursor:pointer;font-size:11px;letter-spacing:1px;color:#3df0c8;
+    border:1px solid rgba(61,240,200,.4);background:rgba(4,2,8,.7);padding:5px 10px;margin-left:8px}
+  .hudbtn:active{background:rgba(61,240,200,.2)}
+  @media (max-width:700px){ #cityHint{display:none} }
   #interactPrompt{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;display:none;z-index:6;
     font-size:13px;letter-spacing:2px;color:#3df0c8;background:rgba(4,2,8,.8);border:1px solid rgba(61,240,200,.5);
     padding:8px 18px;text-transform:uppercase;pointer-events:none}
@@ -116,7 +120,7 @@
   </div>
 </div>
 <div id="hud">
-  <div class="row"><span id="pname">NOBODY</span><span id="pdice">1d8</span><span id="pkills">KILLS 0</span></div>
+  <div class="row"><span id="pname">NOBODY</span><span id="pdice">1d8</span><span id="pkills">KILLS 0</span><span id="autoBtnArena" class="hudbtn" style="pointer-events:auto">AUTO: OFF</span></div>
   <div id="hpwrap"><div id="hpbar" style="width:100%"></div></div>
 </div>
 <div id="bossw"><div id="bossname"></div><div id="bosshpw"><div id="bosshp" style="width:100%"></div></div></div>
@@ -132,7 +136,11 @@
 <div id="banner"><div class="b1"></div><div class="b2"></div></div>
 <div id="flash"></div>
 
-<div id="cityhud"><div class="row"><span id="cityName"></span><span id="cityPurse"></span><span id="cityHint">E — interact · J — journal · ESC — close</span></div></div>
+<div id="cityhud"><div class="row"><span id="cityName"></span><span id="cityPurse"></span>
+  <span id="cityHint" style="margin-left:auto">E — interact · J — journal · ESC — close</span>
+  <span id="journalBtn" class="hudbtn">☰ JOURNAL</span>
+  <span id="autoBtn" class="hudbtn">AUTO: OFF</span>
+</div></div>
 <div id="interactPrompt"></div>
 <div id="belt"></div>
 <div id="dialog" style="display:none"><div id="dlgPortrait"></div><div style="flex:1"><div id="dlgName"></div><div id="dlgText"></div><div id="dlgOpts"></div></div></div>
@@ -213,28 +221,29 @@
   </div>
 </div>
 
-<script src="lib/phaser.min.js?v=1781273629"></script>
-<script src="config.js?v=1781273629"></script>
-<script src="assets/embedded.js?v=1781273629"></script>
-<script src="src/core/money.js?v=1781273629"></script>
-<script src="src/core/dialog.js?v=1781273629"></script>
-<script src="src/core/worldmap.js?v=1781273629"></script>
-<script src="src/core/autopilot.js?v=1781273629"></script>
-<script src="src/core/touchstick.js?v=1781273629"></script>
-<script src="src/core/save.js?v=1781273629"></script>
-<script src="src/core/music.js?v=1781273629"></script>
-<script src="src/core/voice.js?v=1781273629"></script>
-<script src="src/world/citymap.js?v=1781273629"></script>
-<script src="src/world/quests.js?v=1781273629"></script>
-<script src="src/world/companions.js?v=1781273629"></script>
-<script src="src/core/companionAI.js?v=1781273629"></script>
-<script src="src/combat/pit.js?v=1781273629"></script>
-<script src="src/scenes/ArenaScene.js?v=1781273629"></script>
-<script src="src/scenes/WorldScene.js?v=1781273629"></script>
-<script src="src/scenes/CityScene.js?v=1781273629"></script>
-<script src="src/scenes/GroveScene.js?v=1781273629"></script>
-<script src="src/scenes/DungeonScene.js?v=1781273629"></script>
-<script src="src/scenes/VarenholmScene.js?v=1781273629"></script>
-<script src="src/main.js?v=1781273629"></script>
+<script src="lib/phaser.min.js?v=1781275086"></script>
+<script src="config.js?v=1781275086"></script>
+<script src="assets/embedded.js?v=1781275086"></script>
+<script src="src/core/money.js?v=1781275086"></script>
+<script src="src/core/dialog.js?v=1781275086"></script>
+<script src="src/core/worldmap.js?v=1781275086"></script>
+<script src="src/core/autopilot.js?v=1781275086"></script>
+<script src="src/core/questnav.js?v=1781275086"></script>
+<script src="src/core/touchstick.js?v=1781275086"></script>
+<script src="src/core/save.js?v=1781275086"></script>
+<script src="src/core/music.js?v=1781275086"></script>
+<script src="src/core/voice.js?v=1781275086"></script>
+<script src="src/world/citymap.js?v=1781275086"></script>
+<script src="src/world/quests.js?v=1781275086"></script>
+<script src="src/world/companions.js?v=1781275086"></script>
+<script src="src/core/companionAI.js?v=1781275086"></script>
+<script src="src/combat/pit.js?v=1781275086"></script>
+<script src="src/scenes/ArenaScene.js?v=1781275086"></script>
+<script src="src/scenes/WorldScene.js?v=1781275086"></script>
+<script src="src/scenes/CityScene.js?v=1781275086"></script>
+<script src="src/scenes/GroveScene.js?v=1781275086"></script>
+<script src="src/scenes/DungeonScene.js?v=1781275086"></script>
+<script src="src/scenes/VarenholmScene.js?v=1781275086"></script>
+<script src="src/main.js?v=1781275086"></script>
 </body>
 </html>

@@ -10,7 +10,11 @@ const CityUI = {
       belt: $('belt'), prompt: $('interactPrompt'), qlog: $('questlog'), qlogBody: $('questlogBody'),
       board: $('guildboard'), boardBody: $('guildboardBody') };
     if (!this._promptBound) { this._promptBound = true;
-      this.els.prompt.addEventListener('pointerdown', () => { if (this._onPrompt) this._onPrompt(); }); }
+      this.els.prompt.addEventListener('pointerdown', () => { if (this._onPrompt) this._onPrompt(); });
+      const jb = document.getElementById('journalBtn'), ab = document.getElementById('autoBtn');
+      if (jb) jb.addEventListener('pointerdown', () => { if (this._onJournal) this._onJournal(); });
+      if (ab) ab.addEventListener('pointerdown', () => QuestNav.cycleMode());
+    }
   },
   hud(show) { this.els.hud.style.display = show ? 'block' : 'none'; },
   setIdentity(nickname) { this.els.name.textContent = nickname; },
@@ -90,12 +94,21 @@ const CityUI = {
     this.els.qlog.style.display = show ? 'block' : 'none';
     if (!show) return;
     let h = '';
+    const obj = window.QuestNav && QuestNav.objective();
     for (const q of mains) {
       const st = flags['q-' + q.id];
       if (!st) continue;
       h += `<div class="qtitle">${q.title}${st === 'done' ? ' ✓' : ''}</div><div class="qtext">${q.text}</div><div class="qobj">▸ ${q.objective}</div>`;
     }
+    if (obj) h += `<div class="dlgopt" id="trackQuestBtn" style="margin-top:14px">▶ Walk me there — ${obj.label}</div>`;
     this.els.qlogBody.innerHTML = h || '<div class="qtext">No entries yet. Champions make their own trouble.</div>';
+    const tb = document.getElementById('trackQuestBtn');
+    if (tb) tb.addEventListener('pointerdown', () => { if (this._onTrackQuest) this._onTrackQuest(); });
+  },
+
+  syncAutoBtn() {
+    const el = document.getElementById('autoBtn');
+    if (el) el.textContent = ['AUTO: OFF', 'AUTO: FIGHT', 'AUTO: FULL'][window.QuestNav ? QuestNav.mode : 0];
   },
 
   guildBoard(show, quests, note) {

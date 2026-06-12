@@ -156,9 +156,12 @@ class WorldScene extends Phaser.Scene {
       this.qlogOpen = !this.qlogOpen; CityUI.questlog(this.qlogOpen, Quests.main, window.GameState.world.flags); });
     this.input.keyboard.on('keydown-M', () => { if (!this.encounterActive) WorldMapUI.toggle(); });
     this.input.keyboard.on('keydown-F10', () => {
-      const on = Autopilot.toggle();
-      this.floatText(this.player.x, this.player.y - 56, on ? 'AUTOPILOT — fights play themselves' : 'MANUAL', on ? '#3df0c8' : '#9a8f80', 14);
+      const label = QuestNav.cycleMode();
+      this.floatText(this.player.x, this.player.y - 56, label, label === 'AUTO: OFF' ? '#9a8f80' : '#3df0c8', 14);
     });
+    // restore AUTO mode from the save
+    if (window.GameState.meta && window.GameState.meta.autoMode) QuestNav.setMode(window.GameState.meta.autoMode);
+    else CityUI.syncAutoBtn && CityUI.syncAutoBtn();
     this.input.keyboard.on('keydown-ESC', () => { CityUI.closeDialog(); CityUI.guildBoard(false);
       WorldMapUI.hide(); this.qlogOpen = false; CityUI.questlog(false); });
     CityUI.init(); CityUI.hud(true);
@@ -169,6 +172,13 @@ class WorldScene extends Phaser.Scene {
     TouchStick.attach(this, p => { if (this.encounterActive) this.encCombat.pointerAttack(p.x, p.y); });
     CityUI._onPrompt = () => { if (!this.encounterActive) this.tryInteract(); };
     CityUI._onBelt = i => this.useBeltSlot(i, this.encounterActive);
+    CityUI._onJournal = () => { this.qlogOpen = !this.qlogOpen;
+      CityUI.questlog(this.qlogOpen, Quests.main, window.GameState.world.flags); };
+    CityUI._onTrackQuest = () => { this.qlogOpen = false; CityUI.questlog(false);
+      QuestNav.startTracking(this); };
+    CityUI.syncAutoBtn();
+    // a tracked walk continues across zone loads
+    if (QuestNav.tracking) this.time.delayedCall(150, () => QuestNav.replan(this));
     // zone music + autosave heartbeat
     const zoneTrack = { 'karridge-city': 'city', 'thorn-grove': 'grove', 'grove-dungeon': 'dungeon' }[window.GameState.world.zone];
     if (zoneTrack) MusicMan.play(zoneTrack);
@@ -184,6 +194,11 @@ class WorldScene extends Phaser.Scene {
     let mx = (this.keys.A.isDown ? -1 : 0) + (this.keys.D.isDown ? 1 : 0);
     let my = (this.keys.W.isDown ? -1 : 0) + (this.keys.S.isDown ? 1 : 0);
     if (TouchStick.mag > 0.15) { mx = TouchStick.dx; my = TouchStick.dy; }
+    if (mx || my) QuestNav.stop();                 // your hands always outrank the chauffeur
+    else if (QuestNav.tracking) {
+      const d = QuestNav.drive(this);
+      if (d) { mx = d.mx; my = d.my; }
+    }
     const m = Math.hypot(mx, my);
     if (m > 0) {
       this.face = Math.atan2(my, mx);
@@ -230,6 +245,8 @@ class WorldScene extends Phaser.Scene {
   }
 
   updatePrompt() {
+    QuestNav.updateDialogs(this, 1 / 60);
+    QuestNav.idleResume(this, 1 / 60);
     let best = null, bd = 60;
     for (const it of this.interactables) {
       const d = Math.hypot(it.x - this.player.x, it.y - this.player.y);
@@ -452,6 +469,7 @@ class WorldScene extends Phaser.Scene {
 
   updateEncounter(time) {
     if (!this.encounterActive) return false;
+    QuestNav.updateDialogs(this, 1 / 60);
     Autopilot.frame(this.encCombat, 1 / 60);
     this.encCombat.stick.dx = TouchStick.dx; this.encCombat.stick.dy = TouchStick.dy; this.encCombat.stick.mag = TouchStick.mag;
     this.encCombat.frame(time);

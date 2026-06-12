@@ -6,7 +6,7 @@ const Autopilot = {
   on: false,
   boardT: 0,
 
-  toggle() { this.on = !this.on; return this.on; },
+  toggle() { if (window.QuestNav) { QuestNav.cycleMode(); } else this.on = !this.on; return this.on; },
 
   // call every frame while a combat sim is active
   frame(combat, dt) {

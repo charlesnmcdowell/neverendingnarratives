@@ -157,12 +157,16 @@ class ArenaScene extends Phaser.Scene {
       ui.hud(false); ui.controls(false); ui.boss(false, '');
       this.scene.start('CityScene');
     });
-    // F10: spectate — the test-harness bot plays the gauntlet on screen
-    this.input.keyboard.on('keydown-F10', () => {
-      const on = Autopilot.toggle();
-      ui.banner(on ? 'AUTOPILOT' : 'MANUAL', on ? 'the pit plays itself — F10 to take over' : 'your hands now', 1800, '#3df0c8');
-      if (on && this.combat.S.mode === 'title') this.combat.fullReset('warlock');
-    });
+    // F10 / AUTO button: OFF -> FIGHT -> FULL (full = AFK through the whole game)
+    const cycleAuto = () => {
+      const label = QuestNav.cycleMode();
+      ui.banner(label, label === 'AUTO: OFF' ? 'your hands now' : 'the pit plays itself', 1600, '#3df0c8');
+      if (QuestNav.mode >= 1 && this.combat.S.mode === 'title') this.combat.fullReset('warlock');
+    };
+    this.input.keyboard.on('keydown-F10', cycleAuto);
+    const ab = $('autoBtnArena');
+    if (ab) ab.addEventListener('pointerdown', e => { e.stopPropagation(); cycleAuto(); });
+    if (window.GameState.meta && window.GameState.meta.autoMode) QuestNav.setMode(window.GameState.meta.autoMode);
     // DEV: F9 on the title screen skips straight to the city with a stock champion
     this.input.keyboard.on('keydown-F9', () => {
       if (!window.GameState.player) window.GameState.player = {
@@ -204,6 +208,13 @@ class ArenaScene extends Phaser.Scene {
     // arena track persists through the fight board (no flip-flop between fights)
     MusicMan.play(m === 'fight' || m === 'demo' || m === 'board' ? 'arena' : 'title');
     this.updateTitleBackdrop(time, dtMs);
+    // AUTO FULL: walk out of the Pit when the crowd has its name
+    const vic = document.getElementById('victory').classList.contains('show');
+    if (vic && QuestNav.mode === 2 && !this._vicAuto) {
+      this._vicAuto = true;
+      setTimeout(() => { if (document.getElementById('victory').classList.contains('show'))
+        document.getElementById('leaveBtn').dispatchEvent(new Event('pointerdown')); }, 3500);
+    } else if (!vic) this._vicAuto = false;
   }
 
   // ===================== torchlit title backdrop (the Bucket-0 look) =====================
