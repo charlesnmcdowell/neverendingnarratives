@@ -51,6 +51,7 @@ const VoiceMan = {
     this._playerActive = !!isPlayer;
     a.addEventListener('error', () => { this._missing[id] = true;
       this._playerActive = false;
+      if (this.current === a) this.current = null; // failed clip = nothing is speaking
       if (this._pending) { const p = this._pending; this._pending = null; this.say(p[0], p[1]); } });
     const music = window.MusicMan && MusicMan.current;
     if (music) music.volume = Math.min(music.volume, 0.18); // duck

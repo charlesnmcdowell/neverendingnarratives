@@ -160,14 +160,20 @@ const QuestNav = {
     if (this._idleT > 1.2 && this.objective()) { this._idleT = 0; this.tracking = true; this.replan(scene); }
   },
 
-  // FULL: advance ANY open dialog after a reading pause — except companion chat
-  // menus (first option 'Talk'), which FULL closes rather than loops.
+  // FULL: advance ANY open dialog — but NEVER over a voice line. The mode is a
+  // debugging chauffeur (Hiro): it makes every choice and walks every road, yet
+  // waits for the current clip (and the queued reply) to finish so every word of
+  // voice acting is heard. Companion chat menus (first option 'Talk') still close.
   updateDialogs(scene, dt) {
     if (this.mode !== 2) return;
-    if (!CityUI.dialogOpen()) { this.dialogT = 0; return; }
+    if (!CityUI.dialogOpen()) { this.dialogT = 0; this._voiceGapT = 0; return; }
     this.dialogT += dt;
-    if (this.dialogT < 2.8) return;
-    this.dialogT = 0;
+    const a = window.VoiceMan && VoiceMan.current;
+    const speaking = (a && !a.paused && !a.ended) || (window.VoiceMan && VoiceMan._pending);
+    if (speaking && this.dialogT < 90) { this._voiceGapT = 0; return; } // let the line land (90s failsafe)
+    this._voiceGapT = (this._voiceGapT || 0) + dt;
+    if (this.dialogT < 2.8 || this._voiceGapT < 0.8) return; // reading pause + a beat after the voice
+    this.dialogT = 0; this._voiceGapT = 0;
     const opts = document.querySelectorAll('#dlgOpts .dlgopt:not(.disabled)');
     if (opts.length && opts[0].textContent.trim() !== 'Talk') opts[0].dispatchEvent(new Event('pointerdown'));
     else if (opts.length) CityUI.closeDialog();
