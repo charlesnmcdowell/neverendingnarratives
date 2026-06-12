@@ -164,8 +164,8 @@ class CityScene extends WorldScene {
         const t1 = C.buyer.text1 + (window.GameState.player.char === 'druid' ? Quests.druid.vialHum : '');
         CityUI.dialog('THE VEILED WOMAN', t1, [
           { label: '"Who sells it?"', fn: () => CityUI.dialog('THE VEILED WOMAN', C.buyer.text2, [
-            { label: 'Keep the vial (evidence)', fn: () => finish(true) },
-            { label: 'Leave it with her (mercy)', fn: () => finish(false) }]) },
+            ...Quests.opt('buyerKeep').map(label => ({ label, fn: () => finish(true) })),
+            ...Quests.opt('buyerGive').map(label => ({ label, fn: () => finish(false) }))]) },
           { label: 'Leave', fn: () => CityUI.closeDialog() }]);
       }});
     }
@@ -196,19 +196,20 @@ class CityScene extends WorldScene {
     const N = t => t.replace('{N}', P.nickname);
     const close = () => CityUI.closeDialog();
     const paidOffer = () => {
+      const payFn = () => {
+        if (P.copper < 50) { CityUI.dialog(I.name, I.broke, [{ label: 'Leave', fn: close }], this.portraitInn); return; }
+        P.copper -= 50; CityUI.setPurse(P.copper);
+        flags['q-mq2-listening-room'] = 'active';
+        const rumor = I.rumorPaid + (P.char === 'druid' ? Quests.druid.marlowBeat : '');
+        CityUI.dialog(I.name, rumor, [{ label: '"The guild, then."', fn: close }], this.portraitInn);
+      };
       CityUI.dialog(I.name, I.rumorPaidOffer, [
-        { label: 'Pay 5 silver', fn: () => {
-          if (P.copper < 50) { CityUI.dialog(I.name, I.broke, [{ label: 'Leave', fn: close }], this.portraitInn); return; }
-          P.copper -= 50; CityUI.setPurse(P.copper);
-          flags['q-mq2-listening-room'] = 'active';
-          const rumor = I.rumorPaid + (P.char === 'druid' ? Quests.druid.marlowBeat : '');
-          CityUI.dialog(I.name, rumor, [{ label: '"The guild, then."', fn: close }], this.portraitInn);
-        }},
+        ...Quests.opt('marlowPay').map(label => ({ label, fn: payFn })),
         { label: 'Not yet', fn: close }], this.portraitInn);
     };
     const opts = [];
     if (flags['q-mq1-empty-cell'] === 'active')
-      opts.push({ label: 'Ask about the last champion', fn: () => {
+      opts.push({ label: Quests.opt('marlowAsk')[0], fn: () => {
         flags['q-mq1-empty-cell'] = 'done';
         CityUI.dialog(I.name, N(I.rumorFree), [{ label: '"Where did the rest of him go, then?"', fn: paidOffer }, { label: 'Leave', fn: close }], this.portraitInn);
       }});
@@ -220,23 +221,34 @@ class CityScene extends WorldScene {
 
   guildBoard() {
     const GS = window.GameState, P = GS.player, flags = GS.world.flags, counts = GS.world.questCounts;
-    // turn-ins
+    P.guildHunts = P.guildHunts || 0;
+    const rank0 = Quests.rankFor(P.guildHunts);
+    // turn-ins — contracts are NEVERENDING: pay out, reset the tally, respawn the prey
     let turnedIn = '';
     for (const q of Quests.guildBoard) {
-      const c = counts[q.id] || 0;
-      if (c >= q.need && !flags['g-done-' + q.id]) {
-        flags['g-done-' + q.id] = true;
-        P.copper += q.copper; P.belt.length < 8 && P.belt.push({ type: q.potion, label: q.potionLabel });
-        turnedIn += `<div class="qobj">✓ ${q.title} paid out: ${Money.fmt(q.copper)} + ${q.potionLabel}</div>`;
+      while ((counts[q.id] || 0) >= q.need) {
+        counts[q.id] -= q.need;
+        P.guildHunts++;
+        const pay = Math.round(q.copper * Quests.rankFor(P.guildHunts).mult);
+        P.copper += pay;
+        if (P.belt.length < 8) P.belt.push({ type: q.potion, label: q.potionLabel });
+        turnedIn += `<div class="qobj">✓ ${q.title} paid out: ${Money.fmt(pay)} + ${q.potionLabel}</div>`;
+        const kind = q.id.slice(2);
+        for (const k of Object.keys(flags)) if (k.startsWith('pack-' + kind)) delete flags[k]; // the wilds restock
       }
     }
     if (turnedIn) { CityUI.setPurse(P.copper); CityUI.belt(P.belt); }
-    const note = (flags['q-mq2-listening-room'] === 'active'
+    const rank = Quests.rankFor(P.guildHunts);
+    if (rank.name !== rank0.name) turnedIn += `<div class="qtitle" style="color:#3df0c8">▲ GUILD RANK: ${rank.name} — ${rank.note}</div>`;
+    const nextR = Quests.guildRanks.find(g => g.at > P.guildHunts);
+    const rankLine = `<div class="qobj" style="margin-bottom:8px">GUILD RANK: <span style="color:#e7b450">${rank.name}</span> · ${P.guildHunts} hunts · payouts ×${rank.mult}` +
+      (nextR ? ` · ${nextR.at - P.guildHunts} more to ${nextR.name}` : ' · the Vanguard Hall pours when you enter') + '</div>';
+    const note = rankLine + (flags['q-mq2-listening-room'] === 'active'
       ? 'The road ledger confirms it: three travelers logged in, never logged out — all near Thorn Grove. The clerk leans close: "The wood-elves found a camp that shouldn\'t be there. Ley-side. You didn\'t hear it from the guild." (Thorn Grove — the grove keeper knows more)'
       : 'The board creaks with contracts. The clerk eyes your blood-crusted boots with professional approval.') + turnedIn;
     const live = Quests.guildBoard.map(q => Object.assign({}, q, {
       locked: false,
-      text: q.text + ' — ' + Math.min(counts[q.id] || 0, q.need) + '/' + q.need + (flags['g-done-' + q.id] ? ' PAID' : ''),
+      text: q.text + ' — ' + (counts[q.id] || 0) + '/' + q.need + ' (repeatable — the wilds restock)',
     }));
     CityUI.guildBoard(true, live, note);
   }
@@ -257,7 +269,7 @@ class CityScene extends WorldScene {
         this.floatText(ax, ay - 30, 'the Emperor was never where anyone expected · the hunt continues in the campaigns', '#9a8f80', 12);
         setTimeout(() => CityUI.credits('THE RONIN\'S ROAD — he was never where anyone expected'), 2600);
       };
-      CityUI.dialog(F.title, F.text1, [{ label: 'Wait with the crowd', fn: () =>
+      CityUI.dialog(F.title, F.text1, [{ label: Quests.opt('roninWait1')[0], fn: () =>
         CityUI.dialog(F.title, F.text2, [{ label: 'Stay until the plaza empties', fn: () =>
           CityUI.dialog(F.title, F.text3, [{ label: 'Half a smile. Walk on.', fn: done }]) }]) }]);
       return;
@@ -280,9 +292,9 @@ class CityScene extends WorldScene {
         setTimeout(() => this.floatText(ax, ay, 'a coach has arrived by the guild. it seems to be waiting for someone GIFTED.', '#3df0c8', 13), 2800);
     };
     const t2 = C.finale.text2 + (window.GameState.player.char === 'druid' ? ' ' + Quests.druid.finaleGaze : '');
-    CityUI.dialog(C.finale.title, C.finale.text1, [{ label: 'Kneel — or don\'t', fn: () =>
-      CityUI.dialog(C.finale.title, t2, [{ label: 'Hold your tongue. Hold the vial.', fn: () =>
-        CityUI.dialog(C.finale.title, C.finale.text3, [{ label: 'The story has barely begun', fn: done }]) }]) }]);
+    const step3 = () => CityUI.dialog(C.finale.title, C.finale.text3, [{ label: 'The story has barely begun', fn: done }]);
+    const step2 = () => CityUI.dialog(C.finale.title, t2, Quests.opt('finale2').map(label => ({ label, fn: step3 })));
+    CityUI.dialog(C.finale.title, C.finale.text1, Quests.opt('finale1').map(label => ({ label, fn: step2 })));
   }
 
   update(time, dtMs) {

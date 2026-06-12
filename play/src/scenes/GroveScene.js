@@ -181,8 +181,7 @@ class GroveScene extends WorldScene {
       for (let i = -20; i <= 20; i += 8) g.lineBetween(cx + 40 + i, cy - 40, cx + 40 + i + (i === 4 ? 6 : 0), cy - 6);
       this.addLight(cx, cy, 90, false);
       this.interactables.push({ x: cx, y: cy, label: 'search the camp', fn: () => {
-        CityUI.dialog('THE WAYSTATION', C.campSign, [
-          { label: 'Kick over the tents', fn: () => { CityUI.closeDialog();
+        const strike = () => { CityUI.closeDialog();
             this.startEncounter('THE WAYSTATION WAKES', 'they fold camps and people alike', [
               { type: 'hook', x: 540, y: 280, hp: 110, maxhp: 110, spd: 150, r: 14, col: '#4a3c5a', dmgScale: 1.2 },
               { type: 'hook', x: 740, y: 300, hp: 110, maxhp: 110, spd: 150, r: 14, col: '#4a3c5a', dmgScale: 1.2 },
@@ -194,12 +193,14 @@ class GroveScene extends WorldScene {
               flags['q-mq2-listening-room'] = 'done';
               flags['q-mq3-roots-that-rot'] = 'active';
               this.interactables = this.interactables.filter(it => !(it.x === cx && it.y === cy));
-              CityUI.dialog(C.captive.name, C.captive.freed, [{ label: 'Let him run', fn: () => {
+              CityUI.dialog(C.captive.name, C.captive.freed, [{ label: Quests.opt('captiveGo')[0], fn: () => {
                 CityUI.closeDialog();
                 this.floatText(this.player.x, this.player.y - 50, 'JOURNAL UPDATED — ROOTS THAT ROT', '#3df0c8', 14);
                 this.spawnShenSama();
               }}]);
-            }); } },
+            }); };
+        CityUI.dialog('THE WAYSTATION', C.campSign, [
+          ...Quests.opt('campStrike').map(label => ({ label, fn: strike })),
           { label: 'Not yet', fn: () => CityUI.closeDialog() }]);
       }});
     }
@@ -213,8 +214,7 @@ class GroveScene extends WorldScene {
       g.lineStyle(2, 0x3a3a40); for (let i = -18; i <= 18; i += 7) g.lineBetween(wx + i, wy - 18, wx + i, wy + 8);
       this.addLight(wx, wy, 80, false);
       this.interactables.push({ x: wx, y: wy, label: 'stop the night shipment', fn: () => {
-        CityUI.dialog('THE NIGHT SHIPMENT', C.caravanSign, [
-          { label: 'Break the wheel', fn: () => { CityUI.closeDialog();
+        const breakWheel = () => { CityUI.closeDialog();
             this.startEncounter('ASH AND SILENCE', 'free what breathes in the crates', [
               { type: 'door', x: 640, y: 250, r: 26, hp: 320, maxhp: 320, spd: 52, col: '#3a3450', wpn: '#2a2438', dmgScale: 1.3 },
               { type: 'hook', x: 520, y: 320, hp: 120, maxhp: 120, spd: 150, r: 14, col: '#4a3c5a', dmgScale: 1.25 },
@@ -228,7 +228,9 @@ class GroveScene extends WorldScene {
               flags['q-mq5-ash-and-silence'] = 'active';
               this.interactables = this.interactables.filter(it => !(it.x === wx && it.y === wy));
               this.signDialog('THE CRATES OPEN', 'Three captives, sedated, breathing. A juggler. A hedge-witch. A girl nobody reported missing. They wake on the forest floor free, terrified, and ALIVE — and they beg you, each one, not to speak their names to anyone. By the time you look back at the wagon, the cult\'s dead have already been dragged away by someone you never saw. JOURNAL UPDATED — the Dragon Emperor passes through Karridge. Go to the plaza.');
-            }); } },
+            }); };
+        CityUI.dialog('THE NIGHT SHIPMENT', C.caravanSign, [
+          ...Quests.opt('caravanBreak').map(label => ({ label, fn: breakWheel })),
           { label: 'Wait', fn: () => CityUI.closeDialog() }]);
       }});
     }
@@ -243,7 +245,7 @@ class GroveScene extends WorldScene {
     this.interactables.push({ x: sx, y: sy, label: 'approach the hooded stranger', fn: () => {
       const C = Quests.cult;
       const shenText = C.shenSama.text + (window.GameState.player.char === 'druid' ? Quests.druid.shenSamaAdd : '');
-      CityUI.dialog(C.shenSama.name, shenText, [{ label: 'Let him go', fn: () => {
+      CityUI.dialog(C.shenSama.name, shenText, [{ label: Quests.opt('shenGo')[0], fn: () => {
         CityUI.closeDialog(); flags['shen-sama-met'] = true;
         this.tweens.add({ targets: spr, alpha: 0, duration: 900, onComplete: () => spr.destroy() });
         this.interactables = this.interactables.filter(it => it.x !== sx || it.y !== sy);

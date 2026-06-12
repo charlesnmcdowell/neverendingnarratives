@@ -2,6 +2,79 @@
 // Canon guardrail: the conspiracy survives this game. See docs/LORE_BIBLE.md.
 
 const Quests = {
+  // ---- per-character dialogue voices ----
+  // Ronin: a man who has seen a thousand pits and names none of them (vague — the egg stays buried).
+  // Druid: Amaris's daughter — green-eared, blunt-kind, listening to a hum no one else hears.
+  // Warlock: neutral-evil, ominous; where it matters he gets TWO options — measured or malevolent.
+  optTable: {
+    marlowAsk: { default: 'Ask about the last champion',
+      ronin: '"Champions don\'t leave their boots behind. Tell me about Dren."',
+      druid: '"People are going missing quietly out here. Start with him."',
+      warlock: ['"Dead men leave echoes. His is still warm in this room — speak."'] },
+    marlowPay: { default: 'Pay 5 silver',
+      ronin: '"A fair price for a fair truth." (pay 5s)',
+      druid: '"For the missing, then." (pay 5s)',
+      warlock: ['"Knowledge has a price. Here is yours." (pay 5s)',
+                '"Five silver. Cheaper than the other ways I ask questions." (pay 5s)'] },
+    campStrike: { default: 'Kick over the tents',
+      ronin: '"No banner on these tents. Cut them down."',
+      druid: '"The grove wants them gone. So do I."',
+      warlock: ['"Fold their camp the way they fold people."',
+                '"Wake them first. I want this heard."'] },
+    captiveGo: { default: 'Let him run',
+      ronin: '"Run far, boy. Don\'t look back at anything."',
+      druid: '"Go. And learn to stop being SEEN."',
+      warlock: ['"Run. You\'re worth more to me as a rumor."'] },
+    shenGo: { default: 'Let him go',
+      ronin: '"Roads keep secrets better than men. Go."',
+      druid: '"Then run well... brother."',
+      warlock: ['"Go. Hunted things make the finest debts."'] },
+    buyerKeep: { default: 'Keep the vial (evidence)',
+      ronin: '"Evidence outlives sentiment. I keep it."',
+      druid: '"It hums like ME. I need to know why. ...I\'m sorry."',
+      warlock: ['"It\'s safer in my hands than in your veins."',
+                '"Mine now. Miracles rot in weak hands."'] },
+    buyerGive: { default: 'Leave it with her (mercy)',
+      ronin: '"A blade knows when not to cut. Keep it."',
+      druid: '"Keep it. But NO ONE sells you hope again."',
+      warlock: ['"Keep your bottled miracle. Your debt amuses me more."'] },
+    caravanBreak: { default: 'Break the wheel',
+      ronin: '"One cut for the wheel. The rest for whoever minds."',
+      druid: '"Nothing rides in cages tonight."',
+      warlock: ['"Stop the wagon. What spills, spills."',
+                '"Open the crates. Then the crews."'] },
+    finale1: { default: 'Kneel — or don\'t',
+      druid: 'Kneel with the rest. Watch him like a question.',
+      warlock: ['Watch the weather pass.',
+                'Stand. Power should see power coming.'] },
+    finale2: { default: 'Hold your tongue. Hold the vial.',
+      druid: 'Say nothing. Your mother\'s caution wins.',
+      warlock: ['"Not yet. Patience is also a weapon."'] },
+    roninWait1: { default: 'Wait with the crowd', ronin: 'Wait with the crowd. (You don\'t kneel. Habit.)' },
+  },
+  opt(key) {
+    const t = this.optTable[key]; if (!t) return [key];
+    const c = (window.GameState && GameState.player && GameState.player.char) || 'default';
+    const v = t[c] || t.default;
+    return Array.isArray(v) ? v : [v];
+  },
+
+  // ---- guild rank ladder (canon: Greyrush iron crew, Bronze rate, Brass Whistle
+  // silver-tier, Platinum contracting, Diamond-tier Vanguard Hall) ----
+  guildRanks: [
+    { name: 'IRON', at: 0, mult: 1.0, note: 'unproven — iron-crew rates' },
+    { name: 'BRONZE', at: 3, mult: 1.25, note: 'contract client' },
+    { name: 'SILVER', at: 8, mult: 1.5, note: 'silver-tier crew standing' },
+    { name: 'GOLD', at: 15, mult: 2.0, note: 'named on the board' },
+    { name: 'PLATINUM', at: 25, mult: 2.5, note: 'premium contracting' },
+    { name: 'DIAMOND', at: 40, mult: 3.0, note: 'Vanguard Hall — they pour when you enter' },
+  ],
+  rankFor(hunts) {
+    let r = this.guildRanks[0];
+    for (const g of this.guildRanks) if (hunts >= g.at) r = g;
+    return r;
+  },
+
   main: [
     {
       id: 'mq1-empty-cell',
