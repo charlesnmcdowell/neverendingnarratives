@@ -343,8 +343,9 @@ function updDemons(dt){
     d.flash=Math.max(0,d.flash-dt);
     if(d.life<=0||d.hp<=0){leafBurst(d.x,d.y,12,'#b070f0');
       popup(d.x,d.y-20,'UNSUMMONED','#b070f0',12);demons.splice(i,1);
-      if(P.lich&&d.type==='dragon'&&!demons.some(o=>o.type==='dragon'&&o.hp>0))
-        lichPerish('the bone dragon falls — and the soul it carried');
+      if(P.lich&&d.type==='dragon'&&!demons.some(o=>o.type==='dragon'&&o.hp>0)){
+        showBanner('THE LAST DRAGON FALLS','the lich can BLEED now',1800,'#d03a4a');
+        popup(P.x,P.y-52,'MORTAL AGAIN','#d03a4a',14);flashFx(.18);vib([40,60]);}
       continue;}
     d.cool-=dt;
     const tgt=enemies.filter(e=>!e.dead).sort((a,b)=>dist(d,a)-dist(d,b))[0];
@@ -928,6 +929,9 @@ function spawnFight(){
 function hurtPlayer(dmg,from){
   if(P.rollT>0||P.dead)return;
   if(P.kneelT>0){popup(P.x,P.y-40,'IMMORTAL','#ffe9a8',12);return;} // grace: nothing touches him
+  if(P.lichRiseT>0){popup(P.x,P.y-40,'THE PACT HOLDS','#9af0c0',12);return;} // the kneeling cinematic
+  if(P.lich&&demons.some(d=>d.type==='dragon'&&d.hp>0)){ // dragons aloft = the lich cannot bleed
+    popup(P.x,P.y-40,'PHYLACTERY','#9af0c0',12);return;}
   if(P.fadeT>0){popup(P.x,P.y-40,'FADED','#9af0c0',12);return;} // beyond reach
   if(from&&from.worthy)dmg*=3; // the WORTHY hit like they finally matter
   if(P.wardT>0){popup(P.x,P.y-40,'WARDED','#5ad2ff',12);return;}
@@ -962,8 +966,15 @@ function hurtPlayer(dmg,from){
   S.shake=Math.max(S.shake,6);vib(50);
   if(from){const a=ang(from,P);P.x+=Math.cos(a)*14;P.y+=Math.sin(a)*14;}
   if(P.hp<=0){
-    if(P.char==='warlock'&&!P.lich&&S.mode==='fight'&&demons.some(d=>d.type==='dragon'&&d.hp>0)){
-      enterLich();return;} // the bone dragon refuses the ledger
+    if(P.char==='warlock'&&!P.lich&&!(P.lichRiseT>0)&&S.mode==='fight'){
+      // death ALWAYS answers the warlock's ledger: he kneels, and the grave sends a dragon
+      P.hp=1;P.lichRiseT=3;P.paralyzeT=3;
+      P.channel=null;P.heavyWind=0;P.rollT=0;P.parryT=0;
+      summonDemons('dragon'); // the phylactery rises with him
+      camFocus(P.x,P.y,1.9,2.8);
+      flashFx(.3);S.shake=Math.max(S.shake,12);vib([60,60,120]);
+      showBanner('DEATH SIGNS THE LEDGER','a bone dragon answers — three seconds',2400,'#9af0c0');
+      return;}
     if(P.char==='seraph'&&!P.graceUsed&&S.mode==='fight'){ // he is immortal. once per duel, it shows.
       P.graceUsed=true;P.hp=1;P.kneelT=10;P.paralyzeT=10;
       P.channel=null;P.heavyWind=0;P.ascendT=0;P.rollT=0;
@@ -1332,7 +1343,7 @@ function startEncounter(list,cb){
   P.parryT=0;P.parryCD=0;P.ripoT=0;P.combo=0;P.comboT=0;
   P.hexCD=0;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;P.humanCD=0;P.wolfCD=0;P.formCD=0; // all skills fresh each fight (Hiro)
   P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false; // the angel lands; grace is whole again
-  if(P.lich){P.lich=false;P.r=16;updateLabels();}P.fadeT=0;P.fadeCD=0; // each fight begins among the living
+  if(P.lich){P.lich=false;P.r=16;updateLabels();}P.fadeT=0;P.fadeCD=0;P.lichRiseT=0; // each fight begins among the living
   P.ft={dmgTaken:0,heavy:0,slash:0,rolls:0,parries:0,t0:NOW(),low:false};
   S.mode='fight';UI.hud(true);UI.controls(true);UI.name(nickname);
   UI.stats(diceN()+'d8',(P.char==='ronin'?'':'LV '+lvl()+' · ')+'KILLS '+P.kills);
@@ -1374,8 +1385,9 @@ function lose(){
     warlock:'HINTS — PORTAL grants 3s of immunity after the swap. BLINK stuns everything around your departure point. '
          +'HOLD the summon button: demons arrive at 3s / 4s / 6s in one channel. '
          +'As the ARCH DEVIL, bite a succubus to ascend her — faster, and she explodes where she stands. '
-         +'And keep a BONE DRAGON flying: if death finds you, the dragon refuses the ledger and you rise as a LICH — '
-         +'scythe stuns, FADE escapes, and the third summon buys your life back. Guard the dragon. It holds your soul.',
+         +'And death itself signs his ledger: when he falls, a bone dragon rises and remakes him as a LICH — '
+         +'UNKILLABLE while any bone dragon flies. Scythe stuns, FADE escapes, the third summon buys his life back. '
+         +'When the last dragon falls, the lich can bleed — and lich death is final.',
     seraph:'HINTS — the HALO RAY fires every second: whatever it KILLS rises as your minion, then returns to you as half your health. '
          +'The spear is a slow heavy POKE — keep your distance and land it clean. ASCEND lifts you above harm. '
          +'You are immortal: the first fall in any duel buys your foe ten seconds of glory — then you rise at full strength. The second fall is final.'};
@@ -1457,8 +1469,8 @@ function demoReset(){
   P.dead=false;P.channel=null;P.glaive=null;P.devilT=0;P.wardT=0;P.slowT=0;P.paralyzeT=0;
   P.formT=0;P.humanCD=0;P.wolfCD=0;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;
   P.parryCD=0;P.parryT=0;P.heavyCD=0;P.heavyWind=0;P.rollCD=0;P.rollT=0;P.atkRecover=0;P.flash=0;P.hexCD=0;
-  P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;P.lich=false;P.fadeT=0;P.fadeCD=0;
-  if(P.lich){P.lich=false;P.r=16;updateLabels();}P.fadeT=0;P.fadeCD=0;
+  P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;P.lich=false;P.fadeT=0;P.fadeCD=0;P.lichRiseT=0;
+  if(P.lich){P.lich=false;P.r=16;updateLabels();}P.fadeT=0;P.fadeCD=0;P.lichRiseT=0;
   P.combo=0;P.comboT=0;P.ft={dmgTaken:0,heavy:0,slash:0,rolls:0,parries:0,t0:NOW(),low:false};
   P.hp=maxHP();
   wolves=[];demons=[];fireballs=[];tracers=[];enemies=[];zones=[];swings=[];particles=[];popups=[];bullets=[];limbs=[];
@@ -1484,7 +1496,7 @@ function endIntro(){
 function fullReset(ch){
   S.fight=0;P.kills=0;prevKills=0;nickname='NOBODY';
   if(ch)P.char=ch;
-  P.form='human';P.r=16;P.wolfCD=0;P.formT=0;P.humanCD=0;P.bladeTier=0;P.slowT=0;P.paralyzeT=0;P.wardT=0;P.devilT=0;P.hexCD=0;P.level=1;P.unlockMsg=null;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;wolves=[];demons=[];fireballs=[];P.channel=null;P.glaive=null;P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;P.lich=false;P.fadeT=0;P.fadeCD=0;
+  P.form='human';P.r=16;P.wolfCD=0;P.formT=0;P.humanCD=0;P.bladeTier=0;P.slowT=0;P.paralyzeT=0;P.wardT=0;P.devilT=0;P.hexCD=0;P.level=1;P.unlockMsg=null;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;wolves=[];demons=[];fireballs=[];P.channel=null;P.glaive=null;P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;P.lich=false;P.fadeT=0;P.fadeCD=0;P.lichRiseT=0;
   styleScore={untouched:0,headsman:0,quicksand:0,breath:0,corpse:0,mirror:0};
   updateLabels();
   dctx.clearRect(0,0,W,H);toBoard();}
@@ -1523,6 +1535,10 @@ function tick(now){
     P.parryT=Math.max(0,P.parryT-dt);P.parryCD=Math.max(0,P.parryCD-dt);
     P.formCD=Math.max(0,P.formCD-dt);P.wolfCD=Math.max(0,P.wolfCD-dt);
     P.slowT=Math.max(0,(P.slowT||0)-dt);P.wardT=Math.max(0,(P.wardT||0)-dt);P.hexCD=Math.max(0,(P.hexCD||0)-dt);
+    if(P.lichRiseT>0){P.lichRiseT-=dt; // the kneel: three seconds where death watches him change
+      if(Math.random()<.4&&particles.length<240)particles.push({x:P.x+rnd(-16,16),y:P.y-6+rnd(-18,8),
+        vx:rnd(-15,15),vy:rnd(-50,-15),t:rnd(.3,.5),col:'#9af0c0',r:2,noG:true});
+      if(P.lichRiseT<=0){P.paralyzeT=0;enterLich();}}
     if(P.fadeT>0){P.fadeT-=dt;
       if(Math.random()<.3&&particles.length<240)particles.push({x:P.x+rnd(-16,16),y:P.y-12+rnd(-14,10),
         vx:rnd(-20,20),vy:rnd(-30,-6),t:rnd(.25,.45),col:'#9af0c0',r:1.8,noG:true});
@@ -2335,6 +2351,13 @@ function draw(){
         ctx.strokeStyle='rgba(90,210,255,'+(0.5+0.25*Math.sin(S.time*9))+')';ctx.lineWidth=2.5;
         ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+16,0,7);ctx.stroke();}
     }else if(P.char==='warlock'){
+      if(P.lichRiseT>0){ // the kneel: a pillar of grave-light while the dragon takes his measure
+        ctx.fillStyle='rgba(154,240,192,.13)';ctx.fillRect(P.x-20,P.y-80,40,80);
+        ctx.strokeStyle='rgba(154,240,192,'+(0.5+0.3*Math.sin(S.time*6))+')';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(P.x,P.y,P.r+14,0,7);ctx.stroke();
+        const bw5=48,bx5=P.x-24,by5=P.y-P.r-30; // the change, measured
+        ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(bx5,by5,bw5,5);
+        ctx.fillStyle='#9af0c0';ctx.fillRect(bx5+1,by5+1,(bw5-2)*Math.max(0,1-P.lichRiseT/3),3);}
       if(P.wardT>0){ // shimmering ward bubble
         ctx.strokeStyle='rgba(90,210,255,'+(0.5+0.25*Math.sin(S.time*9))+')';ctx.lineWidth=2.5;
         ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+16,0,7);ctx.stroke();
