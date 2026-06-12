@@ -210,7 +210,10 @@ class ArenaScene extends Phaser.Scene {
     // Per-character pit themes (Hiro): ronin keeps the arena track, warlock gets
     // zero dark thirty (the dungeon track), druid gets her own pit-druid track.
     const ch = (window.GameState && GameState.player && GameState.player.char) || (this.combat.P && this.combat.P.char);
-    const pitTrack = ch === 'warlock' ? 'dungeon' : (ch === 'druid' && !MusicMan._missing['pit-druid'] ? 'pit-druid' : 'arena'); // falls back to arena until pit-druid.mp3 exists
+    const pitTrack = ch === 'warlock' ? 'dungeon'
+      : ch === 'druid' && !MusicMan._missing['pit-druid'] ? 'pit-druid'
+      : ch === 'seraph' && !MusicMan._missing['pit-seraph'] ? 'pit-seraph'
+      : 'arena'; // missing files fall back to the arena theme
     MusicMan.play(m === 'fight' || m === 'demo' || m === 'board' ? pitTrack : 'title');
     this.updateTitleBackdrop(time, dtMs);
     // AUTO FULL: walk out of the Pit when the crowd has its name
