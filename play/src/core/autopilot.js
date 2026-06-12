@@ -35,6 +35,13 @@ const Autopilot = {
     const nearest = foes.sort((a, b) => dist(P, a) - dist(P, b))[0];
 
     if (P.char === 'warlock') {
+      if (P.lich) { // dead man's plan: scythe the close ones, FADE, hold the long channel home
+        if (dFoe < 95 && !P.channel && P.fadeT <= 0) combat.doSlash();
+        if (P.parryCD <= 0 && P.fadeT <= 0 && !P.channel) combat.doParry(); // FADE first
+        if (!P.channel) combat.doHeavy(); // then raise the dead — never release, stage 3 is the way back
+        if (dFoe < 140 && !P.channel) moveTo(P.x + (P.x - foe.x), P.y + (P.y - foe.y));
+        return;
+      }
       // the warlock's kit, played properly: hex on cooldown, FULL-duration channels,
       // blink for spacing, portal to escape crowds and to flee his own succubus bombs
       const demons = combat.demons.filter(d => d.hp > 0);

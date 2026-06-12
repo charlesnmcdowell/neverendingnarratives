@@ -57,7 +57,8 @@ function usePotion(type){
   buffs=buffs.filter(b=>b.k!==k);
   buffs.push({k,amt,until:S.time+60});
   popup(P.x,P.y-48,k+' +25% — 60s','#3df0c8',14);flashFx(.1);return true;}
-const maxHP=()=>Math.round(((P.char==='ronin'?38:45)+(stat('CON')-10)*5)*MODS.maxhp);
+// warlock pays for his pacts in flesh: 15% less health than the other casters (Hiro)
+const maxHP=()=>Math.round(((P.char==='ronin'?38:45)+(stat('CON')-10)*5)*MODS.maxhp*(P.char==='warlock'?0.85:1));
 const UNLOCKS={druid:{3:'BEAR FORM UNLOCKED',6:'WOLF FORM UNLOCKED'},
                warlock:{3:'BONE DRAGON UNLOCKED',5:'SUCCUBI UNLOCKED',8:'ARCH DEVIL UNLOCKED'},
                seraph:{3:'CHAINS OF DECREE',6:'TRIUNE MAW',8:'HALO JUDGEMENT'}};
@@ -107,6 +108,7 @@ function nearestRealFoe(){ // nearest enemy that is NOT a summon; falls back to 
 function autoFace(){const f=nearestRealFoe();if(f)P.face=ang(P,f);}
 function doSlash(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.atkRecover>0||P.heavyWind>0||P.rollT>0||P.channel||P.paralyzeT>0)return;
   if(P.char==='warlock'){
+    if(P.lich){lichSlash();return;} // SCYTHE — light cut, long stun, longer flight
     if(P.devilT>0){devilClaw();return;} // CLAW — rolls to the target, then massive hit
     autoFace();hexBolt();return;}
   if(P.char==='druid'){autoFace();druidSlash();return;}
@@ -122,7 +124,7 @@ function doSlash(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.atkRecover>0|
 function doParry(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.rollT>0||P.heavyWind>0||P.channel||P.paralyzeT>0)return;
   if(P.char==='druid'){cycleForm();return;}
   if(P.parryCD>0)return;
-  if(P.char==='warlock'){portal();return;}
+  if(P.char==='warlock'){if(P.lich){fade();return;}portal();return;}
   if(P.char==='seraph'){ascend();return;}
   autoFace();P.parryT=2.3*MODS.parryWin;P.parryCD=1.4;}
 
@@ -131,6 +133,8 @@ function setBtnLabel(id,txt){UI.btnLabel(id,txt);}
 function updateLabels(){
   if(P.char==='ronin'){setBtnLabel('bSlash','SLASH');setBtnLabel('bHeavy','HEAVY');setBtnLabel('bParry','PARRY');setBtnLabel('bRoll','ROLL');return;}
   if(P.char==='warlock'){
+    if(P.lich){setBtnLabel('bSlash','SCYTHE');setBtnLabel('bHeavy','SUMMON');
+      setBtnLabel('bParry','FADE');setBtnLabel('bRoll','DRIFT');return;}
     if(P.devilT>0){setBtnLabel('bSlash','CLAW');setBtnLabel('bHeavy','BITE');}
     else{setBtnLabel('bSlash','HEX');setBtnLabel('bHeavy','SUMMON');}
     setBtnLabel('bParry','PORTAL');setBtnLabel('bRoll','BLINK');return;}
@@ -279,7 +283,7 @@ function strikeOne(e,dmg){ // direct damage helper (vines/roar) — no shield/pa
   blood(e.x,e.y,4);
   if(e.hp<=0)killEnemy(e,false);}
 /* ============ WARLOCK ============ */
-function demonTaunt(){return demons.find(d=>d.type==='brute'&&d.hp>0);}
+function demonTaunt(){return demons.find(d=>(d.type==='brute'||d.type==='zombie')&&d.hp>0);}
 function hexBolt(){
   if(P.hexCD>0){popup(P.x,P.y-44,'HEX — '+Math.ceil(P.hexCD)+'s','#8a93a8',12);return;}
   P.hexCD=10;
@@ -335,12 +339,36 @@ function hurtDemon(d,dmg,from){
   popup(d.x+rnd(-6,6),d.y-d.r-12,dmg,'#d0a8f0',12);}
 function updDemons(dt){
   for(let i=demons.length-1;i>=0;i--){const d=demons[i];
-    d.life-=dt;d.flash=Math.max(0,d.flash-dt);
+    if(!(P.lich&&d.type==='dragon'))d.life-=dt; // the phylactery's hourglass freezes while he is risen
+    d.flash=Math.max(0,d.flash-dt);
     if(d.life<=0||d.hp<=0){leafBurst(d.x,d.y,12,'#b070f0');
-      popup(d.x,d.y-20,'UNSUMMONED','#b070f0',12);demons.splice(i,1);continue;}
+      popup(d.x,d.y-20,'UNSUMMONED','#b070f0',12);demons.splice(i,1);
+      if(P.lich&&d.type==='dragon'&&!demons.some(o=>o.type==='dragon'&&o.hp>0))
+        lichPerish('the bone dragon falls — and the soul it carried');
+      continue;}
     d.cool-=dt;
     const tgt=enemies.filter(e=>!e.dead).sort((a,b)=>dist(d,a)-dist(d,b))[0];
-    if(d.type==='brute'){
+    if(d.type==='zombie'){ // shambling aggro-soaks: minor harm, lasting INFECTION
+      if(!tgt)continue;
+      const dd=dist(d,tgt);d.face=ang(d,tgt);
+      if(dd>d.r+tgt.r+8){d.x+=Math.cos(d.face)*72*dt;d.y+=Math.sin(d.face)*72*dt;}
+      else if(d.cool<=0){d.cool=1.5;
+        swings.push({x:d.x,y:d.y,a:d.face,arc:1.6,range:d.r+24,t:.15,heavy:false,col:'#7a9a6a'});
+        const zd=rollDice(1,6)+2;
+        tgt.hp-=zd;tgt.flash=.1;blood(tgt.x,tgt.y,4);
+        popup(tgt.x,tgt.y-26,zd,'#7a9a6a',12);
+        if(!(tgt.infectT>0)){tgt.infectT=10;popup(tgt.x,tgt.y-42,'INFECTED','#9af0c0',12);}
+        else tgt.infectT=Math.max(tgt.infectT,10);
+        if(tgt.hp<=0)killEnemy(tgt,false);}
+    }else if(d.type==='archer'){ // bone archers: minor harm from a careful distance
+      if(!tgt)continue;
+      const dd=dist(d,tgt);d.face=ang(d,tgt);
+      if(dd>240){d.x+=Math.cos(d.face)*70*dt;d.y+=Math.sin(d.face)*70*dt;}
+      else if(dd<130){d.x-=Math.cos(d.face)*65*dt;d.y-=Math.sin(d.face)*65*dt;}
+      if(d.cool<=0&&dd<300){d.cool=1.8;
+        fireballs.push({x:d.x,y:d.y-10,vx:Math.cos(d.face)*460,vy:Math.sin(d.face)*460,
+          r:4,kind:'arrow',dmg:rollDice(1,8)+Math.floor(dmgBonus()/3)});}
+    }else if(d.type==='brute'){
       if(!tgt)continue;
       const dd=dist(d,tgt);d.face=ang(d,tgt);
       if(dd>d.r+tgt.r+10){d.x+=Math.cos(d.face)*95*dt;d.y+=Math.sin(d.face)*95*dt;}
@@ -422,7 +450,11 @@ function updFireballs(dt){
       continue;}
     for(const e of enemies){if(e.dead)continue;
       if(Math.hypot(b.x-e.x,b.y-(e.y-14))<e.r+b.r){hit=true;
-        if(b.kind==='hex'){
+        if(b.kind==='arrow'){ // bone shaft: direct, modest, no splash
+          e.hp-=b.dmg;e.flash=.12;blood(e.x,e.y,4);
+          popup(e.x,e.y-28,b.dmg,'#cfc6b4',13);
+          if(e.hp<=0)killEnemy(e,false);
+        }else if(b.kind==='hex'){
           e.hexT=10;e.flash=.14; // 30/s rot for 10 seconds, slowed the whole time
           popup(e.x,e.y-28,'HEXED','#b070f0',13);
           S.shake=Math.max(S.shake,4);
@@ -509,6 +541,73 @@ function blink(){
   P.x-=Math.cos(P.face)*150;P.y-=Math.sin(P.face)*150;clampArena(P);
   leafBurst(P.x,P.y,10,'#b070f0');
   S.shake=Math.max(S.shake,4);vib(30);flashFx(.1);}
+/* ============ LICH — the bone dragon refuses the ledger ============ */
+// Die with a bone dragon flying and the pact deepens: he rises as a LICH — a giant
+// floating reaper. The dragon becomes his PHYLACTERY (its death is his death; its
+// hourglass freezes while he is risen). Scythe stuns and hurls. FADE makes him
+// untargetable for 5s where only summoning is allowed. The lich channel runs at
+// twice the warlock's clock: 6s = three taunting zombies whose wounds INFECT
+// (the infected rise as zombies when they die), 8s = two skeletal archers,
+// 12s = the resurrection — back to the living, a warlock again. Lich death is final.
+function enterLich(){
+  P.lich=true;P.hp=Math.round(maxHP()*0.5);P.r=22;
+  P.channel=null;P.heavyWind=0;P.parryT=0;P.parryCD=0;P.rollT=0;P.hexCD=0;P.wardT=0;
+  if(P.devilT>0){P.devilT=0;}
+  P.fadeT=0;P.fadeCD=0;
+  flashFx(.35);S.shake=Math.max(S.shake,14);vib([70,60,130]);
+  leafBurst(P.x,P.y,26,'#9af0c0');
+  showBanner('THE PACT DEEPENS','the bone dragon refuses the ledger — LICH',2200,'#9af0c0');
+  popup(P.x,P.y-64,'GUARD THE DRAGON — IT HOLDS YOUR SOUL','#9af0c0',13);
+  updateLabels();}
+function resurrectWarlock(){
+  P.lich=false;P.hp=maxHP();P.r=16;P.fadeT=0;P.fadeCD=0;
+  flashFx(.3);S.shake=Math.max(S.shake,10);vib([50,50,100]);
+  leafBurst(P.x,P.y,22,'#b070f0');
+  showBanner('BACK TO THE LIVING','the ledger reopens — a warlock again',2000,'#b070f0');
+  updateLabels();}
+function lichPerish(why){
+  P.lich=false;P.fadeT=0;
+  showBanner('THE PHYLACTERY SHATTERS',why||'',1800,'#d03a4a');
+  P.hp=0;P.dead=true;bloodPool(P.x,P.y,30);flashFx(.3);
+  setTimeout(()=>{if(S.mode==='fight')lose();},900);}
+function fade(){
+  P.fadeT=5;P.parryCD=9;P.ft.rolls++;
+  leafBurst(P.x,P.y,14,'#9af0c0');
+  popup(P.x,P.y-52,'FADED','#9af0c0',14);
+  showBanner('FADE','five seconds beyond reach — raise the dead',1100,'#9af0c0');
+  vib(30);flashFx(.1);}
+function lichSlash(){ // the scythe: light harm, heavy law — 5s stun, very long flight
+  if(P.fadeT>0){popup(P.x,P.y-44,'FADED — only the dead answer','#8a93a8',11);return;}
+  autoFace();P.atkRecover=atkRec()*1.3;P.ft.slash++;
+  const dmg=Math.round((rollDice(Math.max(1,Math.ceil(diceN()/2)),8)+Math.floor(dmgBonus()/2))*0.8);
+  swings.push({x:P.x,y:P.y,a:P.face,arc:2.2,range:96,t:.18,heavy:true,col:'#9af0c0'});
+  S.shake=Math.max(S.shake,6);vib(30);
+  for(const e of enemies){if(e.dead)continue;
+    const d=dist(P,e);if(d>96+e.r)continue;
+    let da=Math.atan2(e.y-P.y,e.x-P.x)-P.face;
+    while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;
+    if(Math.abs(da)>1.1)continue;
+    const pa=ang(P,e);
+    e.x+=Math.cos(pa)*220;e.y+=Math.sin(pa)*220;clampArena(e); // hurled across the sand
+    e.stunT=Math.max(e.stunT||0,5);e.attacking=false;e.tele=0;
+    popup(e.x,e.y-44,'REAPED — STUNNED','#9af0c0',12);
+    hitEnemy(e,dmg,false,pa);}}
+function summonZombies(){
+  while(demons.length>=12){const old=demons.shift();leafBurst(old.x,old.y,8,'#9af0c0');}
+  flashFx(.12);S.shake=Math.max(S.shake,6);vib([30,40]);
+  for(let i=0;i<3;i++){const a=i*2.09+0.5;
+    demons.push({type:'zombie',x:P.x+Math.cos(a)*50,y:P.y+Math.sin(a)*50,r:13,face:a,
+      hp:25+P.kills*4,maxhp:25+P.kills*4,life:24,cool:rnd(.6,1.4),flash:0,walkP:0});}
+  showBanner('THE SHAMBLERS','they take the blows — their bite INFECTS',1400,'#9af0c0');}
+function summonArchers(){
+  while(demons.length>=12){const old=demons.shift();leafBurst(old.x,old.y,8,'#9af0c0');}
+  flashFx(.12);S.shake=Math.max(S.shake,5);vib([25,35]);
+  for(const s of[-1,1]){
+    demons.push({type:'archer',x:P.x+Math.cos(P.face+Math.PI)*40+Math.cos(P.face+Math.PI/2)*36*s,
+      y:P.y+Math.sin(P.face+Math.PI)*40+Math.sin(P.face+Math.PI/2)*36*s,r:10,face:P.face,
+      hp:15+P.kills*3,maxhp:15+P.kills*3,life:24,cool:rnd(.5,1.5),flash:0,walkP:0});}
+  showBanner('THE BONE ARCHERS','two quivers answer from the grave',1400,'#cfc6b4');}
+
 /* ============ SERAPHIM — the visitor from the place above ============ */
 let rays=[]; // {x,y,a,len,w,t,judge}
 function seraphSlash(){ // the couched lance: one piercing POKE that lands like a bear's paw
@@ -616,7 +715,8 @@ function heavyLand(){P.ft.heavy++;
   S.shake=Math.max(S.shake,8);vib(40);
   strike(P.face,2.1,92+roninTier()*14,Math.round((rollDice(diceN()*2,8)+dmgBonus())*0.88),true);}
 function doRoll(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.rollCD>0||P.rollT>0||P.channel||P.paralyzeT>0)return;
-  if(P.char==='warlock'){autoFace();blink();return;}
+  if(P.fadeT>0)return; // faded: only the summons answer
+  if(P.char==='warlock'){if(P.lich){/* DRIFT — the standard tumble, in robes */}else{autoFace();blink();return;}}
   P.rollT=.32*MODS.dodgeWin;P.rollCD=rollCDmax();P.heavyWind=0;P.ft.rolls++;
   let mx=stick.dx,my=stick.dy;
   if(keys['w'])my=-1;if(keys['s'])my=1;if(keys['a'])mx=-1;if(keys['d'])mx=1;
@@ -686,6 +786,12 @@ function dismember(e,full){
 }
 function killEnemy(e,heavy){
   e.dead=true;bloodPool(e.x,e.y,e.r*1.6);blood(e.x,e.y,26);gibs(e,heavy?13:6);
+  if(e.infectT>0){ // the infection keeps what it kills: it rises as a zombie
+    while(demons.length>=12){const old=demons.shift();leafBurst(old.x,old.y,8,'#9af0c0');}
+    demons.push({type:'zombie',x:e.x,y:e.y,r:13,face:0,
+      hp:25+P.kills*4,maxhp:25+P.kills*4,life:24,cool:rnd(.8,1.4),flash:0,walkP:0});
+    leafBurst(e.x,e.y,14,'#9af0c0');
+    popup(e.x,e.y-46,'IT RISES','#9af0c0',14);}
   S.shake=Math.max(S.shake,heavy?13:9);S.hitPause=Math.max(S.hitPause,heavy?.16:.12);vib(heavy?[40,40,80]:[30,40,60]);
   // ---- cinematic kill resolution ----
   const fatality=!e.minion&&(heavy||Math.random()<0.22);
@@ -822,6 +928,7 @@ function spawnFight(){
 function hurtPlayer(dmg,from){
   if(P.rollT>0||P.dead)return;
   if(P.kneelT>0){popup(P.x,P.y-40,'IMMORTAL','#ffe9a8',12);return;} // grace: nothing touches him
+  if(P.fadeT>0){popup(P.x,P.y-40,'FADED','#9af0c0',12);return;} // beyond reach
   if(from&&from.worthy)dmg*=3; // the WORTHY hit like they finally matter
   if(P.wardT>0){popup(P.x,P.y-40,'WARDED','#5ad2ff',12);return;}
   const tb=demonTaunt(); // the claw fiend soaks hits aimed near it
@@ -855,6 +962,8 @@ function hurtPlayer(dmg,from){
   S.shake=Math.max(S.shake,6);vib(50);
   if(from){const a=ang(from,P);P.x+=Math.cos(a)*14;P.y+=Math.sin(a)*14;}
   if(P.hp<=0){
+    if(P.char==='warlock'&&!P.lich&&S.mode==='fight'&&demons.some(d=>d.type==='dragon'&&d.hp>0)){
+      enterLich();return;} // the bone dragon refuses the ledger
     if(P.char==='seraph'&&!P.graceUsed&&S.mode==='fight'){ // he is immortal. once per duel, it shows.
       P.graceUsed=true;P.hp=1;P.kneelT=10;P.paralyzeT=10;
       P.channel=null;P.heavyWind=0;P.ascendT=0;P.rollT=0;
@@ -879,6 +988,7 @@ function updEnemy(e,dt){
   if(!e.dead){ // damage-over-time ticks (hex + poison) run at real speed
     if(e.hexT>0){e.hexT-=dt;e.hexTick=(e.hexTick||0)-dt;
       if(e.hexTick<=0){e.hexTick=.5;dotDamage(e,15,'#b070f0');}}
+    if(e.infectT>0)e.infectT-=dt; // the zombie plague waits for its moment
     if(e.poisonT>0){e.poisonT-=dt;e.poisonTick=(e.poisonTick||0)-dt;
       if(e.poisonTick<=0){e.poisonTick=.6;dotDamage(e,2+Math.floor(P.kills/2),'#7fd05a');}}
     if(e.vined>0){e.vineTick=(e.vineTick||0)-dt; // thorns bite while the vines hold
@@ -1222,6 +1332,7 @@ function startEncounter(list,cb){
   P.parryT=0;P.parryCD=0;P.ripoT=0;P.combo=0;P.comboT=0;
   P.hexCD=0;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;P.humanCD=0;P.wolfCD=0;P.formCD=0; // all skills fresh each fight (Hiro)
   P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false; // the angel lands; grace is whole again
+  if(P.lich){P.lich=false;P.r=16;updateLabels();}P.fadeT=0;P.fadeCD=0; // each fight begins among the living
   P.ft={dmgTaken:0,heavy:0,slash:0,rolls:0,parries:0,t0:NOW(),low:false};
   S.mode='fight';UI.hud(true);UI.controls(true);UI.name(nickname);
   UI.stats(diceN()+'d8',(P.char==='ronin'?'':'LV '+lvl()+' · ')+'KILLS '+P.kills);
@@ -1262,7 +1373,9 @@ function lose(){
          +'Human form: VINES traps everyone near you while you hop to safety.',
     warlock:'HINTS — PORTAL grants 3s of immunity after the swap. BLINK stuns everything around your departure point. '
          +'HOLD the summon button: demons arrive at 3s / 4s / 6s in one channel. '
-         +'As the ARCH DEVIL, bite a succubus to ascend her — faster, and she explodes where she stands.',
+         +'As the ARCH DEVIL, bite a succubus to ascend her — faster, and she explodes where she stands. '
+         +'And keep a BONE DRAGON flying: if death finds you, the dragon refuses the ledger and you rise as a LICH — '
+         +'scythe stuns, FADE escapes, and the third summon buys your life back. Guard the dragon. It holds your soul.',
     seraph:'HINTS — the HALO RAY fires every second: whatever it KILLS rises as your minion, then returns to you as half your health. '
          +'The spear is a slow heavy POKE — keep your distance and land it clean. ASCEND lifts you above harm. '
          +'You are immortal: the first fall in any duel buys your foe ten seconds of glory — then you rise at full strength. The second fall is final.'};
@@ -1344,7 +1457,8 @@ function demoReset(){
   P.dead=false;P.channel=null;P.glaive=null;P.devilT=0;P.wardT=0;P.slowT=0;P.paralyzeT=0;
   P.formT=0;P.humanCD=0;P.wolfCD=0;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;
   P.parryCD=0;P.parryT=0;P.heavyCD=0;P.heavyWind=0;P.rollCD=0;P.rollT=0;P.atkRecover=0;P.flash=0;P.hexCD=0;
-  P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;
+  P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;P.lich=false;P.fadeT=0;P.fadeCD=0;
+  if(P.lich){P.lich=false;P.r=16;updateLabels();}P.fadeT=0;P.fadeCD=0;
   P.combo=0;P.comboT=0;P.ft={dmgTaken:0,heavy:0,slash:0,rolls:0,parries:0,t0:NOW(),low:false};
   P.hp=maxHP();
   wolves=[];demons=[];fireballs=[];tracers=[];enemies=[];zones=[];swings=[];particles=[];popups=[];bullets=[];limbs=[];
@@ -1370,7 +1484,7 @@ function endIntro(){
 function fullReset(ch){
   S.fight=0;P.kills=0;prevKills=0;nickname='NOBODY';
   if(ch)P.char=ch;
-  P.form='human';P.r=16;P.wolfCD=0;P.formT=0;P.humanCD=0;P.bladeTier=0;P.slowT=0;P.paralyzeT=0;P.wardT=0;P.devilT=0;P.hexCD=0;P.level=1;P.unlockMsg=null;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;wolves=[];demons=[];fireballs=[];P.channel=null;P.glaive=null;P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;
+  P.form='human';P.r=16;P.wolfCD=0;P.formT=0;P.humanCD=0;P.bladeTier=0;P.slowT=0;P.paralyzeT=0;P.wardT=0;P.devilT=0;P.hexCD=0;P.level=1;P.unlockMsg=null;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;wolves=[];demons=[];fireballs=[];P.channel=null;P.glaive=null;P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;P.lich=false;P.fadeT=0;P.fadeCD=0;
   styleScore={untouched:0,headsman:0,quicksand:0,breath:0,corpse:0,mirror:0};
   updateLabels();
   dctx.clearRect(0,0,W,H);toBoard();}
@@ -1409,6 +1523,10 @@ function tick(now){
     P.parryT=Math.max(0,P.parryT-dt);P.parryCD=Math.max(0,P.parryCD-dt);
     P.formCD=Math.max(0,P.formCD-dt);P.wolfCD=Math.max(0,P.wolfCD-dt);
     P.slowT=Math.max(0,(P.slowT||0)-dt);P.wardT=Math.max(0,(P.wardT||0)-dt);P.hexCD=Math.max(0,(P.hexCD||0)-dt);
+    if(P.fadeT>0){P.fadeT-=dt;
+      if(Math.random()<.3&&particles.length<240)particles.push({x:P.x+rnd(-16,16),y:P.y-12+rnd(-14,10),
+        vx:rnd(-20,20),vy:rnd(-30,-6),t:rnd(.25,.45),col:'#9af0c0',r:1.8,noG:true});
+      if(P.fadeT<=0)popup(P.x,P.y-44,'SEEN AGAIN','#8a93a8',11);}
     if(P.devilT>0){P.devilT-=dt;if(P.devilT<=0)exitDevil();}
     P.cdVines=Math.max(0,(P.cdVines||0)-dt);P.cdRoar=Math.max(0,(P.cdRoar||0)-dt);P.cdHowl=Math.max(0,(P.cdHowl||0)-dt);
     if(P.paralyzeT>0){P.paralyzeT-=dt;
@@ -1429,7 +1547,11 @@ function tick(now){
       if(P.kneelT<=0){P.paralyzeT=0;P.hp=maxHP();
         showBanner('THE SERAPHIM RISES','the glory is spent. the duel resumes.',1800,'#ffe9a8');
         flashFx(.22);S.shake=Math.max(S.shake,8);vib([40,40,80]);}}
-    if(P.channel){const c=P.channel;c.t+=dt;
+    if(P.channel&&P.lich){const c=P.channel;c.t+=dt; // the lich clock runs at half speed
+      if(c.t>=6&&!c.b){c.b=true;c.any=true;summonZombies();}
+      if(c.t>=8&&!c.d){c.d=true;c.any=true;summonArchers();}
+      if(c.t>=12){P.channel=null;resurrectWarlock();}}
+    else if(P.channel){const c=P.channel;c.t+=dt;
       if(c.t>=3&&!c.b){c.b=true;
         if(!demons.some(d=>d.type==='brute'&&d.hp>0)){c.any=true;summonDemons('brute');}
         else popup(P.x,P.y-58,'FIEND LIVES','#8a93a8',11);}
@@ -1526,14 +1648,14 @@ function tick(now){
   if(S.fight>=18&&boss)UI.bossbar(Math.max(0,boss.hp/boss.maxhp));
   UI.cds({
     roll:P.rollCD>0?P.rollCD/(P.char==='warlock'?2.2:rollCDmax()):0,
-    slash:(P.char==='warlock'&&!(P.devilT>0)&&P.hexCD>0)?(P.hexCD||0)/10:0,
+    slash:(P.char==='warlock'&&!P.lich&&!(P.devilT>0)&&P.hexCD>0)?(P.hexCD||0)/10:0,
     heavy:(()=>{let hv=P.heavyCD,hm=P.heavyCDmax||2.2;
       if(P.char==='druid'){hv=P.form==='human'?P.cdVines:(P.form==='bear'?P.cdRoar:P.cdHowl);
         hm=P.form==='human'?3:(P.form==='bear'?4:6);}
       return hv>0?hv/hm:0;})(),
     parry:(()=>{let pv=P.parryCD,pm=1.4;
       if(P.char==='druid'){pv=P.form==='human'?P.humanCD:0;pm=5;}
-      else if(P.char==='warlock')pm=3;
+      else if(P.char==='warlock')pm=P.lich?9:3;
       else if(P.char==='seraph')pm=6;
       return pv>0?pv/pm:0;})()
   });
@@ -1669,7 +1791,26 @@ function drawFighter(x,y,r,face,col,o={}){
   ctx.beginPath();ctx.arc(s1x,s1y,r*.3,0,7);ctx.fill();ctx.stroke();
   ctx.beginPath();ctx.arc(s2x,s2y,r*.3,0,7);ctx.fill();ctx.stroke();
   // arms + held weapon
-  if(o.spear){ // couched angelic lance: both hands on the shaft, point leveled at the foe
+  if(o.scythe){ // the reaper's tool: long snath, moon-curved blade
+    const sw=o.wpnSwing||0, wa=face+sw*.8;
+    const HAND=C(o.skull?'#d8cdb8':'#caa27a');
+    const gx=Math.cos(wa)*r*.85,gy=Math.sin(wa)*r*.85;
+    const h2x=gx-Math.cos(wa)*r*.5,h2y=gy-Math.sin(wa)*r*.5-3;
+    ctx.strokeStyle=LIMB;ctx.lineWidth=3.5;
+    ctx.beginPath();ctx.moveTo(s1x,s1y);ctx.lineTo(gx,gy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(s2x,s2y);ctx.lineTo(h2x,h2y);ctx.stroke();
+    const bx2=gx-Math.cos(wa)*r*1.2,by2=gy-Math.sin(wa)*r*1.2-6;   // snath slants across him
+    const tx2=gx+Math.cos(wa)*r*1.7,ty2=gy+Math.sin(wa)*r*1.7-10;
+    ctx.strokeStyle=C('#3a3046');ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(bx2,by2);ctx.lineTo(tx2,ty2);ctx.stroke();
+    ctx.strokeStyle=C('#cfd6e4');ctx.lineWidth=4;ctx.lineCap='round'; // the moon blade
+    ctx.beginPath();ctx.arc(tx2+Math.cos(wa+1.6)*6,ty2+Math.sin(wa+1.6)*6,r*.85,wa+2.3,wa+4.0);ctx.stroke();
+    ctx.strokeStyle='rgba(154,240,192,.45)';ctx.lineWidth=7;        // soul-light along the edge
+    ctx.beginPath();ctx.arc(tx2+Math.cos(wa+1.6)*6,ty2+Math.sin(wa+1.6)*6,r*.85,wa+2.5,wa+3.8);ctx.stroke();
+    ctx.fillStyle=HAND;
+    ctx.beginPath();ctx.arc(gx,gy,r*.15,0,7);ctx.fill();
+    ctx.beginPath();ctx.arc(h2x,h2y,r*.14,0,7);ctx.fill();}
+  else if(o.spear){ // couched angelic lance: both hands on the shaft, point leveled at the foe
     const poke=o.poke?9:0;
     const gx=Math.cos(face)*r*0.9,gy=Math.sin(face)*r*0.9;
     const g2x=gx+Math.cos(face)*r*0.7,g2y=gy+Math.sin(face)*r*0.7;
@@ -2027,7 +2168,18 @@ function draw(){
         ctx.fillStyle='#ffe9a8';ctx.fillRect(w.x-11,w.y-w.r-11,22*Math.max(0,w.life/7),1.5);}}
     // demons
     for(const d of demons){
-      if(d.type==='brute'){
+      if(d.type==='zombie'){
+        drawFighter(d.x,d.y,d.r,d.face,'#4a5a3a',{flash:d.flash,
+          phase:d.walkP,moving:d._mv,headCol:'#6a7a4a'});
+        ctx.strokeStyle='rgba(154,240,192,.35)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.arc(d.x,d.y,d.r+4,0,7);ctx.stroke();
+      }else if(d.type==='archer'){
+        drawFighter(d.x,d.y,d.r,d.face,'#8a8474',{skull:true,flash:d.flash,
+          phase:d.walkP,moving:d._mv});
+        const ba=d.face; // the bow, drawn and patient
+        ctx.strokeStyle=d.flash>0?'#fff':'#cfc6b4';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(d.x+Math.cos(ba)*d.r*1.1,d.y+Math.sin(ba)*d.r*1.1,d.r*.7,ba-1.1,ba+1.1);ctx.stroke();
+      }else if(d.type==='brute'){
         drawFighter(d.x,d.y,d.r,d.face,'#7a2a3a',{hulk:true,flash:d.flash,
           phase:d.walkP,moving:d._mv,headCol:'#3a1018'});
       }else if(d.type==='dragon'){
@@ -2091,6 +2243,12 @@ function draw(){
         ctx.beginPath();ctx.arc(-10,0,b.r,-0.9,0.9);ctx.stroke();
         ctx.restore();
         continue;}
+      if(b.kind==='arrow'){ // a bone shaft in flight
+        const va=Math.atan2(b.vy,b.vx);
+        ctx.strokeStyle='#d8cdb8';ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(b.x-Math.cos(va)*11,b.y-Math.sin(va)*11);ctx.lineTo(b.x,b.y);ctx.stroke();
+        ctx.fillStyle='#fff';ctx.fillRect(b.x-1,b.y-1,2,2);
+        continue;}
       const col=b.kind==='hex'?'#b070f0':'#f0883d';
       const g2=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r*2.6);
       g2.addColorStop(0,col);g2.addColorStop(1,'transparent');
@@ -2127,6 +2285,31 @@ function draw(){
         dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,
         flying:P.ascendT>0,haloGone:P.heavyWind>0,
         spear:P.kneelT<=0,spearLen:46,poke:P.atkRecover>0,headCol:'#e8e4da'});
+    }else if(P.char==='warlock'&&P.lich){
+      const bob=Math.sin(S.time*2.2)*4, lift=12+bob; // he does not walk anymore
+      ctx.save();ctx.globalAlpha=P.fadeT>0?.12:.3;ctx.fillStyle='#000'; // small far shadow
+      ctx.beginPath();ctx.ellipse(P.x,P.y+P.r*.6,P.r*.7,P.r*.26,0,0,7);ctx.fill();ctx.restore();
+      ctx.save();if(P.fadeT>0)ctx.globalAlpha=.35; // faded: a rumor of a reaper
+      ctx.strokeStyle='rgba(154,240,192,'+(P.fadeT>0?.3:.5)+')';ctx.lineWidth=1.5; // soul-light beneath the hem
+      ctx.beginPath();ctx.arc(P.x,P.y-lift+P.r*.5,P.r*.7,0,7);ctx.stroke();
+      drawFighter(P.x,P.y-lift,P.r,P.face,'#141020',{robe:true,hood:true,skull:true,scythe:true,flash:P.flash,
+        dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,
+        wpnSwing:P.atkRecover>0?-0.9:0});
+      ctx.restore();
+      if(P.channel){ // the lich clock: 6s shamblers · 8s archers · 12s the living
+        const t=P.channel.t,bw=72,bx=P.x-bw/2,by=P.y-lift-50;
+        ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(bx,by,bw,7);
+        ctx.fillStyle='#9af0c0';ctx.fillRect(bx+1,by+1,(bw-2)*Math.min(1,t/12),5);
+        ctx.fillStyle='#fff';
+        for(const th of[6,8])ctx.fillRect(bx+(bw-2)*(th/12),by-1,2,9);
+        const tier=t>=8?'THE LIVING':(t>=6?'BONE ARCHERS':(t>=3?'SHAMBLERS':''));
+        if(tier){ctx.font='bold 11px "Courier New",monospace';ctx.textAlign='center';
+          ctx.fillStyle='#000';ctx.fillText(tier,P.x+1,by-5+1);
+          ctx.fillStyle='#9af0c0';ctx.fillText(tier,P.x,by-5);}
+        if(particles.length<240&&Math.random()<.5){
+          const a=rnd(0,Math.PI*2),rr=rnd(22,46);
+          particles.push({x:P.x+Math.cos(a)*rr,y:P.y-lift-10+Math.sin(a)*rr*.5,
+            vx:-Math.cos(a)*60,vy:-Math.sin(a)*30,t:.4,col:'#9af0c0',r:2,noG:true});}}
     }else if(P.char==='warlock'&&P.devilT>0){
       // ARCH DEVIL: hulking horned thing where the dark elf stood
       const fl2=Math.sin(S.time*7)*.5;
