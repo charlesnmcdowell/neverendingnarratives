@@ -33,7 +33,10 @@ const CityUI = {
       const d = document.createElement('div');
       d.className = 'dlgopt' + (o.disabled ? ' disabled' : '');
       d.textContent = o.label;
-      if (!o.disabled) d.addEventListener('pointerdown', () => o.fn());
+      if (!o.disabled) d.addEventListener('pointerdown', () => {
+        if (window.VoiceMan) VoiceMan.sayPlayer(o.label); // your champion speaks the line
+        o.fn();
+      });
       this.els.dlgOpts.appendChild(d);
     }
   },

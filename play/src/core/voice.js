@@ -24,18 +24,36 @@ const VoiceMan = {
     return MAP[n] || n;
   },
 
-  say(rawName, text) {
+  // player character speaks their chosen line; the NPC reply queues behind it
+  sayPlayer(label) {
+    if (!window.GameState || !GameState.player || !label) return;
+    this.say('PLAYER-' + GameState.player.char.toUpperCase(), label, true);
+  },
+
+  say(rawName, text, isPlayer) {
     if (!text) return;
     const speaker = this.speakerFor(rawName);
     const id = this.hash(speaker + '|' + text);
+    if (this._missing[id]) { if (isPlayer) return; }
+    if (!isPlayer && this.current && this._playerActive && !this.current.ended) {
+      this._pending = [rawName, text];           // let the player's line finish first
+      return;
+    }
     if (this._missing[id]) return;
-    this.stop();
+    this.stop(); this._pending = null;
     const a = new Audio('assets/voice/' + id + '.mp3');
     a.volume = 0.95;
-    a.addEventListener('error', () => { this._missing[id] = true; });
+    this._playerActive = !!isPlayer;
+    a.addEventListener('error', () => { this._missing[id] = true;
+      this._playerActive = false;
+      if (this._pending) { const p = this._pending; this._pending = null; this.say(p[0], p[1]); } });
     const music = window.MusicMan && MusicMan.current;
     if (music) music.volume = Math.min(music.volume, 0.18); // duck
-    a.addEventListener('ended', () => { if (music && MusicMan.current === music) music.volume = MusicMan.vol; });
+    a.addEventListener('ended', () => {
+      this._playerActive = false;
+      if (this._pending) { const p = this._pending; this._pending = null; this.say(p[0], p[1]); return; }
+      if (music && MusicMan.current === music) music.volume = MusicMan.vol;
+    });
     const p = a.play(); if (p && p.catch) p.catch(() => { if (music) music.volume = MusicMan.vol; });
     this.current = a;
   },
