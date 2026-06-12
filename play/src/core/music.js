@@ -4,13 +4,37 @@
 
 const MusicMan = {
   tracks: {}, current: null, currentName: null, vol: 0.55, _missing: {}, _gestured: false,
+  muted: (typeof localStorage !== 'undefined' && localStorage.getItem('ss-arpg-muted') === '1'),
+
+  toggleMute() {
+    this.muted = !this.muted;
+    try { localStorage.setItem('ss-arpg-muted', this.muted ? '1' : '0'); } catch (e) {}
+    if (this.muted) { if (this.current) this.current.pause(); }
+    else if (this.current) { const p = this.current.play(); if (p && p.catch) p.catch(() => {}); this._fadeIn(this.current); }
+    this._syncBtn();
+    return this.muted;
+  },
+
+  _syncBtn() {
+    const el = document.getElementById('musicBtn');
+    if (el) { el.textContent = this.muted ? '♪ OFF' : '♪ ON'; el.style.opacity = this.muted ? 0.55 : 1; }
+  },
+
+  _bindBtn() {
+    if (this._btnBound) return;
+    const el = document.getElementById('musicBtn');
+    if (!el) return;
+    this._btnBound = true;
+    el.addEventListener('pointerdown', e => { e.stopPropagation(); this.toggleMute(); });
+    this._syncBtn();
+  },
 
   _ensureGestureRetry() {
     if (this._gestured) return;
     this._gestured = true;
     const kick = () => {
       const a = this.current;
-      if (a && a.paused && !this._missing[this.currentName]) {
+      if (a && a.paused && !this.muted && !this._missing[this.currentName]) {
         a.volume = 0; const p = a.play(); if (p && p.catch) p.catch(() => {});
         this._fadeIn(a);
       }
@@ -24,6 +48,7 @@ const MusicMan = {
 
   play(name) {
     this._ensureGestureRetry();
+    this._bindBtn();
     if (this.currentName === name) return;
     this.currentName = name;
     for (const [n, a] of Object.entries(this.tracks)) if (n !== name) {
@@ -39,6 +64,7 @@ const MusicMan = {
       this.tracks[name] = a;
     }
     this.current = a;
+    if (this.muted) return; // remembered as current; resumes on unmute
     const p = a.play(); if (p && p.catch) p.catch(() => {}); // retried on next gesture
     this._fadeIn(a);
   },
