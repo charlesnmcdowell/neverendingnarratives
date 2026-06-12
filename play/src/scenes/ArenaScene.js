@@ -190,6 +190,8 @@ class ArenaScene extends Phaser.Scene {
     }
 
     window.GameState.world.zone = 'pit-of-karridge';
+    this.makeTitleBackdrop();
+    this._tbVisible = null; // force first toggle
     MusicMan.play('title');
   }
 
@@ -199,6 +201,63 @@ class ArenaScene extends Phaser.Scene {
     this.combat.frame(time);
     this.pitTex.refresh();
     const m = this.combat.S.mode;
-    MusicMan.play(m === 'fight' || m === 'demo' ? 'arena' : 'title');
+    // arena track persists through the fight board (no flip-flop between fights)
+    MusicMan.play(m === 'fight' || m === 'demo' || m === 'board' ? 'arena' : 'title');
+    this.updateTitleBackdrop(time, dtMs);
+  }
+
+  // ===================== torchlit title backdrop (the Bucket-0 look) =====================
+  makeTitleBackdrop() {
+    const W = this.scale.width, H = this.scale.height;
+    const objs = [];
+    // stone floor
+    const g = this.add.graphics().setDepth(10);
+    for (let y = 0; y < H; y += 40) for (let x = 0; x < W; x += 40) {
+      const shade = 16 + Math.floor(Math.random() * 10);
+      g.fillStyle(Phaser.Display.Color.GetColor(shade, shade - 2, shade - 4));
+      g.fillRect(x, y, 38, 38);
+    }
+    objs.push(g);
+    // torch glows
+    this.tbTorch = this.add.circle(W / 2, H / 2 + 80, 230, 0xff9a3c, 0.10).setDepth(11);
+    this.tbTorchIn = this.add.circle(W / 2, H / 2 + 80, 125, 0xffb050, 0.12).setDepth(11);
+    this.tbSide1 = this.add.circle(W * 0.16, H * 0.3, 150, 0xff9a3c, 0.07).setDepth(11);
+    this.tbSide2 = this.add.circle(W * 0.84, H * 0.3, 150, 0xff9a3c, 0.07).setDepth(11);
+    objs.push(this.tbTorch, this.tbTorchIn, this.tbSide1, this.tbSide2);
+    // drifting fog
+    this.tbFog1 = this.add.rectangle(0, H * 0.42, W * 2, 190, 0x9090a0, 0.05).setOrigin(0, 0.5).setDepth(12);
+    this.tbFog2 = this.add.rectangle(0, H * 0.72, W * 2, 250, 0x707080, 0.04).setOrigin(0, 0.5).setDepth(12);
+    objs.push(this.tbFog1, this.tbFog2);
+    // embers
+    if (!this.textures.exists('title-ember')) {
+      const c = document.createElement('canvas'); c.width = c.height = 4;
+      c.getContext('2d').fillStyle = '#ffb050'; c.getContext('2d').fillRect(0, 0, 4, 4);
+      this.textures.addCanvas('title-ember', c);
+    }
+    this.tbEmbers = this.add.particles(W / 2, H + 10, 'title-ember', {
+      x: { min: -W / 2, max: W / 2 }, lifespan: 6500,
+      speedY: { min: -30, max: -12 }, speedX: { min: -8, max: 8 },
+      scale: { start: 0.8, end: 0 }, alpha: { start: 0.5, end: 0 },
+      quantity: 1, frequency: 200, blendMode: 'ADD',
+    }).setDepth(13);
+    objs.push(this.tbEmbers);
+    this.titleBackdrop = objs;
+  }
+
+  updateTitleBackdrop(time, dtMs) {
+    const onTitle = document.getElementById('title').classList.contains('show');
+    if (this._tbVisible !== onTitle) {
+      this._tbVisible = onTitle;
+      for (const o of this.titleBackdrop) o.setVisible(onTitle);
+      this.frameImg.setVisible(!onTitle);
+      if (this.tbEmbers) onTitle ? this.tbEmbers.start() : this.tbEmbers.stop();
+    }
+    if (!onTitle) return;
+    const f = 0.10 + Math.sin(time * 0.01) * 0.015 + Math.random() * 0.02;
+    this.tbTorch.setAlpha(f); this.tbTorchIn.setAlpha(f + 0.03);
+    this.tbSide1.setAlpha(f * 0.7); this.tbSide2.setAlpha(f * 0.72);
+    const W = this.scale.width;
+    this.tbFog1.x = -((time * 0.012) % W);
+    this.tbFog2.x = -((time * 0.027) % W);
   }
 }

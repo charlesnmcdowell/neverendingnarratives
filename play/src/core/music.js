@@ -1,40 +1,57 @@
-// Zone music — plain HTMLAudio so it works from file:// (no XHR).
-// Drop tracks into game/assets/music/ named: title.mp3, arena.mp3, city.mp3,
-// grove.mp3, dungeon.mp3. Missing files = silence, no errors. Fades between zones.
+// Zone music — plain HTMLAudio so it works from file:// and https alike.
+// ONE cached Audio per track (duplicates are impossible); switching force-fades
+// every other track. Missing files = silence, no errors.
 
 const MusicMan = {
-  current: null, currentName: null, vol: 0.55, _fade: null, _missing: {},
+  tracks: {}, current: null, currentName: null, vol: 0.55, _missing: {}, _gestured: false,
+
+  _ensureGestureRetry() {
+    if (this._gestured) return;
+    this._gestured = true;
+    const kick = () => {
+      const a = this.current;
+      if (a && a.paused && !this._missing[this.currentName]) a.play().catch(() => {});
+    };
+    window.addEventListener('pointerdown', kick);
+    window.addEventListener('keydown', kick);
+  },
 
   play(name) {
+    this._ensureGestureRetry();
     if (this.currentName === name) return;
     this.currentName = name;
-    const old = this.current;
-    if (old) this._fadeOut(old);
-    this.current = null;
-    if (this._missing[name]) return;
-    const a = new Audio('assets/music/' + name + '.mp3');
-    a.loop = true; a.volume = 0;
-    a.addEventListener('error', () => { this._missing[name] = true; if (this.current === a) this.current = null; });
-    const p = a.play();
-    if (p && p.catch) p.catch(() => { /* autoplay blocked until first input; retried below */ });
+    for (const [n, a] of Object.entries(this.tracks)) if (n !== name) this._fadeOut(a);
+    if (this._missing[name]) { this.current = null; return; }
+    let a = this.tracks[name];
+    if (!a) {
+      a = new Audio('assets/music/' + name + '.mp3');
+      a.loop = true; a.volume = 0;
+      a.addEventListener('error', () => { this._missing[name] = true; if (this.current === a) this.current = null; });
+      this.tracks[name] = a;
+    }
     this.current = a;
+    const p = a.play(); if (p && p.catch) p.catch(() => {}); // retried on next gesture
     this._fadeIn(a);
-    // browsers block autoplay before a user gesture — retry once on next input
-    const retry = () => { if (this.current === a && a.paused && !this._missing[name]) a.play().catch(() => {});
-      window.removeEventListener('pointerdown', retry); window.removeEventListener('keydown', retry); };
-    window.addEventListener('pointerdown', retry); window.addEventListener('keydown', retry);
   },
 
   _fadeIn(a) {
-    const step = () => { if (this.current !== a) return;
-      a.volume = Math.min(this.vol, a.volume + 0.04);
-      if (a.volume < this.vol) setTimeout(step, 80); };
+    const step = () => {
+      if (this.current !== a) return;          // superseded — its fadeOut owns it now
+      a.volume = Math.min(this.vol, a.volume + 0.05);
+      if (a.volume < this.vol - 0.001) setTimeout(step, 80);
+    };
     step();
   },
 
   _fadeOut(a) {
-    const step = () => { a.volume = Math.max(0, a.volume - 0.06);
-      if (a.volume > 0) setTimeout(step, 70); else { a.pause(); a.src = ''; } };
+    if (a._fading) return;
+    a._fading = true;
+    const step = () => {
+      if (this.current === a) { a._fading = false; return; } // re-promoted mid-fade
+      a.volume = Math.max(0, a.volume - 0.08);
+      if (a.volume > 0) setTimeout(step, 60);
+      else { a.pause(); a.currentTime = 0; a._fading = false; }
+    };
     step();
   },
 };
