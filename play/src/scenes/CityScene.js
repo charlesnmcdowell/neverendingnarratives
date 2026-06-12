@@ -1,0 +1,324 @@
+// CityScene — Karridge City (extends WorldScene; shared systems live there).
+
+class CityScene extends WorldScene {
+  constructor() { super({ key: 'CityScene' }); }
+
+  preload() {
+    for (const [key, uri] of Object.entries(window.EMBEDDED_ASSETS))
+      if (!this.textures.exists(key)) this.load.image(key, uri);
+  }
+
+  create() {
+    const M = CityMap, T = M.TILE, WPX = M.W * T, HPX = M.H * T;
+    this.worldW = WPX; this.worldH = HPX;
+    this.worldInit();
+    const GS = window.GameState, P = GS.player;
+    GS.world.zone = 'karridge-city';
+    if (!GS.world.flags['q-mq1-empty-cell']) GS.world.flags['q-mq1-empty-cell'] = 'active';
+
+    // props frames
+    const propsTex = this.textures.get('cainos-props');
+    const F = { door: [32, 98, 68, 90], chest: [96, 32, 64, 64], crate: [160, 0, 64, 64],
+      barrel: [160, 160, 32, 56], signEast: [96, 160, 32, 64], well: [352, 264, 112, 88],
+      statue: [448, 0, 64, 96] };
+    for (const [name, [x, y, w, h]] of Object.entries(F))
+      if (!propsTex.has(name)) propsTex.add(name, 0, x, y, w, h);
+
+    // ground
+    const map = this.make.tilemap({ width: M.W, height: M.H, tileWidth: T, tileHeight: T });
+    const tiles = map.addTilesetImage('cainos-stone', undefined, T, T, 0, 0);
+    const ground = map.createBlankLayer('ground', tiles).setDepth(0);
+    const blocks = [0, 2, 4, 6];
+    for (let ty = 0; ty < M.H; ty += 2) for (let tx = 0; tx < M.W; tx += 2) {
+      const b = blocks[Math.floor(Math.random() * blocks.length)];
+      ground.putTileAt(b, tx, ty); ground.putTileAt(b + 1, tx + 1, ty);
+      ground.putTileAt(b + 8, tx, ty + 1); ground.putTileAt(b + 9, tx + 1, ty + 1);
+    }
+    ground.forEachTile(t => { t.tint = 0x6a5f63; });
+
+    // walls + gates
+    const wallG = this.add.graphics().setDepth(2);
+    const drawWallRun = (x, y, w, h) => {
+      wallG.fillStyle(0x1a1418); wallG.fillRect(x, y, w, h);
+      wallG.fillStyle(0x231b20);
+      for (let i = 0; i < (w * h) / 700; i++)
+        wallG.fillRect(x + Math.random() * (w - 12), y + Math.random() * (h - 6), 8 + Math.random() * 10, 4 + Math.random() * 4);
+      wallG.fillStyle(0x2c2228);
+      for (let cx = x; cx < x + w; cx += 24) wallG.fillRect(cx, y - 6, 14, 6);
+      this.solid(x, y, w, h);
+    };
+    const gS = M.gates.south, gN = M.gates.north;
+    drawWallRun(0, 0, gN.x * T, T * 1.5);
+    drawWallRun((gN.x + gN.w) * T, 0, WPX - (gN.x + gN.w) * T, T * 1.5);
+    drawWallRun(0, HPX - T * 1.5, gS.x * T, T * 1.5);
+    drawWallRun((gS.x + gS.w) * T, HPX - T * 1.5, WPX - (gS.x + gS.w) * T, T * 1.5);
+    drawWallRun(0, 0, T, HPX); drawWallRun(WPX - T, 0, T, HPX);
+
+    // NORTH GATE — open since the guild escort returned (B4): travel trigger
+    this.gateNorth = { x: gN.x * T, y: 0, w: gN.w * T, h: T * 1.5 };
+    this.solid(gS.x * T, HPX - T * 0.5, gS.w * T, T * 0.5);
+
+    // atmosphere
+    this.makeAtmosphere({});
+    for (const l of M.lights) this.addLight(l.x * T, l.y * T, l.r, true);
+
+    // buildings
+    this.windowLights = [];
+    for (const b of M.buildings) {
+      const bx = b.x * T, by = b.y * T, bw = b.w * T, bh = b.h * T;
+      const key = 'bld-' + b.w + 'x' + b.h;
+      if (!this.textures.exists(key)) this.makeBuildingTexture(key, bw, bh);
+      this.add.image(bx, by, key).setOrigin(0).setDepth(by + bh);
+      this.solid(bx, by, bw, bh);
+      const dx = bx + b.door * T, dy = by + bh;
+      this.add.image(dx, dy, 'cainos-props', 'door').setOrigin(0.5, 1).setDepth(dy + 1).setScale(0.9);
+      for (let wx = bx + 24; wx < bx + bw - 24; wx += 86) {
+        const wy = by + bh - 18;
+        this.add.rectangle(wx, wy, 12, 16, 0xffc873, 0.85).setDepth(by + bh + 1);
+        this.addLight(wx, wy + 20, 55, false);
+      }
+      if (b.id === 'inn') this.interactables.push({ x: dx, y: dy - 10, label: 'enter THE LAST LANTERN', fn: () => this.innDialog() });
+      if (b.id === 'guild') {
+        this.interactables.push({ x: dx, y: dy - 10, label: 'enter the ADVENTURERS GUILD', fn: () => this.guildBoard() });
+        // DRUID-ONLY post-finale: the heartland coach — her secret road north
+        if (GS.world.flags['q-mq5-ash-and-silence'] === 'done' && P.char === 'druid') {
+          const cy = dy + 40;
+          const cg = this.add.graphics().setDepth(cy);
+          cg.fillStyle(0x241a12); cg.fillRect(dx + 60, cy - 22, 56, 30);
+          cg.fillStyle(0x14100a); cg.fillCircle(dx + 72, cy + 10, 8); cg.fillCircle(dx + 104, cy + 10, 8);
+          this.addLight(dx + 88, cy, 70, false);
+          this.interactables.push({ x: dx + 88, y: cy, label: 'board the heartland coach to VARENHOLM', fn: () => {
+            if (!GS.world.flags['q-mq6-the-dancer']) GS.world.flags['q-mq6-the-dancer'] = 'active';
+            this.scene.start('VarenholmScene');
+          }});
+        }
+      }
+      if (b.sign) {
+        this.add.rectangle(dx + 36, dy - bh / 2 - 6, 46, 16, 0x15100b).setStrokeStyle(1, 0xe7b450, 0.6).setDepth(dy + 2);
+        this.add.text(dx + 36, dy - bh / 2 - 6, b.sign, { fontFamily: 'Courier New', fontSize: '10px', color: '#e7b450' }).setOrigin(0.5).setDepth(dy + 2);
+      }
+    }
+
+    // plaza props
+    const wellX = M.well.x * T, wellY = M.well.y * T;
+    this.add.image(wellX, wellY, 'cainos-props', 'well').setOrigin(0.5).setDepth(wellY + 30);
+    this.solid(wellX - 44, wellY - 30, 88, 64);
+    this.interactables.push({ x: wellX, y: wellY, label: 'look into the well', fn: () => this.signDialog('THE WELL', 'Coins glint far below. Most are offerings. Some are bribes. The well keeps every secret it is paid.') });
+    for (const [px, py, frame] of [[18, 24, 'barrel'], [19, 25, 'crate'], [52, 24, 'barrel'], [27, 19, 'crate'], [43, 27, 'barrel'], [60, 32, 'crate'], [13, 33, 'barrel']]) {
+      this.add.image(px * T, py * T, 'cainos-props', frame).setOrigin(0.5, 1).setDepth(py * T);
+      this.solid(px * T - 14, py * T - 22, 28, 22);
+    }
+    this.add.image(35 * T, 17 * T, 'cainos-props', 'statue').setOrigin(0.5, 1).setDepth(17 * T);
+    this.solid(35 * T - 24, 17 * T - 30, 48, 30);
+
+    for (const s of M.signs) {
+      this.add.image(s.x * T, s.y * T, 'cainos-props', 'signEast').setOrigin(0.5, 1).setDepth(s.y * T);
+      const text = s.y === 3 ? 'NORTH GATE — THORN GROVE. The escort is back; the road is open. Mind the wolves.' : s.text;
+      this.interactables.push({ x: s.x * T, y: s.y * T, label: 'read the sign', fn: () => this.signDialog('SIGNPOST', text) });
+    }
+
+    // chests
+    for (const c of M.chests) {
+      const id = 'chest-' + c.x + '-' + c.y;
+      const img = this.add.image(c.x * T, c.y * T, 'cainos-props', 'chest').setOrigin(0.5, 1).setDepth(c.y * T).setScale(0.8);
+      if (GS.world.chestsOpened.includes(id)) img.setTint(0x555555);
+      this.interactables.push({ x: c.x * T, y: c.y * T, label: 'open the chest', fn: () => {
+        if (GS.world.chestsOpened.includes(id)) { this.floatText(c.x * T, c.y * T - 40, 'empty', '#6b5d4f'); return; }
+        GS.world.chestsOpened.push(id); img.setTint(0x555555);
+        if (c.loot.type === 'copper') { P.copper += c.loot.amount; CityUI.setPurse(P.copper);
+          this.floatText(c.x * T, c.y * T - 40, '+' + Money.fmt(c.loot.amount), '#e7b450'); }
+        else if (P.belt.length < 8) { P.belt.push(c.loot); CityUI.belt(P.belt);
+          this.floatText(c.x * T, c.y * T - 40, c.loot.label, '#7fbf6a'); }
+        else this.floatText(c.x * T, c.y * T - 40, 'belt is full', '#c8443a');
+      }});
+    }
+
+    // characters
+    this.bakeFrames({ 'fr-ankunyx': { col: '#1a1622', o: { samurai: true, armor: 2, wpnLen: 62, thickWpn: true, wpnCol: '#f0e2b0', headCol: '#0d0a12' } } });
+    const spawn = GS.world.cityFromGrove ? { x: 35 * T, y: 3 * T } : M.spawn;
+    GS.world.cityFromGrove = false;
+    this.spawnPlayer(spawn.x, spawn.y);
+    const palettes = ['fr-npc0', 'fr-npc1', 'fr-npc2', 'fr-npc3'];
+    for (const z of M.npcZones) for (let i = 0; i < z.n; i++)
+      this.addNPC(palettes[Math.floor(Math.random() * palettes.length)],
+        (z.x + Math.random() * z.w) * T, (z.y + Math.random() * z.h) * T, z);
+
+    // --- BEAT 4: the buyer, back alley by the west wall (after the camp falls) ---
+    const flags = GS.world.flags, C = Quests.cult;
+    if (flags['q-mq3-roots-that-rot'] === 'active' && !flags['q-mq4-the-buyer']) {
+      const bx = 12 * T, by = 36 * T;
+      const spr = this.add.sprite(bx, by, 'fr-npc2', 0).setDepth(by);
+      this.addLight(bx, by, 60, false);
+      this.interactables.push({ x: bx, y: by, label: 'approach the veiled woman', fn: () => {
+        const finish = kept => {
+          flags['q-mq3-roots-that-rot'] = 'done';
+          flags['q-mq4-the-buyer'] = 'active';
+          flags['vial-kept'] = kept;
+          CityUI.dialog('THE VEILED WOMAN', kept ? C.buyer.choiceKeep : C.buyer.choiceGive,
+            [{ label: 'Walk away', fn: () => { CityUI.closeDialog();
+              this.tweens.add({ targets: spr, alpha: 0, duration: 900, onComplete: () => spr.destroy() });
+              this.interactables = this.interactables.filter(it => it.x !== bx || it.y !== by);
+              this.floatText(this.player.x, this.player.y - 50, 'JOURNAL UPDATED — THE BUYER', '#3df0c8', 14);
+            }}]);
+        };
+        const t1 = C.buyer.text1 + (window.GameState.player.char === 'druid' ? Quests.druid.vialHum : '');
+        CityUI.dialog('THE VEILED WOMAN', t1, [
+          { label: '"Who sells it?"', fn: () => CityUI.dialog('THE VEILED WOMAN', C.buyer.text2, [
+            { label: 'Keep the vial (evidence)', fn: () => finish(true) },
+            { label: 'Leave it with her (mercy)', fn: () => finish(false) }]) },
+          { label: 'Leave', fn: () => CityUI.closeDialog() }]);
+      }});
+    }
+
+    this.placeCompanions('city');
+    this.initEncounterHost(null); // city uses default pit theme (no city fights yet, but host is uniform)
+    this.cameras.main.setBounds(0, 0, WPX, HPX).startFollow(this.player, true, 0.12, 0.12);
+    this.floatText(spawn.x, spawn.y - 60, 'KARRIDGE CITY', '#e7b450', 18);
+    this.chatterT = 4;
+  }
+
+  makeBuildingTexture(key, w, h) {
+    const g = this.make.graphics({ add: false });
+    g.fillStyle(0x241d20); g.fillRect(0, 0, w, h);
+    g.fillStyle(0x191215);
+    for (let i = 0; i < (w * h) / 320; i++)
+      g.fillRect(Math.random() * (w - 18), h * 0.42 + Math.random() * (h * 0.55 - 8), 12 + Math.random() * 14, 5 + Math.random() * 4);
+    g.fillStyle(0x161013); g.fillRect(0, 0, w, h * 0.42);
+    g.fillStyle(0x1f171c);
+    for (let rx = 6; rx < w; rx += 14) g.fillRect(rx, 2, 7, h * 0.42 - 4);
+    g.fillStyle(0x0d0a08); g.fillRect(0, h * 0.42 - 3, w, 3);
+    g.lineStyle(2, 0x0d0a08, 1); g.strokeRect(0, 0, w, h);
+    g.generateTexture(key, w, h); g.destroy();
+  }
+
+  innDialog() {
+    const GS = window.GameState, P = GS.player, I = Quests.innkeeper, flags = GS.world.flags;
+    const N = t => t.replace('{N}', P.nickname);
+    const close = () => CityUI.closeDialog();
+    const paidOffer = () => {
+      CityUI.dialog(I.name, I.rumorPaidOffer, [
+        { label: 'Pay 5 silver', fn: () => {
+          if (P.copper < 50) { CityUI.dialog(I.name, I.broke, [{ label: 'Leave', fn: close }], this.portraitInn); return; }
+          P.copper -= 50; CityUI.setPurse(P.copper);
+          flags['q-mq2-listening-room'] = 'active';
+          const rumor = I.rumorPaid + (P.char === 'druid' ? Quests.druid.marlowBeat : '');
+          CityUI.dialog(I.name, rumor, [{ label: '"The guild, then."', fn: close }], this.portraitInn);
+        }},
+        { label: 'Not yet', fn: close }], this.portraitInn);
+    };
+    const opts = [];
+    if (flags['q-mq1-empty-cell'] === 'active')
+      opts.push({ label: 'Ask about the last champion', fn: () => {
+        flags['q-mq1-empty-cell'] = 'done';
+        CityUI.dialog(I.name, N(I.rumorFree), [{ label: '"Where did the rest of him go, then?"', fn: paidOffer }, { label: 'Leave', fn: close }], this.portraitInn);
+      }});
+    if (flags['q-mq1-empty-cell'] === 'done' && !flags['q-mq2-listening-room']) opts.push({ label: 'Ask what the road knows', fn: paidOffer });
+    if (flags['q-mq2-listening-room']) opts.push({ label: 'Anything else?', fn: () => CityUI.dialog(I.name, I.done, [{ label: 'Leave', fn: close }], this.portraitInn) });
+    opts.push({ label: 'Leave', fn: close });
+    CityUI.dialog(I.name, N(I.greet), opts, this.portraitInn);
+  }
+
+  guildBoard() {
+    const GS = window.GameState, P = GS.player, flags = GS.world.flags, counts = GS.world.questCounts;
+    // turn-ins
+    let turnedIn = '';
+    for (const q of Quests.guildBoard) {
+      const c = counts[q.id] || 0;
+      if (c >= q.need && !flags['g-done-' + q.id]) {
+        flags['g-done-' + q.id] = true;
+        P.copper += q.copper; P.belt.length < 8 && P.belt.push({ type: q.potion, label: q.potionLabel });
+        turnedIn += `<div class="qobj">✓ ${q.title} paid out: ${Money.fmt(q.copper)} + ${q.potionLabel}</div>`;
+      }
+    }
+    if (turnedIn) { CityUI.setPurse(P.copper); CityUI.belt(P.belt); }
+    const note = (flags['q-mq2-listening-room'] === 'active'
+      ? 'The road ledger confirms it: three travelers logged in, never logged out — all near Thorn Grove. The clerk leans close: "The wood-elves found a camp that shouldn\'t be there. Ley-side. You didn\'t hear it from the guild." (Thorn Grove — the grove keeper knows more)'
+      : 'The board creaks with contracts. The clerk eyes your blood-crusted boots with professional approval.') + turnedIn;
+    const live = Quests.guildBoard.map(q => Object.assign({}, q, {
+      locked: false,
+      text: q.text + ' — ' + Math.min(counts[q.id] || 0, q.need) + '/' + q.need + (flags['g-done-' + q.id] ? ' PAID' : ''),
+    }));
+    CityUI.guildBoard(true, live, note);
+  }
+
+  runFinale() {
+    const C = Quests.cult, flags = window.GameState.world.flags;
+    const ax = CityMap.well.x * 32, ay = (CityMap.well.y - 4) * 32;
+
+    // RONIN-ONLY: the Emperor never arrives. (Book 4 readers know why.)
+    if (window.GameState.player.char === 'ronin') {
+      const F = C.finaleRonin;
+      for (const n of this.npcs) { n.pauseT = 14; n.spr.setFrame(this.frameFor(Math.atan2(0 - n.spr.y, ax - n.spr.x), 0, false)); }
+      const done = () => {
+        flags['q-mq5-ash-and-silence'] = 'done';
+        CityUI.closeDialog();
+        for (const n of this.npcs) n.pauseT = 1 + Math.random() * 2;
+        this.floatText(ax, ay - 60, 'THE ANKUSPAWN CONSPIRACY — it holds. for now.', '#e7b450', 16);
+        this.floatText(ax, ay - 30, 'the Emperor was never where anyone expected · the hunt continues in the campaigns', '#9a8f80', 12);
+        setTimeout(() => CityUI.credits('THE RONIN\'S ROAD — he was never where anyone expected'), 2600);
+      };
+      CityUI.dialog(F.title, F.text1, [{ label: 'Wait with the crowd', fn: () =>
+        CityUI.dialog(F.title, F.text2, [{ label: 'Stay until the plaza empties', fn: () =>
+          CityUI.dialog(F.title, F.text3, [{ label: 'Half a smile. Walk on.', fn: done }]) }]) }]);
+      return;
+    }
+
+
+    const em = this.add.sprite(ax, ay, 'fr-ankunyx', 0).setDepth(ay).setScale(1.35);
+    this.addLight(ax, ay, 160, false);
+    for (const n of this.npcs) { n.pauseT = 9999; n.spr.setFrame(this.frameFor(Math.atan2(ay - n.spr.y, ax - n.spr.x), 0, false)); }
+    const done = () => {
+      flags['q-mq5-ash-and-silence'] = 'done';
+      CityUI.closeDialog();
+      this.tweens.add({ targets: em, alpha: 0, duration: 1600, onComplete: () => em.destroy() });
+      for (const n of this.npcs) n.pauseT = 1 + Math.random() * 2;
+      this.floatText(ax, ay - 60, 'THE ANKUSPAWN CONSPIRACY — it holds. for now.', '#e7b450', 16);
+      this.floatText(ax, ay - 30, 'epilogue in your journal (J) · the hunt continues in the campaigns', '#9a8f80', 12);
+      if (window.GameState.player.char === 'warlock')
+        setTimeout(() => CityUI.credits('THE WARLOCK\'S ROAD — what follows him should not fit through doors'), 2600);
+      else if (window.GameState.player.char === 'druid')
+        setTimeout(() => this.floatText(ax, ay, 'a coach has arrived by the guild. it seems to be waiting for someone GIFTED.', '#3df0c8', 13), 2800);
+    };
+    const t2 = C.finale.text2 + (window.GameState.player.char === 'druid' ? ' ' + Quests.druid.finaleGaze : '');
+    CityUI.dialog(C.finale.title, C.finale.text1, [{ label: 'Kneel — or don\'t', fn: () =>
+      CityUI.dialog(C.finale.title, t2, [{ label: 'Hold your tongue. Hold the vial.', fn: () =>
+        CityUI.dialog(C.finale.title, C.finale.text3, [{ label: 'The story has barely begun', fn: done }]) }]) }]);
+  }
+
+  update(time, dtMs) {
+    const dt = Math.min(0.05, dtMs / 1000);
+    if (this.updateEncounter(time)) return;
+    this.updatePlayer(dt);
+    this.updateFollower(dt);
+    this.updateNPCs(dt);
+    this.updatePrompt();
+    this.updateAtmosphere(time, dt);
+
+    // --- BEAT 5 finale: the Dragon Emperor in the plaza ---
+    const flags = window.GameState.world.flags;
+    if (flags['q-mq5-ash-and-silence'] === 'active' && !this.finaleRan &&
+        Math.hypot(this.player.x - CityMap.well.x * 32, this.player.y - CityMap.well.y * 32) < 170) {
+      this.finaleRan = true;
+      this.runFinale();
+    }
+
+    // north gate travel
+    if (this.player.y < this.gateNorth.y + this.gateNorth.h + 10 &&
+        this.player.x > this.gateNorth.x - 8 && this.player.x < this.gateNorth.x + this.gateNorth.w + 8) {
+      window.GameState.world.groveFromCity = true;
+      this.scene.start('GroveScene');
+      return;
+    }
+
+    this.chatterT -= dt;
+    if (this.chatterT <= 0) {
+      this.chatterT = 5 + Math.random() * 5;
+      const near = this.npcs.filter(n => Math.abs(n.spr.x - this.player.x) < 400 && Math.abs(n.spr.y - this.player.y) < 280);
+      if (near.length) {
+        const n = near[Math.floor(Math.random() * near.length)];
+        const line = CityMap.chatter[Math.floor(Math.random() * CityMap.chatter.length)].replace('{N}', window.GameState.player.nickname);
+        this.floatText(n.spr.x, n.spr.y - 46, '“' + line + '”', '#9a8f80', 11);
+      }
+    }
+  }
+}

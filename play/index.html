@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>The Sorcerer-Sword ARPG — The Ankuspawn Conspiracy</title>
+<style>
+  /* ===== ported verbatim from the-pit-of-karridge.html (UI is part of the feel) ===== */
+  :root{
+    --ink:#0d0a08; --sand:#3a2d22; --torch:#c8923a; --gold:#e7b450;
+    --blood:#8a1f1c; --bone:#d8cdb8; --ash:#6b5d4f;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--ink);font-family:'Courier New',monospace;color:var(--bone);touch-action:none}
+  input{user-select:text;-webkit-user-select:text}
+  #game-container{position:fixed;inset:0}
+  #game-container canvas{image-rendering:pixelated}
+  /* ---------- HUD ---------- */
+  #hud{position:fixed;top:0;left:0;right:0;padding:max(8px,env(safe-area-inset-top)) 12px 6px;display:none;pointer-events:none;z-index:5}
+  #hud .row{display:flex;align-items:baseline;gap:10px}
+  #pname{font-size:15px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;font-weight:bold;text-shadow:0 1px 0 #000}
+  #pdice{font-size:12px;color:var(--bone);font-family:monospace;opacity:.9}
+  #pkills{margin-left:auto;font-size:12px;color:var(--ash);font-family:monospace}
+  #hpwrap{margin-top:5px;height:12px;background:#1b1410;border:1px solid #000;box-shadow:0 0 0 1px #2c2118;max-width:340px}
+  #hpbar{height:100%;background:linear-gradient(#a8352d,#6e1815);transition:width .12s}
+  #bossw{position:fixed;left:50%;transform:translateX(-50%);bottom:148px;width:min(70vw,420px);display:none;z-index:5;pointer-events:none}
+  #bossname{text-align:center;font-size:11px;letter-spacing:4px;color:var(--torch);text-transform:uppercase;margin-bottom:3px;text-shadow:0 1px 2px #000}
+  #bosshpw{height:8px;background:#1b1410;border:1px solid #000}
+  #bosshp{height:100%;background:linear-gradient(#b78a2f,#7a5414)}
+  /* ---------- TOUCH CONTROLS ---------- */
+  #controls{position:fixed;inset:0;display:none;z-index:6;pointer-events:none}
+  .btn{position:absolute;border-radius:50%;border:2px solid rgba(231,180,80,.5);background:rgba(20,14,9,.55);color:var(--gold);
+       display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:11px;letter-spacing:2px;
+       text-transform:uppercase;backdrop-filter:blur(2px);box-shadow:inset 0 0 18px rgba(0,0,0,.6);pointer-events:auto}
+  .btn:active,.btn.held{background:rgba(200,146,58,.35);border-color:var(--gold)}
+  .btn .cd{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.65);transform-origin:center;display:none}
+  #bSlash{right:18px;bottom:max(26px,env(safe-area-inset-bottom));width:92px;height:92px;font-size:13px}
+  #bHeavy{right:124px;bottom:max(20px,env(safe-area-inset-bottom));width:66px;height:66px}
+  #bRoll{right:34px;bottom:calc(max(26px,env(safe-area-inset-bottom)) + 104px);width:66px;height:66px}
+  #bParry{right:124px;bottom:calc(max(20px,env(safe-area-inset-bottom)) + 82px);width:66px;height:66px}
+  #stickBase{position:fixed;width:110px;height:110px;border-radius:50%;border:2px solid rgba(216,205,184,.25);
+             background:rgba(20,14,9,.35);display:none;pointer-events:none}
+  #stickNub{position:fixed;width:48px;height:48px;border-radius:50%;background:rgba(216,205,184,.45);display:none;pointer-events:none}
+  #interactPrompt{pointer-events:auto !important;cursor:pointer}
+  /* ---------- SCREENS ---------- */
+  .screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+          background:radial-gradient(ellipse at 50% 30%,#1a120b 0%,#0d0a08 70%);z-index:10;padding:24px;text-align:center}
+  .screen.show{display:flex}
+  .eyebrow{font-size:11px;letter-spacing:6px;color:var(--ash);text-transform:uppercase;margin-bottom:14px}
+  h1{font-size:clamp(38px,11vw,72px);letter-spacing:8px;color:var(--bone);font-weight:normal;line-height:1.05;text-shadow:0 0 22px rgba(255,90,140,.6),4px 4px 0 #4a1024}
+  h1 .nm{color:var(--gold)}
+  .sub{margin-top:10px;font-size:14px;color:var(--torch);letter-spacing:3px;text-transform:uppercase}
+  .tap{margin-top:46px;font-size:13px;color:#3df0c8;letter-spacing:3px;border:2px solid #3df0c8;
+       padding:14px 38px;text-transform:uppercase;background:rgba(61,240,200,.07);box-shadow:0 0 16px rgba(61,240,200,.3);cursor:pointer}
+  .tap:active{background:rgba(200,146,58,.3)}
+  /* fight board */
+  #board .slate{width:min(92vw,440px);border:1px solid #2c2118;background:linear-gradient(#15100b,#0f0b08);
+                box-shadow:0 0 0 1px #000,0 10px 40px #000;padding:22px 20px;text-align:left}
+  .slq{font-size:10px;letter-spacing:4px;color:var(--ash);text-transform:uppercase}
+  #foeName{font-size:clamp(26px,7vw,38px);letter-spacing:4px;color:var(--bone);margin:4px 0 2px}
+  #foeRec{font-family:monospace;font-size:12px;color:var(--torch)}
+  #foeTaunt{margin:12px 0 14px;font-style:italic;font-size:14px;color:var(--bone);opacity:.85;border-left:2px solid var(--blood);padding-left:10px}
+  #odds{font-family:monospace;font-size:13px;color:var(--gold);margin-bottom:14px}
+  #statTable{width:100%;border-collapse:collapse;font-family:monospace;font-size:12px;margin-bottom:6px}
+  #statTable td{padding:3px 0;color:var(--bone)}
+  #statTable td.up{color:#7fbf6a;text-align:right}
+  #statTable td.lbl{color:var(--ash)}
+  .crowdname{margin-top:8px;font-size:11px;letter-spacing:3px;color:var(--torch);text-transform:uppercase;text-align:center}
+  /* announce banner */
+  #banner{position:fixed;left:0;right:0;top:32%;text-align:center;z-index:8;pointer-events:none;display:none}
+  #banner .b1{font-size:clamp(22px,7vw,40px);letter-spacing:6px;color:var(--gold);text-transform:uppercase;text-shadow:0 0 24px rgba(240,168,61,.55),3px 3px 0 #1a0f04}
+  #banner .b2{font-size:12px;letter-spacing:4px;color:var(--bone);text-transform:uppercase;margin-top:6px;opacity:.85}
+  #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:7}
+  /* ---------- CITY UI ---------- */
+  #cityhud{position:fixed;top:0;left:0;right:0;padding:10px 14px;display:none;pointer-events:none;z-index:5}
+  #cityhud .row{display:flex;align-items:baseline;gap:14px}
+  #cityName{font-size:15px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;font-weight:bold;text-shadow:0 1px 0 #000}
+  #cityPurse{font-size:13px;color:var(--torch);font-family:monospace}
+  #cityHint{margin-left:auto;font-size:11px;color:var(--ash)}
+  #interactPrompt{position:fixed;left:50%;transform:translateX(-50%);bottom:120px;display:none;z-index:6;
+    font-size:13px;letter-spacing:2px;color:#3df0c8;background:rgba(4,2,8,.8);border:1px solid rgba(61,240,200,.5);
+    padding:8px 18px;text-transform:uppercase;pointer-events:none}
+  #belt{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;display:none;gap:6px;z-index:6}
+  .beltslot{width:44px;height:44px;border:2px solid #2c2118;background:rgba(15,11,8,.85);box-shadow:0 0 0 1px #000;
+    display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--bone)}
+  .beltslot.filled{border-color:rgba(231,180,80,.55)}
+  #dialog{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;width:min(92vw,560px);display:none;z-index:20;
+    background:linear-gradient(#15100b,#0f0b08);border:1px solid #2c2118;box-shadow:0 0 0 1px #000,0 10px 40px #000;
+    padding:16px;gap:14px;align-items:flex-start}
+  #dlgPortrait{flex:0 0 84px;height:84px;border:1px solid #2c2118;background:#0a0705;display:flex;align-items:center;justify-content:center}
+  #dlgPortrait canvas{width:80px;height:80px;image-rendering:pixelated}
+  #dlgName{font-size:13px;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+  #dlgText{font-size:13px;line-height:1.7;color:var(--bone)}
+  .dlgopt{margin-top:8px;font-size:12px;letter-spacing:1px;color:#3df0c8;cursor:pointer;padding:6px 10px;border:1px solid rgba(61,240,200,.35);background:rgba(61,240,200,.05)}
+  .dlgopt:hover{background:rgba(61,240,200,.15)}
+  .dlgopt.disabled{color:var(--ash);border-color:#2c2118;cursor:default}
+  #questlog,#guildboard{position:fixed;right:16px;top:54px;width:min(88vw,360px);display:none;z-index:20;
+    background:linear-gradient(#15100b,#0f0b08);border:1px solid #2c2118;box-shadow:0 0 0 1px #000,0 10px 40px #000;padding:16px}
+  .qhead{font-size:11px;letter-spacing:4px;color:var(--ash);text-transform:uppercase;margin-bottom:10px}
+  .qtitle{font-size:13px;letter-spacing:2px;color:var(--gold);margin-top:10px}
+  .qtext{font-size:12px;line-height:1.6;color:var(--bone);opacity:.9;margin-top:3px}
+  .qobj{font-size:11px;color:#3df0c8;margin-top:4px}
+</style>
+</head>
+<body>
+<div id="game-container"></div>
+
+<div id="intro" style="display:none;position:fixed;inset:0;z-index:40;pointer-events:none;flex-direction:column;justify-content:space-between;align-items:center;padding:42px 20px 96px">
+  <div style="max-width:380px;text-align:center;background:rgba(4,2,8,.84);border:1px solid #3df0c8;padding:13px 16px;box-shadow:0 0 18px rgba(61,240,200,.25)">
+    <div id="introName" style="font-size:17px;letter-spacing:4px;color:#3df0c8;margin-bottom:7px"></div>
+    <div id="introBio" style="font-size:12px;line-height:1.8;color:var(--bone)"></div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:13px">
+    <div id="demoCap" style="max-width:360px;text-align:center;font-size:13px;letter-spacing:1px;color:#f0a83d;background:rgba(4,2,8,.84);padding:9px 14px;min-height:18px;line-height:1.6"></div>
+    <div class="tap" id="enterBtn" style="margin-top:0;pointer-events:auto">Enter the Pit</div>
+  </div>
+</div>
+<div id="hud">
+  <div class="row"><span id="pname">NOBODY</span><span id="pdice">1d8</span><span id="pkills">KILLS 0</span></div>
+  <div id="hpwrap"><div id="hpbar" style="width:100%"></div></div>
+</div>
+<div id="bossw"><div id="bossname"></div><div id="bosshpw"><div id="bosshp" style="width:100%"></div></div></div>
+
+<div id="stickBase" style="z-index:7"></div><div id="stickNub" style="z-index:7"></div>
+<div id="controls">
+  <div class="btn" id="bSlash">SLASH<div class="cd"></div></div>
+  <div class="btn" id="bHeavy">HEAVY<div class="cd"></div></div>
+  <div class="btn" id="bRoll">ROLL<div class="cd"></div></div>
+  <div class="btn" id="bParry">PARRY<div class="cd"></div></div>
+</div>
+
+<div id="banner"><div class="b1"></div><div class="b2"></div></div>
+<div id="flash"></div>
+
+<div id="cityhud"><div class="row"><span id="cityName"></span><span id="cityPurse"></span><span id="cityHint">E — interact · J — journal · ESC — close</span></div></div>
+<div id="interactPrompt"></div>
+<div id="belt"></div>
+<div id="dialog" style="display:none"><div id="dlgPortrait"></div><div style="flex:1"><div id="dlgName"></div><div id="dlgText"></div><div id="dlgOpts"></div></div></div>
+<div id="questlog"><div class="qhead">Journal — the Ankuspawn thread</div><div id="questlogBody"></div></div>
+<div id="worldmap" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,620px);height:min(80vh,500px);display:none;z-index:25;background:linear-gradient(#1a140d,#0f0b08);border:1px solid #3a2f1f;box-shadow:0 0 0 1px #000,0 14px 60px #000;padding:18px"></div>
+<div id="guildboard"><div class="qhead">Guild board — contracts</div><div id="guildboardBody"></div></div>
+<div id="companions" style="position:fixed;left:16px;top:54px;width:min(88vw,360px);display:none;z-index:20;background:linear-gradient(#15100b,#0f0b08);border:1px solid #2c2118;box-shadow:0 0 0 1px #000,0 10px 40px #000;padding:16px"><div class="qhead">The company — P to close</div><div id="companionsBody"></div></div>
+
+<div class="screen show" id="title">
+  <div class="eyebrow">The Sorcerer-Sword &nbsp;·&nbsp; The Ankuspawn Conspiracy</div>
+  <h1><span class="nm">NOBODY</span></h1>
+  <div class="sub">No banner. No name. 12-to-1 against.</div>
+  <div class="tap" id="continueBtn" style="display:none;margin-top:20px;color:#e7b450;border-color:#e7b450;background:rgba(231,180,80,.07);box-shadow:0 0 16px rgba(231,180,80,.3)">Continue — return to the world</div>
+  <div style="display:flex;gap:10px;margin-top:38px;flex-wrap:wrap;justify-content:center">
+    <div class="tap" id="startBtn" style="margin-top:0">The Ronin</div>
+    <div class="tap" id="druidBtn" style="margin-top:0;color:#7fbf6a;border-color:#7fbf6a;background:rgba(127,191,106,.07);box-shadow:0 0 16px rgba(127,191,106,.3)">The Druid</div>
+    <div class="tap" id="warlockBtn" style="margin-top:0;color:#b070f0;border-color:#b070f0;background:rgba(176,112,240,.07);box-shadow:0 0 16px rgba(176,112,240,.3)">The Warlock</div>
+  </div>
+  <div style="margin-top:14px;font-size:10px;color:var(--ash);letter-spacing:1px;line-height:1.8">
+    RONIN — the only PARRY · every kill (even summons) feeds the blade: katana &rarr; NODACHI &rarr; ODACHI<br>
+    DRUID — twin-blade glaive · vines &amp; retreat · 6s beast forms, separate cooldowns per form<br>
+    WARLOCK — hex · blink-stun · portal ward · one of each demon — full coven transforms him: ARCH DEVIL, 10s, devours his own<br>
+    <span style="color:#f0a83d">TWENTY FIGHTS. The Pit remembers its favorites — and teams them up.</span>
+  </div>
+  <div style="margin-top:26px;font-size:11px;color:var(--ash);letter-spacing:1px;line-height:1.8">
+    WASD — move &nbsp;·&nbsp; J / click — SLASH (three-cut combo) &nbsp;·&nbsp; SPACE / right-click — ROLL (invulnerable)<br>
+    K — PARRY (deflect &amp; stagger) &nbsp;·&nbsp; Q — HEAVY (slow, double dice, finishes)<br>
+    Every kill: +2 ALL STATS, +1 damage die. Forever.
+  </div>
+</div>
+
+<div class="screen" id="board">
+  <div class="slate">
+    <div class="slq">Next on the sand</div>
+    <div id="foeName"></div>
+    <div id="foeRec"></div>
+    <div id="foeTaunt"></div>
+    <div id="odds"></div>
+    <div class="slq" style="margin-bottom:4px">Your ledger</div>
+    <table id="statTable"></table>
+    <div class="crowdname" id="crowdLine"></div>
+  </div>
+  <div class="tap" id="fightBtn">Fight</div>
+</div>
+
+<div class="screen" id="death">
+  <div class="eyebrow">The sand takes another</div>
+  <h1 style="color:var(--blood)">DEAD</h1>
+  <div class="sub" id="deathStats"></div>
+  <div style="margin-top:14px;font-size:13px;color:var(--ash);font-style:italic" id="deathQuote"></div>
+  <div style="margin-top:18px;font-size:11px;color:#3df0c8;letter-spacing:1px;line-height:1.9;max-width:340px" id="deathHints"></div>
+  <div class="tap" id="againBtn">Again</div>
+</div>
+
+<div class="screen" id="credits">
+  <div class="eyebrow">The Sorcerer-Sword &nbsp;·&nbsp; The Ankuspawn Conspiracy</div>
+  <h1 style="font-size:clamp(28px,8vw,52px)">THE STORY HAS<br>BARELY BEGUN</h1>
+  <div class="sub" id="creditsEnding"></div>
+  <div style="margin-top:18px;font-size:12px;color:var(--bone);line-height:2;max-width:460px">
+    Three champions walked out of the Pit of Karridge.<br>
+    Three roads lead away from the plaza — this was only one of them.<br>
+    The conspiracy holds. The hunt continues in the world of
+    <span style="color:var(--gold)">THE SORCERER-SWORD</span>.
+  </div>
+  <div style="margin-top:26px;font-size:12px;line-height:2.4">
+    <a href="https://youtu.be/6HrBWr6NJrE?si=ClFYAsKYOUWtb4Ld" target="_blank" rel="noopener"
+       style="color:#3df0c8;text-decoration:none;border:1px solid rgba(61,240,200,.4);padding:8px 16px;display:inline-block">
+       ▶ LISTEN — Book 1 audio on the Neverending Narratives podcast</a><br>
+    <a href="https://www.amazon.com/Neverending-Narratives-The-Sorcerer-Sword/dp/B0GZXBL8PX" target="_blank" rel="noopener"
+       style="color:#e7b450;text-decoration:none;border:1px solid rgba(231,180,80,.4);padding:8px 16px;display:inline-block;margin-top:8px">
+       📖 READ — The Sorcerer-Sword Books 1 &amp; 2 on Amazon</a>
+  </div>
+  <div style="margin-top:18px;font-size:10px;color:var(--ash);letter-spacing:1px">a game in the world of the novels · combat born in the Pit of Karridge</div>
+  <div class="tap" id="creditsBtn" style="margin-top:26px">Keep walking the world</div>
+</div>
+
+<div class="screen" id="victory">
+  <div class="eyebrow">The Pit falls silent</div>
+  <h1 class="nm" style="color:var(--gold)">THE NAME<br>OF THE PIT</h1>
+  <div class="sub" id="vicStats"></div>
+  <div style="margin-top:14px;font-size:13px;color:var(--bone);font-style:italic;max-width:420px">
+    Bellow pays out with shaking hands. Two thousand voices chant a name you never gave them. It is yours now anyway.
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+    <div class="tap" id="leaveBtn" style="color:var(--gold);border-color:var(--gold);background:rgba(231,180,80,.07);box-shadow:0 0 16px rgba(231,180,80,.3)">Leave the Pit</div>
+    <div class="tap" id="vicBtn" style="margin-top:46px">Walk the gauntlet again</div>
+  </div>
+</div>
+
+<script src="lib/phaser.min.js"></script>
+<script src="config.js"></script>
+<script src="assets/embedded.js"></script>
+<script src="src/core/money.js"></script>
+<script src="src/core/dialog.js"></script>
+<script src="src/core/worldmap.js"></script>
+<script src="src/core/autopilot.js"></script>
+<script src="src/core/touchstick.js"></script>
+<script src="src/core/save.js"></script>
+<script src="src/core/music.js"></script>
+<script src="src/core/voice.js"></script>
+<script src="src/world/citymap.js"></script>
+<script src="src/world/quests.js"></script>
+<script src="src/world/companions.js"></script>
+<script src="src/core/companionAI.js"></script>
+<script src="src/combat/pit.js"></script>
+<script src="src/scenes/ArenaScene.js"></script>
+<script src="src/scenes/WorldScene.js"></script>
+<script src="src/scenes/CityScene.js"></script>
+<script src="src/scenes/GroveScene.js"></script>
+<script src="src/scenes/DungeonScene.js"></script>
+<script src="src/scenes/VarenholmScene.js"></script>
+<script src="src/main.js"></script>
+</body>
+</html>

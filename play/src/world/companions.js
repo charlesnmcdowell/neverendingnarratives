@@ -1,0 +1,76 @@
+// The six companions — personas (AI system prompts), looks, scripted dialog,
+// recruitment. All romanceable; sexuality never gates anything. Tasteful fade-to-black.
+
+const Companions = {
+  brakka: {
+    name: 'BRAKKA', where: 'city', spot: [46, 23],
+    look: { col: '#3a4a3c', o: { thickWpn: true, wpnLen: 34, wpnCol: '#5a5248', headCol: '#4a5a44' } },
+    blurb: 'Orc mercenary. Lawful to the letter of a contract, gruffer than the letter deserves.',
+    persona: 'You are Brakka, an orc mercenary in the Kingdom of Ankunyx. Licensed, professional, gruff, honorable to the exact letter of a contract. Dry, short sentences. You respect competence and despise waste. You carry grief about your old company quietly. Stay in character, fantasy register, under 60 words, never break the fourth wall.',
+    greet: '"You\'re the pit-crowned. Saw your third fight. Sloppy footwork, good instincts." He goes back to oiling the axe. "Mercenary company\'s gone. Just me. Contracts only."',
+    chat: ['"Guild pays on time. That\'s all the poetry I need."',
+      '"Wolves in the grove move like they\'re herded. Herded means a herder."',
+      '"You fight like the Pit taught you. The Pit teaches ugly. Works though."'],
+    recruitFlag: 'dg-amb2', // the Keeper cleared
+    recruitAsk: '"The hollow under the grove. My company\'s last contract went in there, years back. One of mine never came out — Dorga. If the thing that kept that place is dead..." he stops oiling. "Is it dead?"',
+    recruitYes: '"Then Dorga\'s debt is paid and I\'m out of reasons to sit here." He stands. The axe looks lighter on his shoulder than it should. "Contract\'s simple: I walk where you walk. Pay negotiable. Don\'t waste my time and we\'ll be fine."',
+    recruitNo: '"Come back when it\'s done. I don\'t move on maybes."',
+  },
+  vexa: {
+    name: 'VEXA', where: 'city', spot: [61, 33],
+    look: { col: '#4a2433', o: { headCol: '#b85a6a', wpnLen: 0 } },
+    blurb: 'Tiefling alchemist. Chaotic, flammable, occasionally on purpose.',
+    persona: 'You are Vexa, a tiefling alchemist in Karridge\'s back alleys. Chaotic-neutral problem child, arson-adjacent, brilliant, fast-talking, endlessly curious about volatile reagents. You find danger funny and boredom unbearable. Stay in character, fantasy register, under 60 words, never break the fourth wall.',
+    greet: '"Ooh. You smell like the Pit and bad decisions." She doesn\'t look up from a vial that is, faintly, smoking. "I\'m not selling anything. Legally."',
+    chat: ['"The well water FIZZES if you add saltpeter. Nobody appreciates this but me."',
+      '"The guild board\'s rot shaman? Its residue would make a GORGEOUS accelerant."',
+      '"If anyone asks, the alley smelled like that when I got here."'],
+    recruitVial: '"Wait. WAIT. That vial — it HUMS. Do you know what I could learn from— okay. Trade. You give me the hum-vial, I give you me. Field alchemy, fire support, sparkling conversation. That\'s a steal and you know it."',
+    recruitBrew: '"You gave the real one away? To a SAD WOMAN? Ugh, you\'re one of THOSE." She grins, all teeth. "Fine. Bring me a strength potion to take apart instead. I\'ll come along for the entertainment value alone."',
+    recruitYes: '"YES. Okay. Rules: I walk where you walk, I light what you point at, and if I say \'run\' it\'s already too late. This is going to be GREAT."',
+    recruitNo: '"Keep your hum-bottle then. I\'ll be here. Bored. DANGEROUSLY bored."',
+  },
+  dorian: {
+    name: 'DORIAN', where: 'city', spot: [22, 23],
+    look: { col: '#39414a', o: { shield: true, wpnLen: 30, wpnCol: '#cfd3d8', headCol: '#caa27a' } },
+    blurb: 'Disgraced knight of the old coalition army. Seeking a redemption nobody assigned him.',
+    persona: 'You are Dorian, a disgraced human knight of the coalition standing army, drummed out for obeying a bad order. Earnest, formal, self-deprecating, lawful-good to the bone. You believe redemption is earned in small acts. Stay in character, fantasy register, under 60 words, never break the fourth wall.',
+    greet: '"Champion." He salutes with a hand that remembers better banners. "Dorian. Formerly of the Third Shields. The \'formerly\' is the interesting part, and I\'d rather not."',
+    chat: ['"The missing folk on the road — someone should stand for them. Someone with no reputation to lose, perhaps."',
+      '"I drill at dawn behind the inn. Habit. The sword forgives routine, never absence."'],
+    scriptedOnly: true,
+  },
+  faelar: {
+    name: 'FAELAR', where: 'grove', spot: [52, 20],
+    look: { col: '#2a4434', o: { wpnLen: 26, wpnCol: '#d8e4d0', headCol: '#caa27a' } },
+    blurb: 'Wood-elf grove-keeper. Serene like deep water; dry like good wine.',
+    persona: 'You are Faelar, a wood-elf keeper of Thorn Grove. Serene, patient, with a dry wit that arrives a beat late. Neutral good. You speak of the forest as a colleague. The ley-line\'s corruption grieves you personally. Stay in character, fantasy register, under 60 words, never break the fourth wall.',
+    greet: '"The grove has opinions about visitors. About you it is... curious. That\'s rarer than approval."',
+    chat: ['"The node hums clean again since you broke their camp. The trees mention it. Frequently. They\'re worse than gossips."',
+      '"Deepwood\'s Eldest know more than they sing. They always do."'],
+    scriptedOnly: true,
+  },
+  sylvara: {
+    name: 'SYLVARA', where: 'grove', spot: [8, 38],
+    look: { col: '#241a30', o: { robe: true, headCol: '#8a8aa4', wpnLen: 30, wpnCol: '#3a3046', staffTip: true, tipCol: '#b070f0', twoHand: false } },
+    blurb: 'Dark-elf exile. Ex-Academy. Knows what the Ashenveil\'s lower levels smell like.',
+    persona: 'You are Sylvara, a dark-elf exiled noble and former Ashenveil Academy researcher. Sharp-tongued strategist, neutral-evil-leaning pragmatist with exactly one line you will not cross — and the Academy crossed it. You speak in precise, cutting sentences. Stay in character, fantasy register, under 60 words, never break the fourth wall.',
+    greet: '"You\'re louder than you think, champion. So is what you\'re hunting." She doesn\'t turn around. "I was Academy. Ashenveil. Ask better questions than the guild does."',
+    chat: ['"The lower levels have a smell. Copper and lilac. You never stop noticing it."',
+      '"They\'re not brewing potions down there. They\'re farming. Choose your words by their teeth."'],
+    scriptedOnly: true,
+  },
+  pippa: {
+    name: 'PIPPA', where: 'both', spot: [30, 33],
+    look: { col: '#5a4a30', o: { headCol: '#c89a5a', wpnLen: 0 } },
+    blurb: 'Halfling treasure hunter. Relentlessly cheerful. Suspiciously well-funded.',
+    persona: 'You are Pippa, a halfling treasure hunter, chaotic good, relentlessly cheerful, allergic to despair. You\'ve robbed three ruins "ethically" and can prove it. You collect rumors like coins. Stay in character, fantasy register, under 60 words, never break the fourth wall.',
+    greet: '"OH. Oh you\'re the one! I bet two silver on you in fight nine and bought these boots. LOOK at these boots."',
+    chat: ['"There\'s a chest in the grove nobody\'s found. Well. Nobody\'s found TWICE."',
+      '"Dungeon under the roots, treasure at the bottom — I\'d have gotten to it eventually. Probably. The skeletons are a strong argument for \'eventually\'."'],
+    scriptedOnly: true,
+  },
+};
+
+if (typeof module !== 'undefined' && module.exports) module.exports = { Companions };
+else window.Companions = Companions;
