@@ -205,8 +205,12 @@ class ArenaScene extends Phaser.Scene {
     this.combat.frame(time);
     this.pitTex.refresh();
     const m = this.combat.S.mode;
-    // arena track persists through the fight board (no flip-flop between fights)
-    MusicMan.play(m === 'fight' || m === 'demo' || m === 'board' ? 'arena' : 'title');
+    // arena track persists through the fight board (no flip-flop between fights).
+    // Per-character pit themes (Hiro): ronin keeps the arena track, warlock gets
+    // zero dark thirty (the dungeon track), druid gets her own pit-druid track.
+    const ch = (window.GameState && GameState.player && GameState.player.char) || (this.combat.P && this.combat.P.char);
+    const pitTrack = ch === 'warlock' ? 'dungeon' : (ch === 'druid' && !MusicMan._missing['pit-druid'] ? 'pit-druid' : 'arena'); // falls back to arena until pit-druid.mp3 exists
+    MusicMan.play(m === 'fight' || m === 'demo' || m === 'board' ? pitTrack : 'title');
     this.updateTitleBackdrop(time, dtMs);
     // AUTO FULL: walk out of the Pit when the crowd has its name
     const vic = document.getElementById('victory').classList.contains('show');
