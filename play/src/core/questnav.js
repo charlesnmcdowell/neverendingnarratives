@@ -39,7 +39,7 @@ const QuestNav = {
     if (f['q-mq2-listening-room'] === 'active') return at('thorn-grove', 6 * T, 19 * T, true, 'the cult waystation');
     if (f['q-mq3-roots-that-rot'] === 'active') return at('karridge-city', 12 * T, 36 * T, true, 'the veiled woman');
     if (f['q-mq4-the-buyer'] === 'active') return at('thorn-grove', 4 * T, 27 * T, true, 'the night shipment');
-    if (f['q-mq5-ash-and-silence'] === 'active') return at('karridge-city', 35 * T, 22 * T, false, 'the plaza');
+    if (f['q-mq5-ash-and-silence'] === 'active') return at('karridge-city', 35 * T, 25.5 * T, false, 'the plaza'); // open ground south of the well (the well itself is solid)
     if (f['q-mq5-ash-and-silence'] === 'done' && druid && f['q-mq6-the-dancer'] !== 'done') {
       if (GS.world.zone !== 'varenholm') return at('karridge-city', 1656, 744, true, 'the heartland coach');
       if (!f['varenholm-show-seen']) return at('varenholm', 1248, 416, true, 'the Civic Auditorium');
@@ -52,7 +52,7 @@ const QuestNav = {
   nextHop(from, to) {
     const HOPS = {
       'karridge-city': { 'thorn-grove': { x: 1120, y: 40, interact: false }, 'grove-dungeon': { x: 1120, y: 40, interact: false }, 'varenholm': { x: 1656, y: 744, interact: true } },
-      'thorn-grove': { 'karridge-city': { x: 1088, y: 1545, interact: false }, 'varenholm': { x: 1088, y: 1545, interact: false }, 'grove-dungeon': { x: 1984, y: 1344, interact: true } },
+      'thorn-grove': { 'karridge-city': { x: 1088, y: 1572, interact: false }, 'varenholm': { x: 1088, y: 1572, interact: false }, 'grove-dungeon': { x: 1984, y: 1344, interact: true } },
       'grove-dungeon': { 'thorn-grove': { x: 160, y: 96, interact: true }, 'karridge-city': { x: 160, y: 96, interact: true }, 'varenholm': { x: 160, y: 96, interact: true } },
       'varenholm': { 'karridge-city': { x: 896, y: 1088, interact: true }, 'thorn-grove': { x: 896, y: 1088, interact: true }, 'grove-dungeon': { x: 896, y: 1088, interact: true } },
     };
@@ -95,11 +95,13 @@ const QuestNav = {
     blocked[id(S[0], S[1])] = 0; blocked[id(E[0], E[1])] = 0;
     const prev = new Int32Array(W * H).fill(-1);
     const q = [id(S[0], S[1])]; prev[q[0]] = q[0];
-    let found = false;
+    let found = false, best = q[0], bestD = Math.abs(S[0] - E[0]) + Math.abs(S[1] - E[1]);
     while (q.length) {
       const cur = q.shift();
       if (cur === id(E[0], E[1])) { found = true; break; }
       const cx = cur % W, cy = (cur / W) | 0;
+      const d = Math.abs(cx - E[0]) + Math.abs(cy - E[1]);
+      if (d < bestD) { bestD = d; best = cur; }
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nx = cx + dx, ny = cy + dy;
         if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
@@ -108,9 +110,8 @@ const QuestNav = {
         prev[n] = cur; q.push(n);
       }
     }
-    if (!found) return [{ x: tx, y: ty }]; // beeline fallback; collision still applies
     const pts = [];
-    let cur = id(E[0], E[1]);
+    let cur = found ? id(E[0], E[1]) : best; // unreachable target: walk to the closest reachable tile
     while (prev[cur] !== cur) { pts.push({ x: (cur % W) * T + T / 2, y: ((cur / W) | 0) * T + T / 2 }); cur = prev[cur]; }
     pts.reverse(); pts.push({ x: tx, y: ty });
     return pts;
@@ -145,23 +146,19 @@ const QuestNav = {
     if (this._idleT > 1.2 && this.objective()) { this._idleT = 0; this.tracking = true; this.replan(scene); }
   },
 
-  // FULL: advance dialogs (the finale and anything nav opened) after a reading pause
+  // FULL: advance ANY open dialog after a reading pause — except companion chat
+  // menus (first option 'Talk'), which FULL closes rather than loops.
   updateDialogs(scene, dt) {
     if (this.mode !== 2) return;
-    if (CityUI.dialogOpen() && !this.autoDialog) {
-      // main-quest dialogs that opened by proximity (the plaza finale) count too
-      const nm = (document.getElementById('dlgName') || {}).textContent || '';
-      if (/DRAGON EMPEROR|EMPTY ROAD|CRATES OPEN|WAYSTATION|NIGHT SHIPMENT|VERDANCE|CAPTURE TEAM/i.test(nm)) this.autoDialog = true;
-    }
-    if (!this.autoDialog) return;
     if (!CityUI.dialogOpen()) { this.dialogT = 0; return; }
     this.dialogT += dt;
     if (this.dialogT < 2.8) return;
     this.dialogT = 0;
     const opts = document.querySelectorAll('#dlgOpts .dlgopt:not(.disabled)');
     if (opts.length && opts[0].textContent.trim() !== 'Talk') opts[0].dispatchEvent(new Event('pointerdown'));
-    else if (opts.length) { CityUI.closeDialog(); this.autoDialog = false; }
+    else if (opts.length) CityUI.closeDialog();
     if (!CityUI.dialogOpen()) { this.autoDialog = false; this.replan(scene); }
   },
+
 };
 if (typeof window !== 'undefined') window.QuestNav = QuestNav;

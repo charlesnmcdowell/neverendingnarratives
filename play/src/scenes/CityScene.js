@@ -80,18 +80,9 @@ class CityScene extends WorldScene {
       if (b.id === 'inn') this.interactables.push({ x: dx, y: dy - 10, label: 'enter THE LAST LANTERN', fn: () => this.innDialog() });
       if (b.id === 'guild') {
         this.interactables.push({ x: dx, y: dy - 10, label: 'enter the ADVENTURERS GUILD', fn: () => this.guildBoard() });
+        this.guildDoor = { dx, dy };
         // DRUID-ONLY post-finale: the heartland coach — her secret road north
-        if (GS.world.flags['q-mq5-ash-and-silence'] === 'done' && P.char === 'druid') {
-          const cy = dy + 40;
-          const cg = this.add.graphics().setDepth(cy);
-          cg.fillStyle(0x241a12); cg.fillRect(dx + 60, cy - 22, 56, 30);
-          cg.fillStyle(0x14100a); cg.fillCircle(dx + 72, cy + 10, 8); cg.fillCircle(dx + 104, cy + 10, 8);
-          this.addLight(dx + 88, cy, 70, false);
-          this.interactables.push({ x: dx + 88, y: cy, label: 'board the heartland coach to VARENHOLM', fn: () => {
-            if (!GS.world.flags['q-mq6-the-dancer']) GS.world.flags['q-mq6-the-dancer'] = 'active';
-            this.scene.start('VarenholmScene');
-          }});
-        }
+        if (GS.world.flags['q-mq5-ash-and-silence'] === 'done' && P.char === 'druid') this.addVarenholmCoach();
       }
       if (b.sign) {
         this.add.rectangle(dx + 36, dy - bh / 2 - 6, 46, 16, 0x15100b).setStrokeStyle(1, 0xe7b450, 0.6).setDepth(dy + 2);
@@ -253,6 +244,20 @@ class CityScene extends WorldScene {
     CityUI.guildBoard(true, live, note);
   }
 
+  addVarenholmCoach() {
+    if (this._coachAdded || !this.guildDoor) return;
+    this._coachAdded = true;
+    const { dx, dy } = this.guildDoor, cy = dy + 40;
+    const cg = this.add.graphics().setDepth(cy);
+    cg.fillStyle(0x241a12); cg.fillRect(dx + 60, cy - 22, 56, 30);
+    cg.fillStyle(0x14100a); cg.fillCircle(dx + 72, cy + 10, 8); cg.fillCircle(dx + 104, cy + 10, 8);
+    this.addLight(dx + 88, cy, 70, false);
+    this.interactables.push({ x: dx + 88, y: cy, label: 'board the heartland coach to VARENHOLM', fn: () => {
+      if (!window.GameState.world.flags['q-mq6-the-dancer']) window.GameState.world.flags['q-mq6-the-dancer'] = 'active';
+      this.scene.start('VarenholmScene');
+    }});
+  }
+
   runFinale() {
     const C = Quests.cult, flags = window.GameState.world.flags;
     const ax = CityMap.well.x * 32, ay = (CityMap.well.y - 4) * 32;
@@ -288,8 +293,10 @@ class CityScene extends WorldScene {
       this.floatText(ax, ay - 30, 'epilogue in your journal (J) · the hunt continues in the campaigns', '#9a8f80', 12);
       if (window.GameState.player.char === 'warlock')
         setTimeout(() => CityUI.credits('THE WARLOCK\'S ROAD — what follows him should not fit through doors'), 2600);
-      else if (window.GameState.player.char === 'druid')
+      else if (window.GameState.player.char === 'druid') {
+        this.addVarenholmCoach();
         setTimeout(() => this.floatText(ax, ay, 'a coach has arrived by the guild. it seems to be waiting for someone GIFTED.', '#3df0c8', 13), 2800);
+      }
     };
     const t2 = C.finale.text2 + (window.GameState.player.char === 'druid' ? ' ' + Quests.druid.finaleGaze : '');
     const step3 = () => CityUI.dialog(C.finale.title, C.finale.text3, [{ label: 'The story has barely begun', fn: done }]);
