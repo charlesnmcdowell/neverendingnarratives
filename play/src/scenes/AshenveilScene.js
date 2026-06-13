@@ -70,7 +70,13 @@ class AshenveilScene extends WorldScene {
     this.interactables.push({ x: ddx, y: ddy - 10, label: 'enter the ASHENVEIL ACADEMY', fn: () => this.nyxDialog() });
 
     // ---------- the working dead ----------
-    this.bakeFrames({ 'fr-deadworker': { col: '#8a8474', o: { skull: true } } });
+    this.bakeFrames({ 'fr-deadworker': { col: '#8a8474', o: { skull: true } },
+      'fr-ashskel': { col: '#c8c2b0', o: { skull: true, wpnLen: 22, wpnCol: '#8a8474' } },
+      'fr-zombie': { col: '#5a6a4a', o: { skull: true } },
+      'fr-vamp': { col: '#6a2a3a', o: { robe: true, hood: true, headCol: '#d8c8c0' } },
+      'fr-wolfman': { col: '#3a3430', o: { quad: true }, r: 14 },
+      'fr-darkmage': { col: '#4a3a5a', o: { robe: true, hood: true, wpnLen: 28, wpnCol: '#2a2234', staffTip: true, tipCol: '#b070f0', twoHand: false } },
+    });
     for (let i = 0; i < 9; i++)
       this.addNPC('fr-deadworker', (5 + Math.random() * (MW - 14)) * T, (10 + Math.random() * 18) * T,
         { x: 4, y: 9, w: MW - 12, h: 20 });
@@ -88,15 +94,53 @@ class AshenveilScene extends WorldScene {
       window.GameState.world.cityFromGrove = false; this.scene.start('CityScene');
     }});
 
+    // ---------- the feral edge: what slips the Academy's leash (guild contracts) ----------
+    // These restock every visit — the Veil never runs out of strays.
+    this.packs = [];
+    const mkPack = (px, py, def) => {
+      const sprs = [];
+      for (let i = 0; i < def.n; i++) {
+        const s = this.add.sprite(px + (Math.random() - 0.5) * 70, py + (Math.random() - 0.5) * 70, def.tex, 0);
+        s.setDepth(s.y); sprs.push(s);
+      }
+      this.packs.push({ x: px, y: py, def, sprs, alive: true, wanderT: 0 });
+    };
+    const A_DEFS = {
+      skeletons: { tex: 'fr-ashskel', n: 4, name: 'RESTLESS SKELETONS', sub: 'they wandered off the rows', quest: 'g-skeletons',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'skel', x: 640 + Math.cos(i * 1.8) * 210, y: 300 + Math.sin(i * 1.8) * 120,
+          hp: 200, maxhp: 200, spd: 140, r: 11, col: '#c8c2b0', dmgScale: 1.3 })) },
+      zombies: { tex: 'fr-zombie', n: 3, name: 'FERAL ZOMBIES', sub: 'workers that stopped taking instruction', quest: 'g-zombies',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'skel', x: 640 + Math.cos(i * 2.3) * 190, y: 310 + Math.sin(i * 2.3) * 110,
+          hp: 340, maxhp: 340, spd: 68, r: 13, col: '#5a6a4a', dmgScale: 1.4 })) },
+      vampires: { tex: 'fr-vamp', n: 2, name: 'VAMPIRE SPAWN', sub: 'unsanctioned feeding', quest: 'g-vampires',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'grave', x: 640 + Math.cos(i * 3.1) * 180, y: 300 + Math.sin(i * 3.1) * 110,
+          hp: 380, maxhp: 380, spd: 160, r: 14, col: '#6a2a3a', stance: 'open', stanceT: 1, dmgScale: 1.45 })) },
+      werewolves: { tex: 'fr-wolfman', n: 2, name: 'WEREWOLVES', sub: 'three nights, three fences', quest: 'g-werewolves',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'hound', x: 640 + Math.cos(i * 2.7) * 220, y: 320 + Math.sin(i * 2.7) * 125,
+          hp: 360, maxhp: 360, spd: 215, r: 14, col: '#3a3430', dmgScale: 1.45 })) },
+      darkmages: { tex: 'fr-darkmage', n: 2, name: 'RENEGADE DARK MAGES', sub: 'expelled. thoroughly.', quest: 'g-darkmages',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'necro', x: 640 + Math.cos(i * 2.9) * 190, y: 290 + Math.sin(i * 2.9) * 110,
+          hp: 300, maxhp: 300, spd: 105, r: 14, col: '#4a3a5a', dmgScale: 1.4 })) },
+    };
+    for (const [kind, spots] of Object.entries({ skeletons: [[10, 18], [34, 26]], zombies: [[18, 26], [40, 16]],
+      vampires: [[8, 7]], werewolves: [[42, 30]], darkmages: [[16, 12]] }))
+      for (const [sx, sy] of spots) mkPack(sx * T, sy * T, A_DEFS[kind]);
+
     this.initEncounterHost(null);
     this.cameras.main.setBounds(0, 0, WPX, HPX).startFollow(this.player, true, 0.12, 0.12);
     this.floatText(this.player.x, this.player.y - 60, 'THE ASHENVEIL', '#9af0c0', 18);
+    const hunterArrival = 'The grim coach stops where the living road gives up. Grave-lights mark the field rows; the working dead do not look up. The guild\'s writ is folded in your coat: hunt what slips the leash — the feral, the unsanctioned, the expelled. The Academy pays for quiet corrections, and asks, politely, that you not stare at the workforce.';
     if (!flags['ashenveil-arrived']) { flags['ashenveil-arrived'] = true;
-      this.signDialog('THE BLACK CARRIAGE', W.carriage); }
+      if (GS.player.char === 'warlock') this.signDialog('THE BLACK CARRIAGE', W.carriage);
+      else this.signDialog('THE PROVING GROUNDS', hunterArrival); }
   }
 
   nyxDialog() {
     const W = Quests.warlockEpilogue, flags = window.GameState.world.flags, N = W.nyx;
+    if (window.GameState.player.char !== 'warlock') { // the Matron receives exactly one champion
+      const refusal = 'A registrar with no pulse takes your name without writing it down. "The Academy is not receiving. The proving grounds are THAT way." Behind the cold doors, something pauses — weighs you the way a ledger weighs a number it does not need yet — and moves on.';
+      this.signDialog('THE ASHENVEIL ACADEMY', refusal); return;
+    }
     if (flags['q-wq3-the-matron'] === 'done') {
       this.signDialog('THE ASHENVEIL ACADEMY', 'The great hall is empty. The cold is not. Somewhere below — and the lower levels are not a metaphor — the web is already drafting your first contract.'); return;
     }
@@ -134,5 +178,38 @@ class AshenveilScene extends WorldScene {
     this.updateNPCs(dt);
     this.updatePrompt();
     this.updateAtmosphere(time, dt);
+
+    // feral packs wander + aggro (guild hunts; the Veil restocks every visit)
+    for (const pk of this.packs) {
+      if (!pk.alive) continue;
+      pk.wanderT -= dt;
+      for (const s of pk.sprs) {
+        if (pk.wanderT <= 0) { s.tx = pk.x + (Math.random() - 0.5) * 110; s.ty = pk.y + (Math.random() - 0.5) * 110; }
+        if (s.tx !== undefined) {
+          const dx = s.tx - s.x, dy = s.ty - s.y, d = Math.hypot(dx, dy);
+          if (d > 4) { const f = Math.atan2(dy, dx);
+            s.x += Math.cos(f) * 34 * dt; s.y += Math.sin(f) * 34 * dt;
+            s.setFrame(this.frameFor(f, time * 0.004, true)); s.setDepth(s.y); }
+        }
+      }
+      if (pk.wanderT <= 0) pk.wanderT = 2 + Math.random() * 3;
+      const d = Math.hypot(pk.sprs[0].x - this.player.x, pk.sprs[0].y - this.player.y);
+      if (d < 130) {
+        pk.alive = false;
+        this.startEncounter(pk.def.name, pk.def.sub, pk.def.spawn(pk.def.n), win => {
+          if (win) {
+            for (const s of pk.sprs) s.destroy();
+            const counts = window.GameState.world.questCounts;
+            counts[pk.def.quest] = (counts[pk.def.quest] || 0) + pk.def.n;
+            this.floatText(this.player.x, this.player.y - 50, pk.def.name + ' — corrected (' + counts[pk.def.quest] + ' logged)', '#9af0c0');
+            if (Math.random() < 0.5) GroveScene.prototype.grantLoot.call(this, { type: 'potion-health', label: 'Health Potion' }, this.player.x + 30, this.player.y);
+          } else {
+            pk.alive = true;
+            this.player.x = 24 * 32; this.player.y = 30 * 32;
+            this.floatText(this.player.x, this.player.y - 50, 'the working dead drag you back to the coach. gently.', '#c8443a');
+          }
+        });
+      }
+    }
   }
 }

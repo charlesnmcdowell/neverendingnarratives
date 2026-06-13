@@ -83,6 +83,7 @@ class MountainScene extends WorldScene {
       ['fr-ogre', { col: '#5a4a38', o: { hulk: true, headCol: '#4a3a28' }, r: 15 }],
       ['fr-slime', { col: '#3a8a6a', o: { blob: true }, r: 12 }],
       ['fr-wyvern', { col: '#7a3a4a', o: { quad: true }, r: 13 }],
+      ['fr-firele', { col: '#d05a2a', o: { blob: true }, r: 12 }],
     ]));
     for (const c of Quests.seraph.candidates) this.placeCandidate(c, T);
 
@@ -100,20 +101,23 @@ class MountainScene extends WorldScene {
       goblins: { tex: 'fr-goblin', n: 4, name: 'GOBLIN CUTTERS', sub: 'the king\'s unpaid taxmen',
         spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'skel', x: 640 + Math.cos(i * 1.7) * 210, y: 300 + Math.sin(i * 1.7) * 120,
           hp: 190, maxhp: 190, spd: 165, r: 10, col: '#4a6a3a', dmgScale: 1.35 })) },
-      orcs: { tex: 'fr-orcm', n: 3, name: 'ORC RAIDERS', sub: 'they hold the pass. held.',
+      orcs: { tex: 'fr-orcm', n: 3, name: 'ORC RAIDERS', sub: 'they hold the pass. held.', quest: 'g-orcs',
         spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'hook', x: 640 + Math.cos(i * 2.1) * 200, y: 310 + Math.sin(i * 2.1) * 120,
           hp: 270, maxhp: 270, spd: 155, r: 14, col: '#3a5a40', dmgScale: 1.4 })) },
-      ogres: { tex: 'fr-ogre', n: 1, name: 'A HILL THAT MOVES', sub: 'it was here first',
+      ogres: { tex: 'fr-ogre', n: 1, name: 'A HILL THAT MOVES', sub: 'it was here first', quest: 'g-ogres',
         spawn: () => [{ type: 'door', x: 640, y: 260, r: 30, hp: 640, maxhp: 640, spd: 54, col: '#5a4a38', wpn: '#3a2f24', dmgScale: 1.5 }] },
+      firele: { tex: 'fr-firele', n: 2, name: 'FIRE ELEMENTALS', sub: 'the forge-vents walked out', quest: 'g-firele',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'pyre', x: 640 + Math.cos(i * 2.8) * 200, y: 300 + Math.sin(i * 2.8) * 120,
+          hp: 310, maxhp: 310, spd: 120, r: 14, col: '#d05a2a', dmgScale: 1.45 })) },
       slimes: { tex: 'fr-slime', n: 3, name: 'MOUNTAIN SLIMES', sub: 'they remember being heroes',
         spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'hound', x: 640 + Math.cos(i * 2.4) * 190, y: 320 + Math.sin(i * 2.4) * 110,
           hp: 320, maxhp: 320, spd: 115, r: 13, col: '#3a8a6a', dmgScale: 1.3 })) },
-      wyverns: { tex: 'fr-wyvern', n: 2, name: 'WYVERN BROOD', sub: 'the queen\'s daughters take a look at you',
+      wyverns: { tex: 'fr-wyvern', n: 2, name: 'WYVERN BROOD', sub: 'the queen\'s daughters take a look at you', quest: 'g-wyverns',
         spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'gunner', x: 640 + Math.cos(i * 3) * 230, y: 290 + Math.sin(i * 3) * 130,
           hp: 290, maxhp: 290, spd: 145, r: 13, col: '#7a3a4a', dmgScale: 1.45 })) },
     };
     for (const [kind, spots] of Object.entries({ goblins: [[40, 20], [18, 24]], orcs: [[26, 34], [46, 36]],
-      ogres: [[10, 18]], slimes: [[52, 24], [20, 12]], wyverns: [[44, 8]] }))
+      ogres: [[10, 18], [50, 38]], slimes: [[52, 24], [20, 12]], wyverns: [[44, 8], [12, 8]], firele: [[34, 28], [22, 40]] }))
       for (const [sx, sy] of spots) mkPack(sx * T, sy * T, W_DEFS[kind]);
 
     // ---------- chests ----------
@@ -235,6 +239,11 @@ class MountainScene extends WorldScene {
         this.startEncounter(pk.def.name, pk.def.sub, pk.def.spawn(pk.def.n), win => {
           if (win) {
             for (const s of pk.sprs) s.destroy();
+            if (pk.def.quest) { // the guild ledger hears about it
+              const counts = window.GameState.world.questCounts;
+              counts[pk.def.quest] = (counts[pk.def.quest] || 0) + pk.def.n;
+              this.floatText(this.player.x, this.player.y - 66, pk.def.quest.slice(2).toUpperCase() + ' logged: ' + counts[pk.def.quest], '#7fbf6a', 11);
+            }
             this.floatText(this.player.x, this.player.y - 50, pk.def.name + ' — the pass is yours', '#cfd6e4');
             if (Math.random() < 0.5) GroveScene.prototype.grantLoot.call(this, { type: 'potion-health', label: 'Health Potion' }, this.player.x + 30, this.player.y);
           } else {

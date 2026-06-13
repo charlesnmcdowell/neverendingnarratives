@@ -85,6 +85,7 @@ class CityScene extends WorldScene {
         this.guildDoor = { dx, dy };
         // DRUID-ONLY post-finale: the heartland coach — her secret road north
         if (GS.world.flags['q-mq5-ash-and-silence'] === 'done' && P.char === 'druid') this.addVarenholmCoach();
+        this.addHuntCoach(); // guild proving-ground writs: the Ashenveil hunts (all champions)
       }
       if (b.sign) {
         this.add.rectangle(dx + 36, dy - bh / 2 - 6, 46, 16, 0x15100b).setStrokeStyle(1, 0xe7b450, 0.6).setDepth(dy + 2);
@@ -337,6 +338,20 @@ class CityScene extends WorldScene {
     cg.fillStyle(0x05040a); cg.fillCircle(dx + 72, cy + 10, 8); cg.fillCircle(dx + 106, cy + 10, 8);
     this.addLight(dx + 88, cy, 60, false);
     this.interactables.push({ x: dx + 88, y: cy, label: 'board the BLACK CARRIAGE to the ASHENVEIL', fn: () => {
+      this.scene.start('AshenveilScene');
+    }});
+  }
+
+  addHuntCoach() { // guild proving-ground writs: ANY champion can ride to the Ashenveil fields to hunt
+    if (this._huntCoachAdded || !this.guildDoor) return;
+    this._huntCoachAdded = true;
+    const { dx, dy } = this.guildDoor, cy = dy + 40;
+    const cg = this.add.graphics().setDepth(cy);
+    cg.fillStyle(0x14121c); cg.fillRect(dx - 150, cy - 22, 56, 30);          // the grim coach
+    cg.lineStyle(1, 0x8a8474, 0.6); cg.strokeRect(dx - 150, cy - 22, 56, 30); // bone trim
+    cg.fillStyle(0x0a0810); cg.fillCircle(dx - 138, cy + 10, 8); cg.fillCircle(dx - 106, cy + 10, 8);
+    this.addLight(dx - 122, cy, 60, false);
+    this.interactables.push({ x: dx - 122, y: cy, label: 'board the grim coach — ASHENVEIL PROVING GROUNDS', fn: () => {
       this.scene.start('AshenveilScene');
     }});
   }

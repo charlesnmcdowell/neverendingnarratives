@@ -79,7 +79,12 @@ class GroveScene extends WorldScene {
       this.addLight(hx * T, hy * T + 30, 90, false);
     }
     // grove keeper (Faelar's people — Faelar himself is a Bucket 6 companion)
-    this.bakeFrames();
+    this.bakeFrames({
+      'fr-goblin': { col: '#4a6a3a', o: {}, r: 9 },
+      'fr-vine': { col: '#2c5a2c', o: { blob: true }, r: 13 },
+      'fr-insect': { col: '#6a5a2a', o: { quad: true }, r: 9 },
+      'fr-bandit': { col: '#5a4a3a', o: { hood: true, wpnLen: 24, wpnCol: '#8a8f98' } },
+    });
     const keeper = this.add.sprite(setX * T - 2 * T, (setY + 5) * T, 'fr-elf', 0).setDepth((setY + 5) * T);
     this.interactables.push({ x: keeper.x, y: keeper.y, label: 'speak with the grove keeper', fn: () => this.keeperDialog() });
 
@@ -115,6 +120,18 @@ class GroveScene extends WorldScene {
             hp: 80, maxhp: 80, spd: 210, r: 12, col: '#4a4038', dmgScale: 1.15 })), quest: 'g-hounds' },
         shaman: { tex: 'fr-shaman', n: 1, name: 'THE ROT SHAMAN', sub: 'the forest\'s dead answer it',
           spawn: () => [{ type: 'necro', x: 640, y: 260, hp: 180, maxhp: 180, spd: 100, r: 15, col: '#3c4434', dmgScale: 1.2 }], quest: 'g-rotshaman' },
+        goblins: { tex: 'fr-goblin', n: 3 + Math.floor(Math.random() * 2), name: 'GOBLIN SKULKERS', sub: 'the tithe collectors of the underbrush',
+          spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'skel', x: 640 + Math.cos(i * 2.2) * 210, y: 300 + Math.sin(i * 2.2) * 120,
+            hp: 60, maxhp: 60, spd: 175, r: 10, col: '#4a6a3a', dmgScale: 1 })), quest: 'g-goblins' },
+        vines: { tex: 'fr-vine', n: 2 + Math.floor(Math.random() * 2), name: 'STRANGLEVINES', sub: 'the shade walked off the road',
+          spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'chain', x: 640 + Math.cos(i * 2.6) * 180, y: 310 + Math.sin(i * 2.6) * 110,
+            hp: 130, maxhp: 130, spd: 60, r: 15, col: '#2c5a2c', dmgScale: 1.1 })), quest: 'g-vines' },
+        insects: { tex: 'fr-insect', n: 3 + Math.floor(Math.random() * 2), name: 'THE CHITTERSWARM', sub: 'dog-sized and disagreeable',
+          spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'hound', x: 640 + Math.cos(i * 1.9) * 220, y: 320 + Math.sin(i * 1.9) * 130,
+            hp: 55, maxhp: 55, spd: 230, r: 9, col: '#6a5a2a', dmgScale: 0.95 })), quest: 'g-insects' },
+        bandits: { tex: 'fr-bandit', n: 3, name: 'TOLL BANDITS', sub: 'the bridge was never theirs',
+          spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'hook', x: 640 + Math.cos(i * 2.1) * 200, y: 300 + Math.sin(i * 2.1) * 115,
+            hp: 90, maxhp: 90, spd: 150, r: 13, col: '#5a4a3a', dmgScale: 1.05 })), quest: 'g-bandits' },
       };
       const d = defs[kind];
       const sprs = [];
@@ -124,7 +141,8 @@ class GroveScene extends WorldScene {
       }
       this.packs.push({ x: px, y: py, kind, def: d, sprs, alive: true, wanderT: 0 });
     };
-    const packSpots = { wolves: [[20, 26], [36, 10], [8, 44]], hounds: [[44, 34], [24, 40]], shaman: [[30, 22]] };
+    const packSpots = { wolves: [[20, 26], [36, 10], [8, 44]], hounds: [[44, 34], [24, 40]], shaman: [[30, 22]],
+      goblins: [[14, 18], [48, 26]], vines: [[40, 42], [6, 30]], insects: [[24, 8], [54, 40]], bandits: [[46, 18]] };
     for (const [kind, spots] of Object.entries(packSpots))
       for (const [sx, sy] of spots) {
         const id = 'pack-' + kind + '-' + sx + '-' + sy;

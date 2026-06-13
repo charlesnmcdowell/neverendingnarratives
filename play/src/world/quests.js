@@ -355,9 +355,25 @@ const Quests = {
   },
 
   guildBoard: [
+    // ---- THORN GROVE (north gate) ----
     { id: 'g-wolves', title: 'CULL: WOLVES', text: 'Eight wolves out of Thorn Grove\'s edge worry the wood-elf herds.', reward: '4s + potion', region: 'Thorn Grove', need: 8, copper: 40, potion: 'potion-health', potionLabel: 'Health Potion' },
     { id: 'g-rotshaman', title: 'HUNT: ROT SHAMAN', text: 'Something is raising the forest\'s dead. The Eldest want it stopped.', reward: '8s + potion', region: 'Thorn Grove', need: 1, copper: 80, potion: 'potion-str', potionLabel: 'STR Potion' },
     { id: 'g-hounds', title: 'CULL: GRAVE HOUNDS', text: 'Escaped pit hounds gone feral in the southern brush.', reward: '4s + potion', region: 'Thorn Grove', need: 6, copper: 40, potion: 'potion-dex', potionLabel: 'DEX Potion' },
+    { id: 'g-goblins', title: 'CULL: GOBLIN SKULKERS', text: 'A skulk of goblins is tithing the mushroom-pickers. The pickers would prefer not.', reward: '4s + potion', region: 'Thorn Grove', need: 6, copper: 40, potion: 'potion-health', potionLabel: 'Health Potion' },
+    { id: 'g-vines', title: 'ROOT OUT: STRANGLEVINES', text: 'Walking vines with opinions about travelers. The trade road wants its shade back.', reward: '5s + potion', region: 'Thorn Grove', need: 5, copper: 50, potion: 'potion-con', potionLabel: 'CON Potion' },
+    { id: 'g-insects', title: 'SMOKE OUT: CHITTERSWARM', text: 'Dog-sized burrow insects under the old logging trail. Bring boots you don\'t love.', reward: '4s + potion', region: 'Thorn Grove', need: 6, copper: 40, potion: 'potion-atk', potionLabel: 'ATK Potion' },
+    { id: 'g-bandits', title: 'BREAK: TOLL BANDITS', text: 'Men with knives invented a toll bridge that isn\'t theirs. The guild un-invents such things.', reward: '5s + potion', region: 'Thorn Grove', need: 5, copper: 50, potion: 'potion-str', potionLabel: 'STR Potion' },
+    // ---- DRAGONSPINE (the spine trail past the grove — high pay, thin air) ----
+    { id: 'g-orcs', title: 'DRIVE BACK: ORC RAIDERS', text: 'Raiders holding the high pass. The treaty does not cover tolls.', reward: '8s + potion', region: 'Dragonspine', need: 6, copper: 80, potion: 'potion-str', potionLabel: 'STR Potion' },
+    { id: 'g-wyverns', title: 'THIN: WYVERN BROOD', text: 'The brood-queen\'s daughters range too low. Discourage, do not exterminate — treaty terms.', reward: '9s + potion', region: 'Dragonspine', need: 4, copper: 90, potion: 'potion-dex', potionLabel: 'DEX Potion' },
+    { id: 'g-ogres', title: 'TOPPLE: HILL OGRES', text: 'Two hills moved onto the trail and started charging rent.', reward: '10s + potion', region: 'Dragonspine', need: 2, copper: 100, potion: 'potion-con', potionLabel: 'CON Potion' },
+    { id: 'g-firele', title: 'QUENCH: FIRE ELEMENTALS', text: 'Something left the forge-vents open under the Spine. The fires walked out.', reward: '9s + potion', region: 'Dragonspine', need: 4, copper: 90, potion: 'potion-atk', potionLabel: 'ATK Potion' },
+    // ---- THE ASHENVEIL (grim coach by the guild — the proving grounds pay best) ----
+    { id: 'g-skeletons', title: 'RE-INTER: RESTLESS SKELETONS', text: 'Field stock wandering off the rows, the Academy says. Re-file them.', reward: '8s + potion', region: 'The Ashenveil', need: 8, copper: 80, potion: 'potion-health', potionLabel: 'Health Potion' },
+    { id: 'g-zombies', title: 'PUT DOWN: FERAL ZOMBIES', text: 'Workers that stopped taking instruction. The Academy pays for quiet corrections.', reward: '8s + potion', region: 'The Ashenveil', need: 6, copper: 80, potion: 'potion-con', potionLabel: 'CON Potion' },
+    { id: 'g-vampires', title: 'STAKE: VAMPIRE SPAWN', text: 'Unsanctioned feeding in the hedgerows. The Veil dislikes freelancers.', reward: '12s + potion', region: 'The Ashenveil', need: 3, copper: 120, potion: 'potion-dex', potionLabel: 'DEX Potion' },
+    { id: 'g-werewolves', title: 'LEASH: WEREWOLVES', text: 'Three nights, three torn fences, one very specific paw print. Silver optional, violence mandatory.', reward: '12s + potion', region: 'The Ashenveil', need: 3, copper: 120, potion: 'potion-str', potionLabel: 'STR Potion' },
+    { id: 'g-darkmages', title: 'EXPEL: RENEGADE DARK MAGES', text: 'Dropouts of the dark academy practicing on the locals. The faculty wants them expelled — thoroughly.', reward: '14s + potion', region: 'The Ashenveil', need: 3, copper: 140, potion: 'potion-atk', potionLabel: 'ATK Potion' },
   ],
 
   innkeeper: {
