@@ -12,12 +12,23 @@ window.GameState = {
   meta: { playtimeMs: 0, kills: 0 }
 };
 
-// Version-skew self-heal: if the browser served a STALE cached index.html with
-// fresh scripts (CDN/browser cache mismatch after a deploy), required DOM nodes
-// are missing and the game would crash at boot. Detect it and reload once,
-// cache-busted — the player sees a quick refresh instead of a frozen title.
+// Stale-cache self-heal. The CDN/browser can serve an OLD cached index.html after a
+// deploy, which then loads OLD ?v= scripts (e.g. a pre-fix voice.js) — the game runs
+// outdated code (this caused city voice to wedge after the fix had shipped). build.txt
+// is fetched UNCACHED every load; if it's newer than this page's stamp, the page is
+// stale — reload once, cache-busted, to pull the current index.html + scripts.
 (function () {
   try {
+    fetch('build.txt?_=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (s) {
+        s = s && s.trim();
+        if (s && window.__BUILD && s !== window.__BUILD && !sessionStorage.getItem('ss-build-reload')) {
+          sessionStorage.setItem('ss-build-reload', '1');
+          location.replace(location.pathname.replace(/\/$/, '/') + '?b=' + s);
+        } else { sessionStorage.removeItem('ss-build-reload'); }
+      }).catch(function () {});
+    // belt-and-suspenders for index.html older than the build-stamp era (missing 4th champion button)
     if (!document.getElementById('seraphBtn') && !sessionStorage.getItem('ss-skew-reload')) {
       sessionStorage.setItem('ss-skew-reload', '1');
       location.replace(location.pathname + '?fresh=' + Date.now());
