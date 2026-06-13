@@ -78,24 +78,15 @@ class ArenaScene extends Phaser.Scene {
             for (const [cls, txt] of [['lbl', lbl], ['', val], ['up', up]]) {
               const td = document.createElement('td'); if (cls) td.className = cls; td.textContent = txt; tr.appendChild(td); }
             els.statTable.appendChild(tr); }
+          // Bellow's buy-out offer after fight 3 — leaving is the DEFAULT (shown first, highlighted)
+          const offerEl = $('bellowOffer'), leaveBtn2 = $('leaveArenaBtn');
+          if (offerEl) { offerEl.style.display = data.canLeave ? 'block' : 'none'; offerEl.textContent = data.offer || ''; }
+          if (leaveBtn2) leaveBtn2.style.display = data.canLeave ? 'block' : 'none';
         }
         if (id === 'death' && data) { $('deathStats').textContent = data.stats;
           $('deathQuote').textContent = data.quote; $('deathHints').textContent = data.hints; }
         if (id === 'victory' && data) {
-          // ---- arena -> city handoff: the run's earnings follow the player out of the Pit ----
-          const P = this.combat.P;
-          const purse = P.kills * Money.PIT_PAYOUT_PER_KILL; // copper
-          window.GameState.player = {
-            char: P.char,
-            kills: P.kills,
-            level: P.char === 'ronin' ? 1 : Math.min(10, Math.floor(P.level || 1)),
-            bladeTier: P.bladeTier || 0,
-            base: Object.assign({}, P.base),
-            nickname: this.combat.nickname,
-            copper: purse,
-            belt: []
-          };
-          window.GameState.world.flags.pitChampion = true;
+          const purse = this.handoffToCity(0); // full gauntlet — no buy-out bonus
           $('vicStats').textContent = data.stats + ' · Bellow pays out ' + Money.fmt(purse);
         }
         $(id).classList.add('show');
@@ -152,6 +143,7 @@ class ArenaScene extends Phaser.Scene {
     on('seraphBtn', () => this.combat.startIntro('seraph'));
     on('enterBtn', () => this.combat.endIntro());
     on('fightBtn', () => this.combat.startFight());
+    on('leaveArenaBtn', () => this.leaveArena());
     on('againBtn', () => this.combat.fullReset());
     on('vicBtn', () => this.combat.fullReset());
     on('leaveBtn', () => {
@@ -201,6 +193,30 @@ class ArenaScene extends Phaser.Scene {
     MusicMan.play('title');
   }
 
+  // arena -> city handoff: the run's earnings (plus any buy-out bonus) follow the player out
+  handoffToCity(bonusCopper) {
+    const P = this.combat.P;
+    const purse = P.kills * Money.PIT_PAYOUT_PER_KILL + (bonusCopper || 0);
+    window.GameState.player = {
+      char: P.char, kills: P.kills,
+      level: P.char === 'ronin' ? 1 : Math.min(10, Math.floor(P.level || 1)),
+      bladeTier: P.bladeTier || 0, base: Object.assign({}, P.base),
+      nickname: this.combat.nickname, copper: purse, belt: []
+    };
+    window.GameState.world.flags.pitChampion = true;
+    return purse;
+  }
+
+  leaveArena() {
+    if (this._leaving) return; this._leaving = true;
+    this.handoffToCity(150); // Bellow's 15-silver buy-out (15s = 150 copper)
+    const $ = id => document.getElementById(id);
+    for (const s of document.querySelectorAll('.screen')) s.classList.remove('show');
+    $('hud').style.display = 'none'; $('controls').style.display = 'none';
+    if (window.VoiceMan) VoiceMan.stop();
+    this.scene.start('CityScene');
+  }
+
   update(time, dtMs) {
     Autopilot.frame(this.combat, Math.min(0.05, dtMs / 1000));
     this.combat.stick.dx = TouchStick.dx; this.combat.stick.dy = TouchStick.dy; this.combat.stick.mag = TouchStick.mag;
@@ -217,6 +233,11 @@ class ArenaScene extends Phaser.Scene {
       : 'arena'; // missing files fall back to the arena theme
     MusicMan.play(m === 'fight' || m === 'demo' || m === 'board' ? pitTrack : 'title');
     this.updateTitleBackdrop(time, dtMs);
+    // AUTO: take Bellow's buy-out after fight 3 (leaving is the default choice)
+    if (QuestNav.mode >= 1 && this.combat.S.mode === 'board' && this.combat.S.canLeave && !this._leaving) {
+      this._autoLeaveT = (this._autoLeaveT || 0) + Math.min(0.05, dtMs / 1000);
+      if (this._autoLeaveT > 2.4) this.leaveArena();
+    } else if (this.combat.S.mode !== 'board') this._autoLeaveT = 0;
     // AUTO FULL: walk out of the Pit when the crowd has its name
     const vic = document.getElementById('victory').classList.contains('show');
     if (vic && QuestNav.mode === 2 && !this._vicAuto) {

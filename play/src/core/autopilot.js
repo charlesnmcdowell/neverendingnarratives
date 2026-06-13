@@ -14,6 +14,7 @@ const Autopilot = {
     const P = combat.P, S = combat.S;
 
     if (S.mode === 'board') { // linger on the fight board, then step onto the sand
+      if (S.canLeave) return; // Bellow's buy-out is up — leaving is the default; the arena scene takes it
       this.boardT += dt;
       if (this.boardT > 2.2) { this.boardT = 0; combat.startFight(); }
       return;

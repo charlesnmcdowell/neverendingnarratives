@@ -915,6 +915,18 @@ const FIGHTS=[
 function spawnFight(){
   const i=1+S.fight*0.30; // difficulty scale
   enemies=FIGHTS[S.fight].spawn(i).map(e=>{e.dmgScale=1+S.fight*0.16;return e;});
+  if(S.fight>=3){ // after the third fight Bellow stacks the deck (Hiro): a HEALER + a wildcard, dead center
+    const sc=1+S.fight*0.16;
+    enemies.push(mkEnemy({type:'stitch',x:arena.x,y:arena.y-arena.r*0.4,hp:Math.round(120*i),maxhp:Math.round(120*i),spd:125,r:13,col:'#7a8a6a',dmgScale:sc}));
+    const wilds=[
+      {type:'door',r:26,hp:200,spd:52,col:'#7d7468',wpn:'#5a5248'},   // a tank
+      {type:'gunner',hp:150,spd:115,r:14,col:'#5e5a72'},               // a gun
+      {type:'necro',hp:170,spd:100,r:15,col:'#4a5444'},                // a raiser
+      {type:'pyre',hp:160,spd:95,r:15,col:'#a4502c'},                  // a mage
+    ];
+    const w=wilds[Math.floor(Math.random()*wilds.length)];
+    enemies.push(mkEnemy(Object.assign({},w,{x:arena.x,y:arena.y,hp:Math.round(w.hp*i),maxhp:Math.round(w.hp*i),dmgScale:sc})));
+  }
   zones=[];swings=[];particles=[];popups=[];bullets=[];limbs=[];wolves=[];P.wolfCD=0;P.glaive=null;
   demons=[];fireballs=[];tracers=[];P.channel=null;P.slowT=0;P.paralyzeT=0;P.wardT=0;
   if(P.devilT>0){P.devilT=0;P.r=16;updateLabels();}
@@ -1271,7 +1283,11 @@ function toBoard(){
     if(P.unlockMsg){oddsTxt+='  —  '+P.unlockMsg;
       setTimeout(()=>showBanner(P.unlockMsg,'',1400,'#3df0c8'),400);P.unlockMsg=null;}}
   const rows=statRows(prevKills,P.kills);prevKills=P.kills;
-  show('board',{foeName:f.name,foeRec:f.rec,foeTaunt:f.taunt,odds:oddsTxt,rows,crowd:'The crowd calls you: '+nickname});}
+  // After the third fight, Bellow buys his fighters out — 15 silver to walk. Default choice. (Hiro)
+  const canLeave=S.fight>=3&&!encounterCb;
+  S.canLeave=canLeave;
+  const offer=canLeave?'Bellow leans over the rail: "You\'ve made your name, '+nickname+'. Walk now and the house pays you FIFTEEN SILVER — or stay, and the deck gets... fuller." (default: take the purse)':'';
+  show('board',{foeName:f.name,foeRec:f.rec,foeTaunt:f.taunt,odds:oddsTxt,rows,crowd:'The crowd calls you: '+nickname,canLeave,offer,leaveSilver:15});}
 function startFight(){
   S.mode='fight';show(null);
   UI.hud(true);UI.controls(true);UI.name(nickname);
