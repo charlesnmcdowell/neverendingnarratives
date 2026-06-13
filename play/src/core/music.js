@@ -72,8 +72,10 @@ const MusicMan = {
   _fadeIn(a) {
     const step = () => {
       if (this.current !== a) return;          // superseded — its fadeOut owns it now
-      a.volume = Math.min(this.vol, a.volume + 0.05);
-      if (a.volume < this.vol - 0.001) setTimeout(step, 80);
+      // a track that comes up while a voice line is playing stays ducked under it
+      const ceil = this._duckedByVoice && window.VoiceMan ? VoiceMan.DUCK : this.vol;
+      a.volume = Math.min(ceil, a.volume + 0.05);
+      if (a.volume < ceil - 0.001) setTimeout(step, 80);
     };
     step();
   },

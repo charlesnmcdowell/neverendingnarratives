@@ -40,15 +40,25 @@ const VoiceMan = {
     return MAP[n] || n;
   },
 
-  // ---- music duck/restore — symmetric, and never leaves a track quiet ----
+  DUCK: 0.10, // music sits well under a voice line (voice plays at this.vol ~0.95)
+
+  // is a clip (or a queued reply) actively speaking right now?
+  isSpeaking() {
+    return !!(this._pending || (this.current && !this.current.ended && !this.current.paused));
+  },
+
+  // ---- music duck/restore — follows the CURRENT track, even across zone changes ----
+  // MusicMan honors the _duckedByVoice flag in its fade so a track that starts
+  // mid-line comes up ducked instead of drowning the voice.
   _duck() {
-    const m = window.MusicMan && MusicMan.current;
-    if (m) { this._duckedTrack = m; m.volume = Math.min(m.volume, 0.18); }
+    if (!window.MusicMan) return;
+    MusicMan._duckedByVoice = true;
+    if (MusicMan.current) MusicMan.current.volume = Math.min(MusicMan.current.volume, this.DUCK);
   },
   _unduck() {
-    const t = this._duckedTrack;
-    if (t && window.MusicMan && MusicMan.current === t) t.volume = MusicMan.vol;
-    this._duckedTrack = null;
+    if (!window.MusicMan) return;
+    MusicMan._duckedByVoice = false;
+    if (MusicMan.current && !MusicMan.muted) MusicMan.current.volume = MusicMan.vol;
   },
 
   // player character speaks their chosen line; the NPC reply queues behind it
