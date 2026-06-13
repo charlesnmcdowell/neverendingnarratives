@@ -118,7 +118,7 @@ class GroveScene extends WorldScene {
         hounds: { tex: 'fr-hound', n: 3 + Math.floor(Math.random() * 2), name: 'FERAL PIT HOUNDS', sub: 'they remember the sand',
           spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'hound', x: 640 + Math.cos(i * 2.6) * 220, y: 320 + Math.sin(i * 2.6) * 130,
             hp: 80, maxhp: 80, spd: 210, r: 12, col: '#4a4038', dmgScale: 1.15 })), quest: 'g-hounds' },
-        shaman: { tex: 'fr-shaman', n: 1, name: 'THE ROT SHAMAN', sub: 'the forest\'s dead answer it',
+        rotshaman: { tex: 'fr-shaman', n: 1, name: 'THE ROT SHAMAN', sub: 'the forest\'s dead answer it',
           spawn: () => [{ type: 'necro', x: 640, y: 260, hp: 180, maxhp: 180, spd: 100, r: 15, col: '#3c4434', dmgScale: 1.2 }], quest: 'g-rotshaman' },
         goblins: { tex: 'fr-goblin', n: 3 + Math.floor(Math.random() * 2), name: 'GOBLIN SKULKERS', sub: 'the tithe collectors of the underbrush',
           spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'skel', x: 640 + Math.cos(i * 2.2) * 210, y: 300 + Math.sin(i * 2.2) * 120,
@@ -141,7 +141,7 @@ class GroveScene extends WorldScene {
       }
       this.packs.push({ x: px, y: py, kind, def: d, sprs, alive: true, wanderT: 0 });
     };
-    const packSpots = { wolves: [[20, 26], [36, 10], [8, 44]], hounds: [[44, 34], [24, 40]], shaman: [[30, 22]],
+    const packSpots = { wolves: [[20, 26], [36, 10], [8, 44]], hounds: [[44, 34], [24, 40]], rotshaman: [[30, 22]],
       goblins: [[14, 18], [48, 26]], vines: [[40, 42], [6, 30]], insects: [[24, 8], [54, 40]], bandits: [[46, 18]] };
     for (const [kind, spots] of Object.entries(packSpots))
       for (const [sx, sy] of spots) {
