@@ -198,6 +198,7 @@ class GroveScene extends WorldScene {
     this.initEncounterHost(GROVE_THEME);
     this.cameras.main.setBounds(0, 0, WPX, HPX).startFollow(this.player, true, 0.12, 0.12);
     this.floatText(spawn.x, spawn.y - 60, 'THORN GROVE', '#7fbf6a', 18);
+    this.introPan();
   }
 
   buildConspiracy(T) {

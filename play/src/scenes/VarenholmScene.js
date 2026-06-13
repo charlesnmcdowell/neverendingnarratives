@@ -87,6 +87,7 @@ class VarenholmScene extends WorldScene {
 
     this.initEncounterHost(null);
     this.cameras.main.setBounds(0, 0, WPX, HPX).startFollow(this.player, true, 0.12, 0.12);
+    this.introPan();
     MusicMan.play('varenholm');
     this.floatText(this.player.x, this.player.y - 60, 'VARENHOLM — CROWN QUARTER', '#e7b450', 18);
     this.signDialog('THE COACH ROAD', Quests.varenholm.coach);

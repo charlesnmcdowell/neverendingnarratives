@@ -174,6 +174,7 @@ class CityScene extends WorldScene {
     this.initEncounterHost(null); // city uses default pit theme (no city fights yet, but host is uniform)
     this.cameras.main.setBounds(0, 0, WPX, HPX).startFollow(this.player, true, 0.12, 0.12);
     this.floatText(spawn.x, spawn.y - 60, 'KARRIDGE CITY', '#e7b450', 18);
+    this.introPan();
     this.chatterT = 4;
   }
 

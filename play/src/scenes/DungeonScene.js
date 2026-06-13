@@ -60,6 +60,7 @@ class DungeonScene extends WorldScene {
     this.initEncounterHost(GROVE_THEME);
     this.cameras.main.setBounds(0, 0, WPX, HPX).startFollow(this.player, true, 0.12, 0.12);
     this.floatText(5 * T, 4 * T - 50, 'THE ROOT-HOLLOW', '#7fd0ff', 16);
+    this.introPan();
 
     // encounters as ambush trigger zones
     this.ambushes = [];

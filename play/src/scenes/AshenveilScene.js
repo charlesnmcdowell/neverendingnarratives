@@ -129,6 +129,7 @@ class AshenveilScene extends WorldScene {
     this.initEncounterHost(null);
     this.cameras.main.setBounds(0, 0, WPX, HPX).startFollow(this.player, true, 0.12, 0.12);
     this.floatText(this.player.x, this.player.y - 60, 'THE ASHENVEIL', '#9af0c0', 18);
+    this.introPan();
     const hunterArrival = 'The grim coach stops where the living road gives up. Grave-lights mark the field rows; the working dead do not look up. The guild\'s writ is folded in your coat: hunt what slips the leash — the feral, the unsanctioned, the expelled. The Academy pays for quiet corrections, and asks, politely, that you not stare at the workforce.';
     if (!flags['ashenveil-arrived']) { flags['ashenveil-arrived'] = true;
       if (GS.player.char === 'warlock') this.signDialog('THE BLACK CARRIAGE', W.carriage);

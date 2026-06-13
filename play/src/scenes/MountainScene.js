@@ -143,6 +143,7 @@ class MountainScene extends WorldScene {
     this.initEncounterHost(MOUNT_THEME);
     this.cameras.main.setBounds(0, 0, WPX, HPX).startFollow(this.player, true, 0.12, 0.12);
     this.floatText(this.player.x, this.player.y - 60, 'DRAGONSPINE — THE TREATY LANDS', '#cfd6e4', 18);
+    this.introPan();
     if (!flags['spine-arrived']) { flags['spine-arrived'] = true; this.signDialog('THE SPINE TRAIL', SQ.arrival); }
   }
 

@@ -193,8 +193,41 @@ class WorldScene extends Phaser.Scene {
     this.time.addEvent({ delay: 10000, loop: true, callback: () => { if (!this.encounterActive) SaveSystem.save(); } });
   }
 
+  // First-visit cinematic: a 4s pan from the player out to the quest objective, a
+  // zoom-in on it, then a glide back to the player. Once per zone (persisted in the
+  // save). Skipped where the camera has no pan effect (headless/navsim stub).
+  introPan() {
+    const cam = this.cameras && this.cameras.main;
+    if (!cam || typeof cam.pan !== 'function' || typeof cam.zoomTo !== 'function') return;
+    const GS = window.GameState; GS.world.seenZones = GS.world.seenZones || {};
+    const zone = GS.world.zone;
+    if (GS.world.seenZones[zone]) return;     // only the FIRST time you set foot here
+    GS.world.seenZones[zone] = true;
+    const baseZoom = window.IS_PHONE ? 1.18 : 1;
+    // where to look: the active quest objective if it lives in THIS zone, else an overview of the map center
+    let tx = this.worldW / 2, ty = this.worldH / 2, hasObj = false;
+    const obj = window.QuestNav && QuestNav.objective && QuestNav.objective();
+    if (obj && obj.zone === zone) { tx = obj.x; ty = obj.y; hasObj = true; }
+    this.cinematic = true;
+    cam.stopFollow();
+    cam.pan(tx, ty, 1500, 'Sine.easeInOut');
+    this.time.delayedCall(1550, () => {
+      cam.zoomTo((window.IS_PHONE ? 1.7 : 2.0), 700, 'Sine.easeInOut');
+      if (hasObj && obj.label) this.floatText(tx, ty - 46, '▸ ' + obj.label, '#3df0c8', 14);
+    });
+    this.time.delayedCall(2700, () => {
+      cam.zoomTo(baseZoom, 600, 'Sine.easeInOut');
+      cam.pan(this.player.x, this.player.y, 1200, 'Sine.easeInOut');
+    });
+    this.time.delayedCall(4000, () => {
+      this.cinematic = false;
+      cam.setZoom(baseZoom);
+      cam.startFollow(this.player, true, 0.12, 0.12);
+    });
+  }
+
   updatePlayer(dt) {
-    if (CityUI.dialogOpen() || this.encounterActive) return 0;
+    if (CityUI.dialogOpen() || this.encounterActive || this.cinematic) return 0;
     const P = window.GameState.player;
     const DEX = P.char === 'ronin' ? P.base.DEX + P.kills * 2 : P.base.DEX + 3 * (Math.min(10, P.level) - 1);
     const spd = 185 + (DEX - 10) * 4;
