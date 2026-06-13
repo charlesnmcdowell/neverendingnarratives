@@ -58,7 +58,15 @@ function usePotion(type){
   buffs.push({k,amt,until:S.time+60});
   popup(P.x,P.y-48,k+' +25% — 60s','#3df0c8',14);flashFx(.1);return true;}
 // warlock pays for his pacts in flesh: 15% less health than the other casters (Hiro)
-const maxHP=()=>Math.round(((P.char==='ronin'?38:45)+(stat('CON')-10)*5)*MODS.maxhp*(P.char==='warlock'?0.85:1));
+// per-form / per-character health modifiers (Hiro balance pass):
+//   ronin slightly frailer; druid human frail / bear tanky; warlock human & lich frail / devil tanky; seraph tankier.
+const formHP=()=>{
+  if(P.char==='druid')return P.form==='bear'?1.1:(P.form==='wolf'?1.0:0.78);
+  if(P.char==='warlock'){if(P.devilT>0)return 1.1; if(P.lich)return 0.8; return 0.8;}
+  if(P.char==='seraph')return 1.2;
+  return 1;
+};
+const maxHP=()=>Math.round(((P.char==='ronin'?34:45)+(stat('CON')-10)*5)*MODS.maxhp*(P.char==='warlock'?0.85:1)*formHP());
 const UNLOCKS={druid:{3:'BEAR FORM UNLOCKED',6:'WOLF FORM UNLOCKED'},
                warlock:{3:'BONE DRAGON UNLOCKED',5:'SUCCUBI UNLOCKED',8:'ARCH DEVIL UNLOCKED'},
                seraph:{3:'CHAINS OF DECREE',6:'TRIUNE MAW',8:'HALO JUDGEMENT'}};
@@ -116,11 +124,21 @@ function doSlash(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.atkRecover>0|
   autoFace();P.atkRecover=atkRec();P.ft.slash++;
   if(P.comboT<=0)P.combo=0;
   const st=P.combo;P.atkPose=st;P.combo=(P.combo+1)%3;P.comboT=1.1;
+  // Hiro: the ronin STEPS INTO each strike (pressing the advance)
+  const f=nearestRealFoe();
+  if(f&&st!==2){const a=ang(P,f);P.x+=Math.cos(a)*22;P.y+=Math.sin(a)*22;clampArena(P);}
   // kendo rhythm: kesa-giri right, kesa-giri left, men overhead finisher
   const arc=st===2?1.15:1.7, range=(st===2?88:74)+roninTier()*12, mult=st===2?1.25:1;
-  let dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*mult*0.88);
+  // light-attack damage trimmed slightly (Hiro): 0.88 -> 0.78 on the two kesa cuts
+  let dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*mult*(st===2?0.88:0.78));
   swings.push({x:P.x,y:P.y,a:P.face,arc,range,t:st===2?.16:.14,heavy:st===2,col:st===2?'#e7d9a8':'#d8cdb8',style:st});
-  strike(P.face,arc,range,dmg,false);}
+  strike(P.face,arc,range,dmg,false);
+  if(st===2){ // the MEN finisher: recover, give ground, and snap into an auto-parry (Hiro)
+    P.atkRecover=Math.max(P.atkRecover,3.0);          // 3s before he can attack again
+    const ba=f?ang(f,P):P.face+Math.PI;                // step BACK from the foe (3 steps)
+    P.x+=Math.cos(ba)*66;P.y+=Math.sin(ba)*66;clampArena(P);
+    P.parryT=2.3*MODS.parryWin;P.parryCD=0;            // auto-parry stance on the retreat
+    popup(P.x,P.y-46,'ZANSHIN — guard up','#e7b450',12);}}
 function doParry(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.rollT>0||P.heavyWind>0||P.channel||P.paralyzeT>0)return;
   if(P.char==='druid'){cycleForm();return;}
   if(P.parryCD>0)return;
@@ -257,24 +275,30 @@ function druidHeavy(){
     P.x+=Math.cos(a)*115;P.y+=Math.sin(a)*115;clampArena(P);
     leafBurst(P.x,P.y,12);S.shake=Math.max(S.shake,4);vib(30);
     if(!rooted)popup(P.x,P.y-44,'VINES FIND NO ONE','#7fbf6a',12);
-  }else if(P.form==='bear'){ // ROAR — AOE stagger + knockback — own cooldown
+  }else if(P.form==='bear'){ // ROAR — AOE stagger + knockback + FEAR (Hiro) — own cooldown
     if(P.cdRoar>0)return;
     P.ft.heavy++;P.cdRoar=4;
     swings.push({x:P.x,y:P.y,a:0,arc:7,range:140,t:.22,heavy:true,col:'#c98a4a',ring:true});
     S.shake=Math.max(S.shake,10);vib(60);flashFx(.12);
     for(const e of enemies){if(e.dead)continue;
       if(dist(P,e)<145){e.stunT=Math.max(e.stunT||0,1.0);
+        e.fearT=Math.max(e.fearT||0,3.0); // they FLEE for 3 seconds
         const a=ang(P,e);e.x+=Math.cos(a)*75;e.y+=Math.sin(a)*75;clampArena(e);
+        popup(e.x,e.y-30,'FEAR','#c98a4a',12);
         strikeOne(e,Math.round(rollDice(1,6)+dmgBonus()*.5));}}
     popup(P.x,P.y-50,'ROAR','#c98a4a',20);
-  }else{ // wolf HOWLING HEAL — own cooldown, doubled strength
+  }else{ // wolf HOWLING HEAL — own cooldown, and the pack SWELLS (Hiro)
     if(P.cdHowl>0)return;
     P.ft.heavy++;P.cdHowl=6;
-    const amt=24+P.kills*4;
+    const amt=32+P.kills*5; // healing bumped up
     P.hp=Math.min(maxHP(),P.hp+amt);
     popup(P.x,P.y-48,'HOWL  +'+amt,'#7fbf6a',17);
     for(const w of wolves){w.hp=w.maxhp;w.life=Math.min(16,w.life+6);
       popup(w.x,w.y-22,'+','#7fbf6a',12);}
+    for(let i=0;i<5;i++){const a=rnd(0,Math.PI*2); // FIVE more answer the howl
+      wolves.push({x:P.x+Math.cos(a)*44,y:P.y+Math.sin(a)*44,r:11,face:a,
+        hp:20+P.kills*4,maxhp:20+P.kills*4,life:14,cool:rnd(.4,1),lungeT:0,bit:false,walkP:0});}
+    popup(P.x,P.y-66,'THE PACK SWELLS — +5','#7fbf6a',14);
     swings.push({x:P.x,y:P.y,a:0,arc:7,range:120,t:.3,heavy:false,col:'#7fbf6a',ring:true});
     vib(35);}}
 function strikeOne(e,dmg){ // direct damage helper (vines/roar) — no shield/parry rules
@@ -326,8 +350,9 @@ function summonDemons(type){
       hp:30+P.kills*5,maxhp:30+P.kills*5,life:18,cool:1,flash:0,walkP:0});
     showBanner('CLAW FIEND','it hungers — they fight IT now',1300,'#b070f0');
   }else if(type==='dragon'){
+    const dhp=44+P.kills*6; // Hiro: moderately tougher — it is the lich's phylactery
     demons.push({type:'dragon',x:P.x,y:P.y-60,r:18,face:P.face,
-      hp:20+P.kills*3,maxhp:20+P.kills*3,life:15,cool:1.2,flash:0,walkP:0});
+      hp:dhp,maxhp:dhp,life:15,cool:1.2,flash:0,walkP:0});
     showBanner('BONE DRAGON','poison breath — the rot spreads',1300,'#7fd05a');
   }else{
     for(let i=0;i<3;i++){const a=i*2.09;
@@ -355,7 +380,7 @@ function updDemons(dt){
       if(dd>d.r+tgt.r+8){d.x+=Math.cos(d.face)*72*dt;d.y+=Math.sin(d.face)*72*dt;}
       else if(d.cool<=0){d.cool=1.5;
         swings.push({x:d.x,y:d.y,a:d.face,arc:1.6,range:d.r+24,t:.15,heavy:false,col:'#7a9a6a'});
-        const zd=rollDice(1,6)+2;
+        const zd=rollDice(1,8)+4; // Hiro: lich summons hit a little harder
         tgt.hp-=zd;tgt.flash=.1;blood(tgt.x,tgt.y,4);
         popup(tgt.x,tgt.y-26,zd,'#7a9a6a',12);
         if(!(tgt.infectT>0)){tgt.infectT=10;popup(tgt.x,tgt.y-42,'INFECTED','#9af0c0',12);}
@@ -368,7 +393,7 @@ function updDemons(dt){
       else if(dd<130){d.x-=Math.cos(d.face)*65*dt;d.y-=Math.sin(d.face)*65*dt;}
       if(d.cool<=0&&dd<300){d.cool=1.8;
         fireballs.push({x:d.x,y:d.y-10,vx:Math.cos(d.face)*460,vy:Math.sin(d.face)*460,
-          r:4,kind:'arrow',dmg:rollDice(1,8)+Math.floor(dmgBonus()/3)});}
+          r:4,kind:'arrow',dmg:rollDice(1,10)+Math.floor(dmgBonus()/2)});}
     }else if(d.type==='brute'){
       if(!tgt)continue;
       const dd=dist(d,tgt);d.face=ang(d,tgt);
@@ -473,10 +498,10 @@ function updFireballs(dt){
 /* ---- ARCH DEVIL: the price of the full coven ---- */
 function enterDevil(){
   if(lvl()<8){popup(P.x,P.y-64,'ARCH DEVIL AT LEVEL 8','#8a93a8',12);return;}
-  P.devilT=10;P.channel=null;P.r=24;
+  P.devilT=15;P.channel=null;P.r=24; // Hiro: +5s longer
   flashFx(.35);S.shake=Math.max(S.shake,12);vib([60,60,120]);
   leafBurst(P.x,P.y,26,'#d03a4a');
-  showBanner('ARCH DEVIL','he was never summoning FOR himself — 10 seconds',1800,'#d03a4a');
+  showBanner('ARCH DEVIL','he was never summoning FOR himself — 15 seconds',1800,'#d03a4a');
   updateLabels();}
 function exitDevil(){
   P.devilT=0;P.r=16;
@@ -615,21 +640,28 @@ function seraphSlash(){ // the couched lance: one piercing POKE that lands like 
   P.atkRecover=atkRec()*1.45;P.ft.slash++; // slower than a katana — heaven does not flurry
   if(P.comboT<=0)P.combo=0;
   const st=P.combo;P.atkPose=st;P.combo=(P.combo+1)%3;P.comboT=1.4;
-  if(st===2&&lvl()>=6){ // TRIUNE MAW — all three heads lunge and bite; the spear rests
-    P.atkRecover=atkRec()*1.25;
-    const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*1.35);
-    swings.push({x:P.x,y:P.y,a:P.face,arc:2.4,range:74,t:.16,heavy:true,col:'#ffe9a8'});
+  const foe=nearestRealFoe();
+  if(st===2){ // 3rd strike (Hiro): a CHARGE several steps toward and THROUGH the nearest foe, knockback
+    P.atkRecover=atkRec()*1.3;
+    const a=foe?ang(P,foe):P.face;P.face=a;
+    const cx=P.x+Math.cos(a)*160,cy=P.y+Math.sin(a)*160; // charge target (through them)
+    for(let k=0;k<10&&particles.length<240;k++)
+      particles.push({x:P.x+(cx-P.x)*k/10,y:P.y+(cy-P.y)*k/10,vx:rnd(-20,20),vy:rnd(-30,10),t:rnd(.2,.4),col:'#fff6dc',r:rnd(1.5,3),noG:true});
+    P.x=cx;P.y=cy;clampArena(P);
+    swings.push({x:P.x,y:P.y,a:a,arc:1.6,range:96,t:.16,heavy:true,col:'#ffe9a8'});
+    S.shake=Math.max(S.shake,7);vib([30,40]);flashFx(.12);
+    const triune=lvl()>=6;
+    const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*(triune?1.6:1.35)); // moderate, +heal at lv6
     let dealt=0;
     for(const e of enemies){if(e.dead)continue;
-      const d=dist(P,e);if(d>74+e.r)continue;
-      let da=Math.atan2(e.y-P.y,e.x-P.x)-P.face;
-      while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;
-      if(Math.abs(da)>1.2)continue;
-      dealt+=dmg;hitEnemy(e,dmg,true,P.face);}
-    if(dealt>0){const hl=Math.max(3,Math.round(dealt*0.2));
+      if(dist(P,e)>110+e.r)continue;
+      const pa=ang(P,e);e.x+=Math.cos(pa)*70;e.y+=Math.sin(pa)*70;clampArena(e); // knocked back
+      e.stunT=Math.max(e.stunT||0,0.5);dealt+=dmg;hitEnemy(e,dmg,true,pa);}
+    if(triune&&dealt>0){const hl=Math.max(3,Math.round(dealt*0.2));
       P.hp=Math.min(maxHP(),P.hp+hl);popup(P.x,P.y-56,'+'+hl+' — the heads are fed','#ffe9a8',12);}
-    S.shake=Math.max(S.shake,6);vib(30);return;}
-  // the POKE: narrow, long, and heavy as a landslide (bear-paw class damage)
+    popup(P.x,P.y-44,'CHARGE','#ffe9a8',13);return;}
+  // the POKE: narrow, long, heavy — and he STEPS INTO it toward the nearest foe (Hiro)
+  if(foe){const a=ang(P,foe);P.x+=Math.cos(a)*26;P.y+=Math.sin(a)*26;clampArena(P);}
   const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*1.5);
   swings.push({x:P.x,y:P.y,a:P.face,arc:0.5,range:120,t:.15,heavy:true,col:'#f0ead0',style:2});
   strike(P.face,0.55,120,dmg,true);}
@@ -642,7 +674,7 @@ function convertToMinion(x,y,maxhp,r){ // slain by the ray: it rises BOUND IN LI
 function fireRay(){ // the halo unmakes in a line — moderate, relentless, and it RECRUITS
   autoFace();
   const judge=lvl()>=8, w=judge?70:44, len=900;
-  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*(judge?1.0:0.8));
+  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*(judge?3.0:2.4)); // Hiro: 3x damage to match the 3s cooldown
   rays.push({x:P.x,y:P.y-14,a:P.face,len,w,t:.45,judge});
   flashFx(judge?.22:.12);S.shake=Math.max(S.shake,judge?9:6);vib(judge?[40,30,70]:30);
   const ca=Math.cos(P.face),sa=Math.sin(P.face);
@@ -659,20 +691,26 @@ function fireRay(){ // the halo unmakes in a line — moderate, relentless, and 
   for(let k=0;k<22&&particles.length<240;k++){const pd=rnd(20,len*0.6);
     particles.push({x:P.x+ca*pd+rnd(-w/2,w/2)*-sa,y:P.y-14+sa*pd+rnd(-w/2,w/2)*ca,
       vx:rnd(-30,30),vy:rnd(-60,-10),t:rnd(.3,.6),col:k%2?'#ffe9a8':'#fff6dc',r:rnd(1.5,3),noG:true});}}
-function ascend(){ // the wings answer: above the sand, above the blades
-  autoFace();P.parryCD=6;P.ascendT=1.1;P.wardT=1.5;P.ft.rolls++;
+function ascend(){ // Hiro: fly UP, then CRASH DOWN on the nearest foe — radiating light AOE, 3s cooldown
+  autoFace();P.parryCD=3;P.ascendT=1.1;P.wardT=1.5;P.ft.rolls++;
+  const foe=nearestRealFoe();
+  P.slamX=foe?foe.x:P.x;P.slamY=foe?foe.y:P.y; // where the crash will land
   leafBurst(P.x,P.y,16,'#fff6dc');
   popup(P.x,P.y-58,'ASCEND','#ffe9a8',14);
   S.shake=Math.max(S.shake,4);vib(25);flashFx(.1);}
-function seraphSlam(){ // the landing is the sentence
-  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*1.2);
-  swings.push({x:P.x,y:P.y,a:0,arc:7,range:120,t:.2,heavy:true,col:'#ffe9a8',ring:true});
-  S.shake=Math.max(S.shake,9);vib([40,40,70]);flashFx(.16);
-  leafBurst(P.x,P.y,20,'#ffe9a8');
+function seraphSlam(){ // the crash: a ring of light magic — knockback + moderate damage
+  if(P.slamX!==undefined){P.x=P.slamX;P.y=P.slamY;clampArena(P);P.slamX=undefined;} // land on the marked foe
+  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*1.4);
+  const R=150;
+  swings.push({x:P.x,y:P.y,a:0,arc:7,range:R,t:.25,heavy:true,col:'#ffe9a8',ring:true});
+  swings.push({x:P.x,y:P.y,a:0,arc:7,range:R*0.6,t:.3,heavy:true,col:'#fff6dc',ring:true});
+  S.shake=Math.max(S.shake,11);vib([50,40,90]);flashFx(.22);
+  for(let k=0;k<26&&particles.length<240;k++){const a=rnd(0,6.3);
+    particles.push({x:P.x,y:P.y,vx:Math.cos(a)*rnd(120,320),vy:Math.sin(a)*rnd(120,320),t:rnd(.3,.6),col:k%2?'#ffe9a8':'#fff6dc',r:rnd(2,4),noG:true});}
   for(const e of enemies){if(e.dead)continue;
-    if(dist(P,e)>120+e.r)continue;
-    const pa=ang(P,e);e.x+=Math.cos(pa)*60;e.y+=Math.sin(pa)*60;clampArena(e);
-    e.stunT=Math.max(e.stunT||0,0.8);
+    if(dist(P,e)>R+e.r)continue;
+    const pa=ang(P,e);e.x+=Math.cos(pa)*90;e.y+=Math.sin(pa)*90;clampArena(e); // knocked back
+    e.stunT=Math.max(e.stunT||0,1.0);
     hitEnemy(e,dmg,true,pa);}}
 function updRays(dt){for(let i=rays.length-1;i>=0;i--){rays[i].t-=dt;if(rays[i].t<=0)rays.splice(i,1);}}
 function updWolves(dt){
@@ -707,8 +745,8 @@ function doHeavy(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.heavyWind>0||
   if(P.char==='warlock'){
     if(P.devilT>0){devilStrike(1.0,true);return;} // BITE — moderate, feeds him
     startChannel();return;}
-  if(P.char==='seraph'){ // HALO RAY: every second, a lance of dawn
-    autoFace();P.heavyWind=.4;P.heavyCD=1;P.heavyCDmax=1;P.ft.heavy++;return;}
+  if(P.char==='seraph'){ // HALO RAY (Hiro): slower (3s) but hits 3x harder
+    autoFace();P.heavyWind=.4;P.heavyCD=3;P.heavyCDmax=3;P.ft.heavy++;return;}
   autoFace();P.heavyWind=.55;P.heavyCD=2.2;P.heavyCDmax=2.2;}
 function heavyRelease(){if(P.char==='warlock')releaseChannel();}
 function heavyLand(){P.ft.heavy++;
@@ -926,6 +964,7 @@ function spawnFight(){
     ];
     const w=wilds[Math.floor(Math.random()*wilds.length)];
     enemies.push(mkEnemy(Object.assign({},w,{x:arena.x,y:arena.y,hp:Math.round(w.hp*i),maxhp:Math.round(w.hp*i),dmgScale:sc})));
+    for(const e of enemies){e.hp=Math.round(e.hp*2);e.maxhp=Math.round(e.maxhp*2);} // Hiro: DOUBLE all enemy HP after fight 3
   }
   zones=[];swings=[];particles=[];popups=[];bullets=[];limbs=[];wolves=[];P.wolfCD=0;P.glaive=null;
   demons=[];fireballs=[];tracers=[];P.channel=null;P.slowT=0;P.paralyzeT=0;P.wardT=0;
@@ -1026,6 +1065,12 @@ function updEnemyVs(e,dt,P){
   if(e.dead){e.deathT+=dt;return;}
   if(e.stunT>0){e.stunT-=dt;e.flash=Math.max(e.flash,.04);
     if(e.vined)e.vined=Math.max(0,e.vined-dt);return;}
+  if(e.fearT>0){e.fearT-=dt; // FEAR (druid bear roar): flee from the player, cannot attack
+    const a=ang(P,e);e.face=a;
+    e.x+=Math.cos(a)*e.spd*1.15*dt;e.y+=Math.sin(a)*e.spd*1.15*dt;clampArena(e);
+    e.attacking=false;e.tele=0;
+    if(Math.random()<.2&&particles.length<240)particles.push({x:e.x+rnd(-8,8),y:e.y-20,vx:0,vy:-30,t:.3,col:'#c98a4a',r:2});
+    return;}
   e.vined=0;
   e.flash=Math.max(0,e.flash-dt);
   const dToP=dist(e,P);
@@ -1547,6 +1592,7 @@ function tick(now){
 
   // player
   if(!P.dead){
+    if(P.hp>maxHP())P.hp=maxHP(); // form-HP changes (Hiro) shrink the cap mid-fight — keep the bar honest
     P.rollCD=Math.max(0,P.rollCD-dt);P.heavyCD=Math.max(0,P.heavyCD-dt);
     P.parryT=Math.max(0,P.parryT-dt);P.parryCD=Math.max(0,P.parryCD-dt);
     P.formCD=Math.max(0,P.formCD-dt);P.wolfCD=Math.max(0,P.wolfCD-dt);
@@ -1688,7 +1734,7 @@ function tick(now){
     parry:(()=>{let pv=P.parryCD,pm=1.4;
       if(P.char==='druid'){pv=P.form==='human'?P.humanCD:0;pm=5;}
       else if(P.char==='warlock')pm=P.lich?9:3;
-      else if(P.char==='seraph')pm=6;
+      else if(P.char==='seraph')pm=3;
       return pv>0?pv/pm:0;})()
   });
   draw();
@@ -2362,7 +2408,7 @@ function draw(){
       // form timer
       {const bw3=48,bx3=P.x-bw3/2,by3=P.y-P.r-30;
        ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(bx3,by3,bw3,5);
-       ctx.fillStyle='#d03a4a';ctx.fillRect(bx3+1,by3+1,(bw3-2)*Math.max(0,P.devilT/10),3);}
+       ctx.fillStyle='#d03a4a';ctx.fillRect(bx3+1,by3+1,(bw3-2)*Math.max(0,P.devilT/15),3);}
       if(P.wardT>0){
         ctx.strokeStyle='rgba(90,210,255,'+(0.5+0.25*Math.sin(S.time*9))+')';ctx.lineWidth=2.5;
         ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+16,0,7);ctx.stroke();}

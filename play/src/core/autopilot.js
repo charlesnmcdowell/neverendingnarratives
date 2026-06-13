@@ -22,7 +22,7 @@ const Autopilot = {
     if (S.mode !== 'fight') return;
 
     // keep-alive, scaled up late where one-shots punch through (same as test harness)
-    if (P.hp < combat.maxHP() * (S.fight >= 12 ? 0.85 : 0.45)) P.hp = combat.maxHP();
+    if (P.hp < combat.maxHP() * 0.85) P.hp = combat.maxHP(); // enemies hit 2x after fight 3 / scale by zone — keep the AUTO show alive
 
     const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
     const foes = combat.enemies.filter(e => !e.dead);

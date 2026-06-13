@@ -84,6 +84,12 @@ class GroveScene extends WorldScene {
       'fr-vine': { col: '#2c5a2c', o: { blob: true }, r: 13 },
       'fr-insect': { col: '#6a5a2a', o: { quad: true }, r: 9 },
       'fr-bandit': { col: '#5a4a3a', o: { hood: true, wpnLen: 24, wpnCol: '#8a8f98' } },
+      // 5 new forest monsters (Hiro)
+      'fr-boar': { col: '#5a4030', o: { quad: true }, r: 14 },
+      'fr-treant': { col: '#3a5a2c', o: { hulk: true, headCol: '#2c4420' }, r: 18 },
+      'fr-spider': { col: '#2a2030', o: { quad: true }, r: 12 },
+      'fr-harpy': { col: '#6a5a3a', o: { wpnLen: 0 }, r: 11 },
+      'fr-wisp': { col: '#7fd0ff', o: { robe: true, hood: true, staffTip: true, tipCol: '#7fd0ff', wpnLen: 18 }, r: 9 },
     });
     const keeper = this.add.sprite(setX * T - 2 * T, (setY + 5) * T, 'fr-elf', 0).setDepth((setY + 5) * T);
     this.interactables.push({ x: keeper.x, y: keeper.y, label: 'speak with the grove keeper', fn: () => this.keeperDialog() });
@@ -132,6 +138,21 @@ class GroveScene extends WorldScene {
         bandits: { tex: 'fr-bandit', n: 3, name: 'TOLL BANDITS', sub: 'the bridge was never theirs',
           spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'hook', x: 640 + Math.cos(i * 2.1) * 200, y: 300 + Math.sin(i * 2.1) * 115,
             hp: 90, maxhp: 90, spd: 150, r: 13, col: '#5a4a3a', dmgScale: 1.05 })), quest: 'g-bandits' },
+        // --- 5 new forest monsters (Hiro) ---
+        boar: { tex: 'fr-boar', n: 2, name: 'DIRE BOARS', sub: 'they were here before the road',
+          spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'hound', x: 640 + Math.cos(i * 2.3) * 190, y: 310 + Math.sin(i * 2.3) * 110,
+            hp: 110, maxhp: 110, spd: 175, r: 14, col: '#5a4030', dmgScale: 1.15 })) },
+        treant: { tex: 'fr-treant', n: 1, name: 'AN ANGRY TREANT', sub: 'the grove walks when wronged',
+          spawn: () => [{ type: 'door', x: 640, y: 280, r: 26, hp: 260, maxhp: 260, spd: 50, col: '#3a5a2c', wpn: '#2c4420', dmgScale: 1.2 }] },
+        spider: { tex: 'fr-spider', n: 3, name: 'GIANT SPIDERS', sub: 'the webs you walked through were warnings',
+          spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'hook', x: 640 + Math.cos(i * 2.0) * 200, y: 300 + Math.sin(i * 2.0) * 115,
+            hp: 70, maxhp: 70, spd: 165, r: 12, col: '#2a2030', dmgScale: 1.05 })) },
+        harpy: { tex: 'fr-harpy', n: 2, name: 'HARPIES', sub: 'they sing, then they dive',
+          spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'gunner', x: 640 + Math.cos(i * 3) * 210, y: 290 + Math.sin(i * 3) * 120,
+            hp: 80, maxhp: 80, spd: 150, r: 11, col: '#6a5a3a', dmgScale: 1.1 })) },
+        wisp: { tex: 'fr-wisp', n: 2, name: 'WILL-O-WISPS', sub: 'follow the lights and you drown',
+          spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'pyre', x: 640 + Math.cos(i * 2.6) * 190, y: 300 + Math.sin(i * 2.6) * 110,
+            hp: 90, maxhp: 90, spd: 110, r: 11, col: '#3a7faf', dmgScale: 1.1 })) },
       };
       const d = defs[kind];
       const sprs = [];
@@ -142,7 +163,8 @@ class GroveScene extends WorldScene {
       this.packs.push({ x: px, y: py, kind, def: d, sprs, alive: true, wanderT: 0 });
     };
     const packSpots = { wolves: [[20, 26], [36, 10], [8, 44]], hounds: [[44, 34], [24, 40]], rotshaman: [[30, 22]],
-      goblins: [[14, 18], [48, 26]], vines: [[40, 42], [6, 30]], insects: [[24, 8], [54, 40]], bandits: [[46, 18]] };
+      goblins: [[14, 18], [48, 26]], vines: [[40, 42], [6, 30]], insects: [[24, 8], [54, 40]], bandits: [[46, 18]],
+      boar: [[16, 40]], treant: [[58, 16]], spider: [[10, 24]], harpy: [[50, 8]], wisp: [[30, 44]] };
     for (const [kind, spots] of Object.entries(packSpots))
       for (const [sx, sy] of spots) {
         const id = 'pack-' + kind + '-' + sx + '-' + sy;
@@ -340,17 +362,18 @@ class GroveScene extends WorldScene {
         this.startEncounter(pk.def.name, pk.def.sub, pk.def.spawn(pk.def.n), win => {
           if (win) {
             for (const s of pk.sprs) s.destroy();
-            window.GameState.world.flags[pk.id] = 'cleared';
+            if (pk.id) window.GameState.world.flags[pk.id] = 'cleared';
             const counts = window.GameState.world.questCounts;
-            counts[pk.def.quest] = (counts[pk.def.quest] || 0) + pk.def.n;
-            this.floatText(this.player.x, this.player.y - 50, pk.def.name + ' — cleared (' + counts[pk.def.quest] + ' logged)', '#7fbf6a');
+            let logged = '';
+            if (pk.def.quest) { counts[pk.def.quest] = (counts[pk.def.quest] || 0) + pk.def.n; logged = ' (' + counts[pk.def.quest] + ' logged)'; }
+            this.floatText(this.player.x, this.player.y - 50, pk.def.name + ' — cleared' + logged, '#7fbf6a');
             if (Math.random() < 0.5) this.grantLoot({ type: 'potion-health', label: 'Health Potion' }, this.player.x + 30, this.player.y);
           } else {
             pk.alive = true; // the pack holds its ground; the forest spat you out
             this.player.x = 34 * 32; this.player.y = (50 - 4) * 32;
             this.floatText(this.player.x, this.player.y - 50, 'dragged back to the treeline, breathing', '#c8443a');
           }
-        });
+        }, { zoneScale: true });
       }
     }
 

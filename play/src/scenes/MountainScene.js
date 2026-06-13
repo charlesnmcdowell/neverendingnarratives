@@ -84,6 +84,12 @@ class MountainScene extends WorldScene {
       ['fr-slime', { col: '#3a8a6a', o: { blob: true }, r: 12 }],
       ['fr-wyvern', { col: '#7a3a4a', o: { quad: true }, r: 13 }],
       ['fr-firele', { col: '#d05a2a', o: { blob: true }, r: 12 }],
+      // 5 new mountain monsters (Hiro)
+      ['fr-rockgolem', { col: '#6a6a72', o: { hulk: true, headCol: '#4a4a52' }, r: 18 }],
+      ['fr-frostele', { col: '#7fd0ff', o: { blob: true }, r: 12 }],
+      ['fr-troll', { col: '#5a6a4a', o: { hulk: true, headCol: '#3a4a2c' }, r: 17 }],
+      ['fr-griffon', { col: '#b89a5a', o: { quad: true }, r: 13 }],
+      ['fr-drake', { col: '#8a3a2c', o: { quad: true }, r: 14 }],
     ]));
     for (const c of Quests.seraph.candidates) this.placeCandidate(c, T);
 
@@ -115,9 +121,24 @@ class MountainScene extends WorldScene {
       wyverns: { tex: 'fr-wyvern', n: 2, name: 'WYVERN BROOD', sub: 'the queen\'s daughters take a look at you', quest: 'g-wyverns',
         spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'gunner', x: 640 + Math.cos(i * 3) * 230, y: 290 + Math.sin(i * 3) * 130,
           hp: 290, maxhp: 290, spd: 145, r: 13, col: '#7a3a4a', dmgScale: 1.45 })) },
+      // --- 5 new mountain monsters (Hiro) ---
+      rockgolem: { tex: 'fr-rockgolem', n: 1, name: 'ROCK GOLEM', sub: 'the mountain stood up',
+        spawn: () => [{ type: 'door', x: 640, y: 270, r: 30, hp: 680, maxhp: 680, spd: 48, col: '#6a6a72', wpn: '#4a4a52', dmgScale: 1.5 }] },
+      frostele: { tex: 'fr-frostele', n: 2, name: 'FROST ELEMENTALS', sub: 'the cold has opinions',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'gunner', x: 640 + Math.cos(i * 2.7) * 210, y: 300 + Math.sin(i * 2.7) * 120,
+          hp: 300, maxhp: 300, spd: 130, r: 13, col: '#7fd0ff', dmgScale: 1.45 })) },
+      troll: { tex: 'fr-troll', n: 2, name: 'MOUNTAIN TROLLS', sub: 'they heal faster than you hit',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'chain', x: 640 + Math.cos(i * 2.5) * 190, y: 300 + Math.sin(i * 2.5) * 110,
+          hp: 420, maxhp: 420, spd: 80, r: 17, col: '#5a6a4a', dmgScale: 1.4 })) },
+      griffon: { tex: 'fr-griffon', n: 2, name: 'GRIFFONS', sub: 'they hunt the high passes',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'hound', x: 640 + Math.cos(i * 3) * 220, y: 290 + Math.sin(i * 3) * 125,
+          hp: 300, maxhp: 300, spd: 215, r: 14, col: '#b89a5a', dmgScale: 1.4 })) },
+      drake: { tex: 'fr-drake', n: 1, name: 'A YOUNG DRAKE', sub: 'not the brood-mother. bad enough.',
+        spawn: () => [{ type: 'pyre', x: 640, y: 270, r: 16, hp: 520, maxhp: 520, spd: 110, col: '#8a3a2c', dmgScale: 1.5 }] },
     };
     for (const [kind, spots] of Object.entries({ goblins: [[40, 20], [18, 24]], orcs: [[26, 34], [46, 36]],
-      ogres: [[10, 18], [50, 38]], slimes: [[52, 24], [20, 12]], wyverns: [[44, 8], [12, 8]], firele: [[34, 28], [22, 40]] }))
+      ogres: [[10, 18], [50, 38]], slimes: [[52, 24], [20, 12]], wyverns: [[44, 8], [12, 8]], firele: [[34, 28], [22, 40]],
+      rockgolem: [[8, 30]], frostele: [[56, 16]], troll: [[28, 12]], griffon: [[48, 26]], drake: [[16, 38]] }))
       for (const [sx, sy] of spots) mkPack(sx * T, sy * T, W_DEFS[kind]);
 
     // ---------- chests ----------
@@ -252,7 +273,7 @@ class MountainScene extends WorldScene {
             this.player.x = 27 * 32; this.player.y = 40 * 32;
             this.floatText(this.player.x, this.player.y - 50, 'the thin air spits you back to the trailhead', '#c8443a');
           }
-        });
+        }, { zoneScale: true });
       }
     }
 

@@ -76,6 +76,12 @@ class AshenveilScene extends WorldScene {
       'fr-vamp': { col: '#6a2a3a', o: { robe: true, hood: true, headCol: '#d8c8c0' } },
       'fr-wolfman': { col: '#3a3430', o: { quad: true }, r: 14 },
       'fr-darkmage': { col: '#4a3a5a', o: { robe: true, hood: true, wpnLen: 28, wpnCol: '#2a2234', staffTip: true, tipCol: '#b070f0', twoHand: false } },
+      // 5 new undead monsters (Hiro)
+      'fr-wraith': { col: '#2a2c3a', o: { robe: true, hood: true, headCol: '#9aa0b0' } },
+      'fr-ghoul': { col: '#6a6a4a', o: { quad: true }, r: 12 },
+      'fr-bonegolem': { col: '#cfc6b4', o: { hulk: true, skull: true, headCol: '#d8cdb8' }, r: 18 },
+      'fr-banshee': { col: '#5a6a7a', o: { robe: true, hood: true, headCol: '#c8d0d8', wpnLen: 0 } },
+      'fr-gravewight': { col: '#4a4452', o: { wpnLen: 30, wpnCol: '#8a8aa0', skull: true } },
     });
     for (let i = 0; i < 9; i++)
       this.addNPC('fr-deadworker', (5 + Math.random() * (MW - 14)) * T, (10 + Math.random() * 18) * T,
@@ -121,9 +127,25 @@ class AshenveilScene extends WorldScene {
       darkmages: { tex: 'fr-darkmage', n: 2, name: 'RENEGADE DARK MAGES', sub: 'expelled. thoroughly.', quest: 'g-darkmages',
         spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'necro', x: 640 + Math.cos(i * 2.9) * 190, y: 290 + Math.sin(i * 2.9) * 110,
           hp: 300, maxhp: 300, spd: 105, r: 14, col: '#4a3a5a', dmgScale: 1.4 })) },
+      // --- 5 new undead monsters (Hiro) ---
+      wraiths: { tex: 'fr-wraith', n: 3, name: 'WRAITHS', sub: 'the cold that walks',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'hook', x: 640 + Math.cos(i * 2.0) * 200, y: 300 + Math.sin(i * 2.0) * 115,
+          hp: 240, maxhp: 240, spd: 175, r: 12, col: '#2a2c3a', dmgScale: 1.4 })) },
+      ghouls: { tex: 'fr-ghoul', n: 3, name: 'GHOULS', sub: 'they got loose from the rows',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'hound', x: 640 + Math.cos(i * 2.4) * 190, y: 320 + Math.sin(i * 2.4) * 110,
+          hp: 230, maxhp: 230, spd: 210, r: 12, col: '#6a6a4a', dmgScale: 1.35 })) },
+      bonegolem: { tex: 'fr-bonegolem', n: 1, name: 'A BONE GOLEM', sub: 'an Academy experiment, off its leash',
+        spawn: () => [{ type: 'door', x: 640, y: 270, r: 30, hp: 640, maxhp: 640, spd: 50, col: '#cfc6b4', wpn: '#9a9080', dmgScale: 1.5 }] },
+      banshees: { tex: 'fr-banshee', n: 2, name: 'BANSHEES', sub: 'the wail comes before the teeth',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'gunner', x: 640 + Math.cos(i * 3) * 210, y: 290 + Math.sin(i * 3) * 120,
+          hp: 260, maxhp: 260, spd: 140, r: 12, col: '#5a6a7a', dmgScale: 1.45 })) },
+      gravewights: { tex: 'fr-gravewight', n: 2, name: 'GRAVE WIGHTS', sub: 'they remember how to fence',
+        spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'grave', x: 640 + Math.cos(i * 3.1) * 180, y: 300 + Math.sin(i * 3.1) * 110,
+          hp: 320, maxhp: 320, spd: 130, r: 14, col: '#4a4452', stance: 'open', stanceT: 1, dmgScale: 1.4 })) },
     };
     for (const [kind, spots] of Object.entries({ skeletons: [[10, 18], [34, 26]], zombies: [[18, 26], [40, 16]],
-      vampires: [[8, 7]], werewolves: [[42, 30]], darkmages: [[16, 12]] }))
+      vampires: [[8, 7]], werewolves: [[42, 30]], darkmages: [[16, 12]],
+      wraiths: [[30, 8]], ghouls: [[22, 28]], bonegolem: [[44, 22]], banshees: [[6, 24]], gravewights: [[38, 10]] }))
       for (const [sx, sy] of spots) mkPack(sx * T, sy * T, A_DEFS[kind]);
 
     this.initEncounterHost(null);
@@ -201,15 +223,16 @@ class AshenveilScene extends WorldScene {
           if (win) {
             for (const s of pk.sprs) s.destroy();
             const counts = window.GameState.world.questCounts;
-            counts[pk.def.quest] = (counts[pk.def.quest] || 0) + pk.def.n;
-            this.floatText(this.player.x, this.player.y - 50, pk.def.name + ' — corrected (' + counts[pk.def.quest] + ' logged)', '#9af0c0');
+            let logged = '';
+            if (pk.def.quest) { counts[pk.def.quest] = (counts[pk.def.quest] || 0) + pk.def.n; logged = ' (' + counts[pk.def.quest] + ' logged)'; }
+            this.floatText(this.player.x, this.player.y - 50, pk.def.name + ' — corrected' + logged, '#9af0c0');
             if (Math.random() < 0.5) GroveScene.prototype.grantLoot.call(this, { type: 'potion-health', label: 'Health Potion' }, this.player.x + 30, this.player.y);
           } else {
             pk.alive = true;
             this.player.x = 24 * 32; this.player.y = 30 * 32;
             this.floatText(this.player.x, this.player.y - 50, 'the working dead drag you back to the coach. gently.', '#c8443a');
           }
-        });
+        }, { zoneScale: true });
       }
     }
   }

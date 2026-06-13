@@ -475,10 +475,26 @@ class WorldScene extends Phaser.Scene {
     return Math.min(2.5, 1 + Math.max(0, k - 20) * 0.012);
   }
 
-  startEncounter(name, sub, pack, onEnd) {
+  // Per-region difficulty for AMBIENT HUNT packs (Hiro). Each region is ~2x the one
+  // before: forest → undead → mountain. Scripted story fights opt out (noZoneScale).
+  // TUNABLE — dial these down after playtest if the back regions feel too spongy.
+  zoneDifficulty() {
+    return ({
+      'thorn-grove':  { hp: 3,  dmg: 2 },   // forest — the baseline
+      'grove-dungeon':{ hp: 3,  dmg: 2 },   // Root-Hollow is part of the forest region
+      'ashenveil':    { hp: 6,  dmg: 4 },   // undead — 2x the forest
+      'dragonspine':  { hp: 12, dmg: 8 },   // mountain — 2x the undead
+    })[window.GameState.world.zone] || { hp: 1, dmg: 1 };
+  }
+
+  startEncounter(name, sub, pack, onEnd, opts) {
     const GS = window.GameState, P = GS.player;
     const fs = this.fieldScale();
-    pack = pack.map(e => Object.assign({}, e, { hp: Math.round(e.hp * fs), maxhp: Math.round((e.maxhp || e.hp) * fs) }));
+    const zd = (opts && opts.zoneScale) ? this.zoneDifficulty() : { hp: 1, dmg: 1 };
+    pack = pack.map(e => Object.assign({}, e, {
+      hp: Math.round(e.hp * fs * zd.hp),
+      maxhp: Math.round((e.maxhp || e.hp) * fs * zd.hp),
+      dmgScale: (e.dmgScale || 1) * zd.dmg }));
     this.encounterActive = true;
     if (window.IS_PHONE) this.cameras.main.setZoom(1); // the arena frame needs the full window
     this.encImg.setVisible(true);
