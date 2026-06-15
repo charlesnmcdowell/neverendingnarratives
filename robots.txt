@@ -1,0 +1,5 @@
+# robots.txt — neverendingnarratives.com
+User-agent: *
+Allow: /
+
+Sitemap: https://neverendingnarratives.com/sitemap.xml
