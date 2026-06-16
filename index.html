@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="The Sorcerer-Sword by Neverending Narratives — play the free browser action-RPG, listen to free LitRPG audiobook chapters, read the novels, and help fund development. An ever-expanding LitRPG / GameLit world.">
-    <meta name="keywords" content="Sorcerer-Sword, the sorcerer sword, free browser ARPG, LitRPG game, GameLit, LitRPG audiobook, free audiobook chapters, Altar of Omnia, Neverending Narratives, browser action RPG, indie RPG, royal road litrpg">
+    <meta name="description" content="The Sorcerer-Sword by Neverending Narratives — play the free browser action-RPG, listen to free LitRPG audiobook chapters, read the novels, and help fund development. An ever-expanding dark-fantasy LitRPG world.">
+    <meta name="keywords" content="Sorcerer-Sword, the sorcerer sword, free browser ARPG, LitRPG game, GameLit, LitRPG audiobook, free audiobook chapters, Altar of Omnia, Neverending Narratives, browser action RPG, indie RPG, royal road litrpg, dark fantasy">
     <meta name="author" content="Neverending Narratives">
     <link rel="canonical" href="https://neverendingnarratives.com/">
     <meta name="robots" content="index, follow">
-    <meta name="theme-color" content="#eab308">
+    <meta name="theme-color" content="#0a0908">
+
     <title>The Sorcerer-Sword | Free Browser ARPG, LitRPG Audiobooks &amp; Novels — Neverending Narratives</title>
 
     <!-- Open Graph / Facebook -->
@@ -16,7 +17,7 @@
     <meta property="og:site_name" content="Neverending Narratives">
     <meta property="og:url" content="https://neverendingnarratives.com/">
     <meta property="og:title" content="The Sorcerer-Sword — Free Browser ARPG, LitRPG Audiobooks &amp; Novels">
-    <meta property="og:description" content="Step into an ever-expanding LitRPG world. Play the action-RPG free in your browser, listen to free audiobook chapters, read the novels, and help fund what comes next.">
+    <meta property="og:description" content="Step into an ever-expanding dark-fantasy LitRPG world. Play the action-RPG free in your browser, listen to free audiobook chapters, read the novels, and help fund what comes next.">
     <meta property="og:image" content="https://neverendingnarratives.com/assets/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -39,7 +40,7 @@
           "name": "Neverending Narratives",
           "url": "https://neverendingnarratives.com/",
           "email": "neverendingnarratives@gmail.com",
-          "description": "Creators of The Sorcerer-Sword — a free browser ARPG, LitRPG audiobooks and novels — and a professional audiobook production studio based in Nashville, Tennessee.",
+          "description": "Creators of The Sorcerer-Sword — a free browser ARPG, LitRPG audiobooks and dark-fantasy novels.",
           "sameAs": [
             "https://www.youtube.com/@Neverendingnarratives37",
             "https://www.royalroad.com/profile/884453/fictions",
@@ -58,8 +59,8 @@
           "@type": "VideoGame",
           "name": "The Sorcerer-Sword",
           "url": "https://neverendingnarratives.com/play/",
-          "description": "A free browser-based action RPG set in the ever-expanding LitRPG world of the Sorcerer-Sword. No download, no sign-up — play instantly in your browser.",
-          "genre": ["Action RPG", "LitRPG", "GameLit"],
+          "description": "A free browser-based action RPG set in the ever-expanding dark-fantasy LitRPG world of the Sorcerer-Sword. No download, no sign-up — play instantly in your browser.",
+          "genre": ["Action RPG", "LitRPG", "GameLit", "Dark Fantasy"],
           "gamePlatform": ["Web Browser"],
           "applicationCategory": "Game",
           "operatingSystem": "Any (web browser)",
@@ -81,69 +82,91 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap');
-        
-        :root { --accent: 234 179 8; }
-        .tail-container { font-family: 'Inter', system-ui, sans-serif; }
-        .heading-font { font-family: 'Playfair Display', serif; }
 
-        .hero-bg {
-            background-image: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.75)), url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1920&h=1080&fit=crop&crop=center');
-            background-size: cover;
-            background-position: center;
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=EB+Garamond:ital@0;1&family=Inter:wght@400;500;600&display=swap');
+
+        :root {
+            --gold:  234 179 8;
+            --ember: 249 115 22;
+            --blood: 127 29 29;
+            --ink:   10 9 8;
+        }
+
+        html, body { background-color: #0a0908; }
+        .tail-container { font-family: 'Inter', system-ui, sans-serif; color:#d9d2c4; }
+        .heading-font { font-family: 'Cinzel', serif; letter-spacing: 0.02em; }
+        .serif { font-family: 'EB Garamond', Georgia, serif; }
+
+        /* Page-wide vignette + faint ember/blood glow for a dark-fantasy mood */
+        body::before {
+            content:''; position:fixed; inset:0; pointer-events:none; z-index:30;
+            background:
+                radial-gradient(120% 80% at 50% -10%, rgba(249,115,22,0.08), transparent 55%),
+                radial-gradient(140% 100% at 50% 120%, rgba(127,29,29,0.14), transparent 60%),
+                radial-gradient(100% 100% at 50% 45%, transparent 58%, rgba(0,0,0,0.55) 100%);
+        }
+
+        /* Gilded heading treatment */
+        .text-gold-grad {
+            background:linear-gradient(180deg,#fde68a 0%,#eab308 55%,#b45309 100%);
+            -webkit-background-clip:text; background-clip:text; color:transparent;
+        }
+
+        /* Ornamental rune divider */
+        .rune-divider { display:flex; align-items:center; justify-content:center; gap:1rem; color:#a16207; }
+        .rune-divider::before, .rune-divider::after {
+            content:''; height:1px; width:90px;
+            background:linear-gradient(90deg,transparent,#a16207);
+        }
+        .rune-divider::after { background:linear-gradient(90deg,#a16207,transparent); }
+
+        /* Hero forest video */
+        .hero-video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; z-index:0; }
+        .hero-overlay {
+            position:absolute; inset:0; z-index:1;
+            background:
+                radial-gradient(120% 90% at 50% 0%, rgba(0,0,0,0.30), transparent 50%),
+                linear-gradient(rgba(10,9,8,0.55), rgba(10,9,8,0.86)),
+                radial-gradient(100% 100% at 50% 50%, transparent 42%, rgba(0,0,0,0.72) 100%);
         }
 
         .nav-link { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .nav-link:hover { color: rgb(234 179 8); transform: translateY(-2px); }
 
-        .section-title:after {
-            content: '';
-            position: absolute;
-            width: 60px;
-            height: 3px;
-            background: rgb(234 179 8);
-            bottom: -8px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        audio { width: 100%; accent-color: rgb(234 179 8); }
+        /* Subtle gold edge on cards */
+        .card-fantasy { background:rgba(20,17,14,0.7); border:1px solid rgba(161,98,7,0.25); }
+        .card-fantasy:hover { border-color:rgba(234,179,8,0.45); }
 
         .fade-in { opacity: 0; transform: translateY(20px); animation: fadeInUp 0.6s ease forwards; }
-        .fade-in-delayed { animation-delay: 0.2s; }
-        .fade-in-delayed-2 { animation-delay: 0.4s; }
-
-        @keyframes fadeInUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .fade-in-delayed { opacity:0; transform:translateY(20px); animation: fadeInUp 0.6s ease 0.2s forwards; }
+        .fade-in-delayed-2 { opacity:0; transform:translateY(20px); animation: fadeInUp 0.6s ease 0.4s forwards; }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
         .stat-counter { transition: all 0.3s ease; }
         .stat-counter:hover { transform: scale(1.05); }
     </style>
 </head>
-<body class="tail-container bg-zinc-950 text-zinc-100 overflow-x-hidden">
+<body class="tail-container text-zinc-100 overflow-x-hidden">
 
     <!-- NAVBAR -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-[#0a0908]/90 backdrop-blur-md border-b border-amber-900/40">
         <div class="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <i class="fa-solid fa-book-open text-3xl text-yellow-400"></i>
+                <i class="fa-solid fa-khanda text-3xl text-yellow-400"></i>
                 <div>
                     <span class="text-2xl font-bold tracking-tight heading-font">Neverending</span>
-                    <span class="text-2xl font-bold tracking-tight text-yellow-400 heading-font">Narratives</span>
+                    <span class="text-2xl font-bold tracking-tight text-gold-grad heading-font">Narratives</span>
                 </div>
             </div>
-            
+
             <div class="hidden md:flex items-center gap-8 text-sm font-medium">
                 <a href="/play/" class="nav-link text-yellow-400 flex items-center gap-1.5"><i class="fa-solid fa-gamepad"></i> Play the Game</a>
                 <a href="#listen" onclick="smoothScrollTo('listen')" class="nav-link">Listen</a>
                 <a href="#read" onclick="smoothScrollTo('read')" class="nav-link">Read</a>
-                <a href="#fund" onclick="smoothScrollTo('fund')" class="nav-link text-yellow-400 flex items-center gap-1.5"><i class="fa-solid fa-heart"></i> Fund</a>
+                <a href="#audiobooks" onclick="smoothScrollTo('audiobooks')" class="nav-link">Audiobooks</a>
+                <a href="#fund" onclick="smoothScrollTo('fund')" class="nav-link text-yellow-400 flex items-center gap-1.5"><i class="fa-solid fa-fire"></i> Fund</a>
                 <a href="#about" onclick="smoothScrollTo('about')" class="nav-link">About</a>
-                <a href="#services" onclick="smoothScrollTo('services')" class="nav-link">Hire Us</a>
-                <a href="#contact" onclick="smoothScrollTo('contact')" class="nav-link">Contact</a>
             </div>
 
             <div class="flex items-center gap-4">
@@ -151,44 +174,48 @@
                     <i class="fa-solid fa-scroll"></i>
                     <span class="hidden md:inline">Our Stories</span>
                 </a>
-                <a href="#contact" onclick="smoothScrollTo('contact')" 
-                   class="bg-yellow-400 hover:bg-yellow-500 text-zinc-950 px-5 py-2.5 rounded-full font-semibold text-sm transition-all active:scale-95">
-                    Get a Quote
+                <a href="/play/"
+                   class="bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-5 py-2.5 rounded-full font-semibold text-sm transition-all active:scale-95">
+                    Play Free
                 </a>
                 <button id="mobile-menu-button" class="md:hidden text-2xl"><i class="fa-solid fa-bars"></i></button>
             </div>
         </div>
 
         <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-zinc-900 border-t border-zinc-800">
+        <div id="mobile-menu" class="hidden md:hidden bg-[#100d0b] border-t border-amber-900/40">
             <div class="flex flex-col px-6 py-6 gap-4 text-lg">
                 <a href="/play/" class="py-2 text-yellow-400 flex items-center gap-2"><i class="fa-solid fa-gamepad"></i> Play the Game</a>
                 <a href="#listen" onclick="toggleMobileMenu()" class="py-2">Listen</a>
                 <a href="#read" onclick="toggleMobileMenu()" class="py-2">Read</a>
-                <a href="#fund" onclick="toggleMobileMenu()" class="py-2 text-yellow-400"><i class="fa-solid fa-heart"></i> Fund</a>
+                <a href="#audiobooks" onclick="toggleMobileMenu()" class="py-2">Audiobooks</a>
+                <a href="#fund" onclick="toggleMobileMenu()" class="py-2 text-yellow-400"><i class="fa-solid fa-fire"></i> Fund</a>
                 <a href="#about" onclick="toggleMobileMenu()" class="py-2">About</a>
-                <a href="#services" onclick="toggleMobileMenu()" class="py-2">Hire Us</a>
-                <a href="#contact" onclick="toggleMobileMenu()" class="py-2">Contact</a>
             </div>
         </div>
     </nav>
 
-    <!-- HERO SECTION — The Sorcerer-Sword product hub -->
-    <section class="hero-bg min-h-screen flex items-center">
-        <div class="max-w-7xl mx-auto px-6 py-32 text-center">
+    <!-- HERO SECTION — The Sorcerer-Sword product hub (forest video background) -->
+    <section class="relative min-h-screen flex items-center overflow-hidden">
+        <video class="hero-video" autoplay muted loop playsinline poster="assets/forest-poster.jpg">
+            <source src="assets/Forestmove.mp4" type="video/mp4">
+        </video>
+        <div class="hero-overlay"></div>
+
+        <div class="relative z-10 max-w-7xl mx-auto px-6 py-32 text-center">
             <div class="fade-in">
-                <span class="inline-block text-yellow-400 text-sm font-medium uppercase tracking-widest mb-4">A Free Browser ARPG · LitRPG Audiobooks · Original Novels</span>
-                <h1 class="heading-font text-6xl md:text-8xl font-bold mb-6 leading-tight">
-                    The <span class="text-yellow-400">Sorcerer-Sword</span>
+                <span class="inline-block text-yellow-400/90 text-sm font-medium uppercase tracking-widest mb-4">A Free Browser ARPG · LitRPG Audiobooks · Dark-Fantasy Novels</span>
+                <h1 class="heading-font text-6xl md:text-8xl font-bold mb-6 leading-tight drop-shadow-[0_4px_30px_rgba(0,0,0,0.8)]">
+                    The <span class="text-gold-grad">Sorcerer-Sword</span>
                 </h1>
             </div>
             <div class="fade-in-delayed">
-                <p class="text-xl md:text-2xl text-zinc-300 mb-10 max-w-3xl mx-auto leading-relaxed">
-                    Step into an ever-expanding world of LitRPG adventure.
-                    <span class="text-zinc-100 font-medium">Play</span> the action-RPG free in your browser,
-                    <span class="text-zinc-100 font-medium">listen</span> to the audiobooks,
-                    <span class="text-zinc-100 font-medium">read</span> the novels, and help
-                    <span class="text-zinc-100 font-medium">fund</span> what comes next.
+                <p class="serif text-xl md:text-2xl text-zinc-200 mb-10 max-w-3xl mx-auto leading-relaxed">
+                    Step into an ever-expanding world of dark-fantasy LitRPG adventure.
+                    <span class="text-yellow-300 font-medium">Play</span> the action-RPG free in your browser,
+                    <span class="text-yellow-300 font-medium">listen</span> to the audiobooks,
+                    <span class="text-yellow-300 font-medium">read</span> the novels, and help
+                    <span class="text-yellow-300 font-medium">fund</span> what comes next.
                 </p>
             </div>
             <!-- Play · Listen · Read · Fund -->
@@ -198,41 +225,42 @@
                     <i class="fa-solid fa-gamepad text-xl"></i> Play Free
                 </a>
                 <a href="#listen" onclick="smoothScrollTo('listen')"
-                   class="flex-1 sm:min-w-[200px] inline-flex items-center justify-center gap-3 border-2 border-zinc-100 hover:bg-zinc-100 hover:text-zinc-950 px-8 py-5 rounded-full font-semibold text-lg transition-all">
+                   class="flex-1 sm:min-w-[200px] inline-flex items-center justify-center gap-3 border-2 border-zinc-100/80 hover:bg-zinc-100 hover:text-zinc-950 px-8 py-5 rounded-full font-semibold text-lg transition-all">
                     <i class="fa-solid fa-headphones"></i> Listen
                 </a>
                 <a href="#read" onclick="smoothScrollTo('read')"
-                   class="flex-1 sm:min-w-[200px] inline-flex items-center justify-center gap-3 border-2 border-zinc-100 hover:bg-zinc-100 hover:text-zinc-950 px-8 py-5 rounded-full font-semibold text-lg transition-all">
+                   class="flex-1 sm:min-w-[200px] inline-flex items-center justify-center gap-3 border-2 border-zinc-100/80 hover:bg-zinc-100 hover:text-zinc-950 px-8 py-5 rounded-full font-semibold text-lg transition-all">
                     <i class="fa-solid fa-book"></i> Read
                 </a>
                 <a href="#fund" onclick="smoothScrollTo('fund')"
                    class="flex-1 sm:min-w-[200px] inline-flex items-center justify-center gap-3 border-2 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-zinc-950 px-8 py-5 rounded-full font-semibold text-lg transition-all">
-                    <i class="fa-solid fa-heart"></i> Fund
+                    <i class="fa-solid fa-fire"></i> Fund
                 </a>
             </div>
-            <p class="fade-in-delayed-2 text-zinc-400 text-sm mt-5">No download. No sign-up. Jump straight into the ARPG.</p>
+            <p class="fade-in-delayed-2 text-zinc-300 text-sm mt-5">No download. No sign-up. Jump straight into the ARPG.</p>
         </div>
     </section>
 
-    <!-- LISTEN — audiobook / podcast section (roadmap C): free first chapters on YouTube -->
-    <section id="listen" class="py-24 bg-zinc-950 border-t border-zinc-800">
+    <!-- LISTEN — audiobook / podcast section: free chapters on YouTube -->
+    <section id="listen" class="py-24 bg-[#0c0a09] border-t border-amber-900/30">
         <div class="max-w-6xl mx-auto px-6">
-            <div class="text-center mb-14">
+            <div class="text-center mb-6">
                 <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Listen Free</span>
-                <h2 class="heading-font text-5xl font-bold mt-2 mb-4">The Audiobooks &amp; Podcast</h2>
-                <p class="text-zinc-400 text-lg max-w-2xl mx-auto">
-                    Press play and step into the world of the Sorcerer-Sword. Full first chapters — professionally
-                    narrated with original music — drop free on our YouTube channel. New episodes added regularly.
+                <h2 class="heading-font text-4xl md:text-5xl font-bold mt-2 mb-4">The Audiobook &amp; Podcast</h2>
+                <p class="text-zinc-400 text-lg max-w-2xl mx-auto serif">
+                    Press play and step into the world of the Sorcerer-Sword. Full chapters — professionally
+                    narrated with original music — stream free on our YouTube channel. New episodes added regularly.
                 </p>
             </div>
+            <div class="rune-divider mb-12"><i class="fa-solid fa-khanda"></i></div>
 
-            <!-- Featured chapter -->
-            <div class="mb-12 bg-zinc-900 rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl shadow-black/40">
+            <!-- Featured chapter: The Sorcerer-Sword -->
+            <div class="mb-12 rounded-3xl overflow-hidden card-fantasy shadow-2xl shadow-black/50">
                 <div class="relative pb-[56.25%] bg-black">
                     <iframe
                         class="absolute inset-0 w-full h-full"
-                        src="https://www.youtube.com/embed/3lJzuzY5CFM?si=4HIvY-ic3gETlHtb"
-                        title="Altar of Omnia – The Unbound Path (Free Audiobook Chapter)"
+                        src="https://www.youtube.com/embed/6HrBWr6NJrE"
+                        title="The Sorcerer-Sword — Free Audiobook Chapter"
                         frameborder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         referrerpolicy="strict-origin-when-cross-origin"
@@ -242,11 +270,11 @@
                 <div class="p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                     <div>
                         <span class="text-yellow-400 text-xs font-medium uppercase tracking-widest">Now Playing · Free Chapter</span>
-                        <h3 class="heading-font text-3xl font-bold mt-1">Altar of Omnia — The Unbound Path</h3>
-                        <p class="text-zinc-400 mt-1">LitRPG / Sci-Fi • Full opening chapter, free to stream</p>
+                        <h3 class="heading-font text-2xl md:text-3xl font-bold mt-1">The Sorcerer-Sword</h3>
+                        <p class="text-zinc-400 mt-1 serif">Dark-Fantasy LitRPG • Full chapter, free to stream</p>
                     </div>
                     <a href="https://www.royalroad.com/profile/884453/fictions" target="_blank"
-                       class="shrink-0 inline-flex items-center justify-center gap-2 text-sm border border-zinc-700 hover:border-yellow-400 hover:text-yellow-400 px-5 py-3 rounded-full transition-all">
+                       class="shrink-0 inline-flex items-center justify-center gap-2 text-sm border border-amber-900/50 hover:border-yellow-400 hover:text-yellow-400 px-5 py-3 rounded-full transition-all">
                         <i class="fa-solid fa-book-open"></i> Read along on Royal Road
                     </a>
                 </div>
@@ -254,20 +282,20 @@
 
             <!-- Where to listen -->
             <div class="grid md:grid-cols-3 gap-6 mb-12">
-                <div class="bg-zinc-900 rounded-3xl p-7 border border-zinc-800 text-center">
+                <div class="card-fantasy rounded-3xl p-7 text-center transition-all">
                     <i class="fa-brands fa-youtube text-yellow-400 text-4xl mb-4"></i>
-                    <h4 class="text-xl font-bold mb-2">Watch on YouTube</h4>
-                    <p class="text-zinc-400 text-sm">Full chapters with visuals, narration, and original score. Subscribe so you never miss an episode.</p>
+                    <h4 class="text-xl font-bold mb-2 heading-font">Watch on YouTube</h4>
+                    <p class="text-zinc-400 text-sm serif">Full chapters with visuals, narration, and original score. Subscribe so you never miss an episode.</p>
                 </div>
-                <div class="bg-zinc-900 rounded-3xl p-7 border border-zinc-800 text-center">
+                <div class="card-fantasy rounded-3xl p-7 text-center transition-all">
                     <i class="fa-solid fa-podcast text-yellow-400 text-4xl mb-4"></i>
-                    <h4 class="text-xl font-bold mb-2">Audio-only Podcast</h4>
-                    <p class="text-zinc-400 text-sm">Prefer to listen on the go? Audio-first episodes are coming to podcast apps — stay tuned.</p>
+                    <h4 class="text-xl font-bold mb-2 heading-font">Audio-only Podcast</h4>
+                    <p class="text-zinc-400 text-sm serif">Prefer to listen on the go? Audio-first episodes are coming to podcast apps — stay tuned.</p>
                 </div>
-                <div class="bg-zinc-900 rounded-3xl p-7 border border-zinc-800 text-center">
+                <div class="card-fantasy rounded-3xl p-7 text-center transition-all">
                     <i class="fa-solid fa-gamepad text-yellow-400 text-4xl mb-4"></i>
-                    <h4 class="text-xl font-bold mb-2">Then Play It</h4>
-                    <p class="text-zinc-400 text-sm">Heard the story? Step into the same world — play the Sorcerer-Sword ARPG free in your browser.</p>
+                    <h4 class="text-xl font-bold mb-2 heading-font">Then Play It</h4>
+                    <p class="text-zinc-400 text-sm serif">Heard the story? Step into the same world — play the Sorcerer-Sword ARPG free in your browser.</p>
                 </div>
             </div>
 
@@ -280,128 +308,142 @@
         </div>
     </section>
 
-    <!-- READ — buy the books section (roadmap D): Gumroad/Payhip hosted-checkout embeds + Amazon secondary -->
-    <section id="read" class="py-24 bg-zinc-900 border-t border-zinc-800">
+    <!-- READ — buy the novels: Amazon / Kindle -->
+    <section id="read" class="py-24 bg-[#0a0807] border-t border-amber-900/30">
         <div class="max-w-6xl mx-auto px-6">
-            <div class="text-center mb-14">
+            <div class="text-center mb-6">
                 <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Read the Books</span>
-                <h2 class="heading-font text-5xl font-bold mt-2 mb-4">Own the Sorcerer-Sword Novels</h2>
-                <p class="text-zinc-400 text-lg max-w-2xl mx-auto">
-                    Take the full story with you. Buy direct for instant DRM-free delivery (ePub &amp; PDF), or
-                    grab the Kindle edition on Amazon. Every purchase funds the next chapter and the game.
+                <h2 class="heading-font text-4xl md:text-5xl font-bold mt-2 mb-4">Own the Sorcerer-Sword Novels</h2>
+                <p class="text-zinc-400 text-lg max-w-2xl mx-auto serif">
+                    Take the full story with you. Grab the Kindle edition on Amazon — every purchase funds the next
+                    chapter and the game.
                 </p>
             </div>
+            <div class="rune-divider mb-12"><i class="fa-solid fa-book-skull"></i></div>
 
             <!-- Book cards -->
             <div class="grid md:grid-cols-2 gap-8 mb-12">
                 <!-- Book 1 -->
-                <div class="bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700 hover:border-yellow-400/30 transition-all flex flex-col">
+                <div class="card-fantasy rounded-3xl overflow-hidden transition-all flex flex-col">
                     <div class="p-8 flex-1">
                         <span class="text-yellow-400 text-xs font-medium uppercase tracking-widest">Book One</span>
-                        <h3 class="heading-font text-3xl font-bold mt-1 mb-3">Altar of Omnia — The Unbound Path</h3>
-                        <p class="text-zinc-400 leading-relaxed mb-6">
-                            The opening saga of the Sorcerer-Sword world. A LitRPG / Sci-Fi epic of systems,
+                        <h3 class="heading-font text-2xl md:text-3xl font-bold mt-1 mb-3">Altar of Omnia — The Unbound Path</h3>
+                        <p class="text-zinc-400 leading-relaxed mb-6 serif">
+                            The opening saga of the Sorcerer-Sword world. A dark-fantasy LitRPG epic of systems,
                             sorcery, and a hero forced to break the rules of his own reality.
                         </p>
                         <ul class="text-zinc-300 text-sm space-y-2">
-                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> DRM-free ePub &amp; PDF, instant download</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Kindle edition on Amazon</li>
                             <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Read free first chapters on Royal Road</li>
                             <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Supports development of the ARPG</li>
                         </ul>
                     </div>
                     <div class="p-8 pt-0 space-y-3">
-                        <!-- Buy direct (Gumroad/Payhip hosted checkout) -->
-                        <a href="REPLACE-WITH-YOUR-GUMROAD-OR-PAYHIP-BOOK1-LINK" target="_blank"
+                        <a href="https://www.amazon.com/dp/B0GZXBL8PX?binding=kindle_edition&ref=dbs_dp_sirpi" target="_blank"
                            class="block text-center bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-bold transition-all active:scale-95">
-                            <i class="fa-solid fa-bolt mr-2"></i> Buy Direct — Instant Download
+                            <i class="fa-brands fa-amazon mr-2"></i> Buy on Amazon / Kindle
                         </a>
-                        <!-- Amazon secondary -->
-                        <a href="REPLACE-WITH-YOUR-AMAZON-BOOK1-LINK" target="_blank"
-                           class="block text-center border border-zinc-600 hover:border-yellow-400 hover:text-yellow-400 px-8 py-4 rounded-full font-semibold transition-all">
-                            <i class="fa-brands fa-amazon mr-2"></i> Or buy on Amazon / Kindle
+                        <a href="https://www.royalroad.com/profile/884453/fictions" target="_blank"
+                           class="block text-center border border-amber-900/50 hover:border-yellow-400 hover:text-yellow-400 px-8 py-4 rounded-full font-semibold transition-all">
+                            <i class="fa-solid fa-scroll mr-2"></i> Read free on Royal Road
                         </a>
                     </div>
                 </div>
 
                 <!-- Book 2 -->
-                <div class="bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700 hover:border-yellow-400/30 transition-all flex flex-col">
+                <div class="card-fantasy rounded-3xl overflow-hidden transition-all flex flex-col">
                     <div class="p-8 flex-1">
                         <span class="text-yellow-400 text-xs font-medium uppercase tracking-widest">Book Two</span>
-                        <h3 class="heading-font text-3xl font-bold mt-1 mb-3">REPLACE-WITH-BOOK2-TITLE</h3>
-                        <p class="text-zinc-400 leading-relaxed mb-6">
-                            The saga continues. <span class="text-zinc-500 italic">(Hiro: drop in the Book Two
-                            blurb here, or remove this card if there's only one book live right now.)</span>
+                        <!-- PLACEHOLDER: Hiro, drop in the Book Two title here when ready -->
+                        <h3 class="heading-font text-2xl md:text-3xl font-bold mt-1 mb-3">Book Two <span class="text-zinc-500 text-lg">— Coming Soon</span></h3>
+                        <p class="text-zinc-400 leading-relaxed mb-6 serif">
+                            The saga continues. The next volume of the Sorcerer-Sword is in production —
+                            <a href="#listen" onclick="smoothScrollTo('listen')" class="text-yellow-400 hover:underline">hear new chapters on YouTube</a>
+                            while you wait.
                         </p>
                         <ul class="text-zinc-300 text-sm space-y-2">
-                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> DRM-free ePub &amp; PDF, instant download</li>
-                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Read free first chapters on Royal Road</li>
-                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Supports development of the ARPG</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-hourglass-half text-yellow-400"></i> In production now</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Free chapters drop on YouTube first</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Funded by readers like you</li>
                         </ul>
                     </div>
                     <div class="p-8 pt-0 space-y-3">
-                        <a href="REPLACE-WITH-YOUR-GUMROAD-OR-PAYHIP-BOOK2-LINK" target="_blank"
-                           class="block text-center bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-bold transition-all active:scale-95">
-                            <i class="fa-solid fa-bolt mr-2"></i> Buy Direct — Instant Download
+                        <a href="https://www.youtube.com/@Neverendingnarratives37?sub_confirmation=1" target="_blank"
+                           class="block text-center border border-amber-900/50 hover:border-yellow-400 hover:text-yellow-400 px-8 py-4 rounded-full font-semibold transition-all">
+                            <i class="fa-brands fa-youtube mr-2"></i> Get notified — Subscribe
                         </a>
-                        <a href="REPLACE-WITH-YOUR-AMAZON-BOOK2-LINK" target="_blank"
-                           class="block text-center border border-zinc-600 hover:border-yellow-400 hover:text-yellow-400 px-8 py-4 rounded-full font-semibold transition-all">
-                            <i class="fa-brands fa-amazon mr-2"></i> Or buy on Amazon / Kindle
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Audiobook coming soon + free-to-read funnel -->
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-zinc-800/60 rounded-3xl p-7 border border-zinc-700 flex items-center gap-5">
-                    <i class="fa-solid fa-headphones text-yellow-400 text-4xl shrink-0"></i>
-                    <div>
-                        <h4 class="text-xl font-bold mb-1">Audiobook — Coming Soon</h4>
-                        <p class="text-zinc-400 text-sm">The full narrated audiobook is in production. Stream free
-                            chapters now on <a href="#listen" onclick="smoothScrollTo('listen')" class="text-yellow-400 hover:underline">YouTube</a>.</p>
-                    </div>
-                </div>
-                <div class="bg-zinc-800/60 rounded-3xl p-7 border border-zinc-700 flex items-center gap-5">
-                    <i class="fa-solid fa-scroll text-yellow-400 text-4xl shrink-0"></i>
-                    <div>
-                        <h4 class="text-xl font-bold mb-1">Prefer to read free first?</h4>
-                        <p class="text-zinc-400 text-sm">Start the serial on
-                            <a href="https://www.royalroad.com/profile/884453/fictions" target="_blank" class="text-yellow-400 hover:underline">Royal Road</a>,
-                            then buy direct to keep the whole saga.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- FUND — help develop the Sorcerer-Sword (roadmap E): Ko-fi donate + manual-value goal bar + CashApp tip -->
-    <section id="fund" class="py-24 bg-zinc-950 border-t border-zinc-800">
+    <!-- AUDIOBOOKS — $10 two-book bundle via Cash App (manual fulfillment) -->
+    <section id="audiobooks" class="py-24 bg-[#0c0a09] border-t border-amber-900/30">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="text-center mb-6">
+                <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Audiobooks</span>
+                <h2 class="heading-font text-4xl md:text-5xl font-bold mt-2 mb-4">Both Audiobooks — <span class="text-gold-grad">$10</span></h2>
+                <p class="text-zinc-400 text-lg max-w-2xl mx-auto serif">
+                    Get both Sorcerer-Sword audiobooks as a bundle. Professionally narrated with original music —
+                    yours to keep.
+                </p>
+            </div>
+            <div class="rune-divider mb-12"><i class="fa-solid fa-headphones"></i></div>
+
+            <div class="card-fantasy rounded-3xl p-8 md:p-10 shadow-2xl shadow-black/50">
+                <div class="flex flex-col md:flex-row md:items-center gap-8">
+                    <div class="shrink-0 text-center">
+                        <i class="fa-solid fa-headphones text-yellow-400 text-6xl mb-3"></i>
+                        <div class="heading-font text-5xl font-bold text-gold-grad">$10</div>
+                        <div class="text-zinc-500 text-xs uppercase tracking-widest mt-1">Both audiobooks</div>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="heading-font text-2xl font-bold mb-3">How it works</h3>
+                        <ol class="text-zinc-300 text-sm space-y-3 mb-6">
+                            <li class="flex gap-3"><span class="text-yellow-400 font-bold">1.</span> Send <span class="text-yellow-400 font-semibold">$10</span> on Cash App to <span class="text-yellow-400 font-semibold">$hiiroprotagonist36</span> — add a note saying "Audiobooks".</li>
+                            <li class="flex gap-3"><span class="text-yellow-400 font-bold">2.</span> Email <a href="mailto:neverendingnarratives@gmail.com?subject=Audiobook%20Bundle" class="text-yellow-400 hover:underline">neverendingnarratives@gmail.com</a> with your Cash App name so we can match the payment.</li>
+                            <li class="flex gap-3"><span class="text-yellow-400 font-bold">3.</span> We send you both audiobooks to download. <!-- PLACEHOLDER: Hiro, confirm delivery method / file location for the audiobook files --></li>
+                        </ol>
+                        <a href="https://cash.app/$hiiroprotagonist36" target="_blank"
+                           class="block text-center bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-bold transition-all active:scale-95">
+                            <i class="fa-brands fa-square-cash-app mr-2"></i> Pay $10 on Cash App
+                        </a>
+                        <p class="text-zinc-500 text-xs mt-3 text-center">Delivery is handled by hand, usually within a day. Questions? Email us anytime.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FUND — help develop the Sorcerer-Sword: manual goal bar + Cash App (only money channel) -->
+    <section id="fund" class="py-24 bg-[#0a0807] border-t border-amber-900/30">
         <div class="max-w-5xl mx-auto px-6">
-            <div class="text-center mb-14">
+            <div class="text-center mb-6">
                 <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Fund Development</span>
-                <h2 class="heading-font text-5xl font-bold mt-2 mb-4">Help Build The Sorcerer-Sword</h2>
-                <p class="text-zinc-400 text-lg max-w-2xl mx-auto">
+                <h2 class="heading-font text-4xl md:text-5xl font-bold mt-2 mb-4">Help Build The Sorcerer-Sword</h2>
+                <p class="text-zinc-400 text-lg max-w-2xl mx-auto serif">
                     The game is free to play and the first chapters are free to hear — your support pays the artists
                     and tools that bring the world to life. Every dollar goes straight into development.
                 </p>
             </div>
+            <div class="rune-divider mb-12"><i class="fa-solid fa-fire"></i></div>
 
             <!-- ===================================================================== -->
-            <!-- DONATION PROGRESS BAR                                                 -->
-            <!-- Hiro: this bar is NOT live. Edit the ONE number below after each      -->
-            <!-- Ko-fi payout so it stays honest. Do not invent a number.             -->
-            <!-- (Want it fully automatic? Paste your Ko-fi goal-widget embed code     -->
-            <!--  in place of this card and delete the script at the bottom.)          -->
+            <!-- DONATION PROGRESS BAR  (MANUAL)                                       -->
+            <!-- Hiro: Cash App can't auto-report a total, so this bar is manual.      -->
+            <!-- After you tally donations, edit the ONE number below: data-raised.    -->
+            <!-- e.g. data-raised="250"  -> shows $250 raised. Keep it honest.         -->
             <!-- ===================================================================== -->
             <div id="fund-bar"
                  data-raised="0"
                  data-goal1="1000"
                  data-goal2="5000"
-                 class="bg-zinc-900 rounded-3xl p-8 md:p-10 border border-zinc-800 shadow-2xl shadow-black/40 mb-10">
+                 class="card-fantasy rounded-3xl p-8 md:p-10 shadow-2xl shadow-black/50 mb-10">
                 <div class="flex items-end justify-between mb-3">
                     <div>
                         <span class="text-zinc-400 text-xs font-medium uppercase tracking-widest">Raised so far</span>
-                        <div class="heading-font text-4xl font-bold text-yellow-400"><span id="fund-raised">$0</span></div>
+                        <div class="heading-font text-4xl font-bold text-gold-grad"><span id="fund-raised">$0</span></div>
                     </div>
                     <div class="text-right">
                         <span class="text-zinc-400 text-xs font-medium uppercase tracking-widest">Next goal</span>
@@ -410,54 +452,40 @@
                 </div>
 
                 <!-- track -->
-                <div class="relative h-5 bg-zinc-800 rounded-full overflow-hidden">
-                    <div id="fund-fill" class="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-400 to-amber-500 rounded-full transition-all duration-700" style="width:0%"></div>
+                <div class="relative h-5 bg-[#1a1512] rounded-full overflow-hidden border border-amber-900/40">
+                    <div id="fund-fill" class="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-600 rounded-full transition-all duration-700" style="width:0%"></div>
                 </div>
                 <p class="text-zinc-500 text-xs mt-2" id="fund-progress-label">$0 of $1,000 toward the first goal</p>
 
                 <!-- milestones -->
                 <div class="grid sm:grid-cols-2 gap-4 mt-8">
-                    <div id="milestone-1" class="rounded-2xl p-5 border border-zinc-700 bg-zinc-800/40">
+                    <div id="milestone-1" class="rounded-2xl p-5 border border-amber-900/30 bg-[#140f0c]/60">
                         <div class="flex items-center gap-2 mb-1">
                             <i class="fa-solid fa-palette text-yellow-400"></i>
                             <span class="font-semibold">Goal 1 — $1,000</span>
                         </div>
-                        <p class="text-zinc-400 text-sm">Character portraits for all four heroes — Ronin, Druid, Warlock &amp; Seraphim.</p>
+                        <p class="text-zinc-400 text-sm serif">Character portraits for all four heroes — Ronin, Druid, Warlock &amp; Seraphim.</p>
                     </div>
-                    <div id="milestone-2" class="rounded-2xl p-5 border border-zinc-700 bg-zinc-800/40">
+                    <div id="milestone-2" class="rounded-2xl p-5 border border-amber-900/30 bg-[#140f0c]/60">
                         <div class="flex items-center gap-2 mb-1">
                             <i class="fa-solid fa-person-running text-yellow-400"></i>
                             <span class="font-semibold">Goal 2 — $5,000</span>
                         </div>
-                        <p class="text-zinc-400 text-sm">Full animated sprites for all four heroes, bringing them to life in-game.</p>
+                        <p class="text-zinc-400 text-sm serif">Full animated sprites for all four heroes, bringing them to life in-game.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Ways to give -->
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-zinc-900 rounded-3xl p-8 border border-zinc-800 flex flex-col">
-                    <div class="flex items-center gap-3 mb-3">
-                        <i class="fa-solid fa-mug-hot text-yellow-400 text-3xl"></i>
-                        <h3 class="text-2xl font-bold">Support on Ko-fi</h3>
-                    </div>
-                    <p class="text-zinc-400 mb-6 flex-1">One-time tip or a monthly membership. Ko-fi takes no cut on
-                        donations, so more of your support reaches development. Follow for behind-the-scenes updates.</p>
-                    <a href="REPLACE-WITH-YOUR-KOFI-LINK" target="_blank"
+            <!-- Way to give: Cash App only -->
+            <div class="max-w-xl mx-auto">
+                <div class="card-fantasy rounded-3xl p-8 flex flex-col text-center">
+                    <i class="fa-brands fa-square-cash-app text-yellow-400 text-4xl mb-3"></i>
+                    <h3 class="text-2xl font-bold mb-3 heading-font">Donate via Cash App</h3>
+                    <p class="text-zinc-400 mb-6 serif">Send a one-time gift of any size — every bit funds the next portrait,
+                        sprite, and chapter. Thank you for keeping the Sorcerer-Sword alive.</p>
+                    <a href="https://cash.app/$hiiroprotagonist36" target="_blank"
                        class="block text-center bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-bold transition-all active:scale-95">
-                        <i class="fa-solid fa-heart mr-2"></i> Donate on Ko-fi
-                    </a>
-                </div>
-                <div class="bg-zinc-900 rounded-3xl p-8 border border-zinc-800 flex flex-col">
-                    <div class="flex items-center gap-3 mb-3">
-                        <i class="fa-solid fa-dollar-sign text-yellow-400 text-3xl"></i>
-                        <h3 class="text-2xl font-bold">Quick Tip via Cash App</h3>
-                    </div>
-                    <p class="text-zinc-400 mb-6 flex-1">Prefer Cash App? Send a quick tip directly — every bit helps
-                        fund the next portrait, sprite, and chapter.</p>
-                    <a href="REPLACE-WITH-YOUR-CASHAPP-LINK" target="_blank"
-                       class="block text-center border-2 border-zinc-100 hover:bg-zinc-100 hover:text-zinc-950 px-8 py-4 rounded-full font-semibold transition-all">
-                        <i class="fa-brands fa-square-cash-app mr-2"></i> Tip on Cash App
+                        <i class="fa-brands fa-square-cash-app mr-2"></i> Donate — $hiiroprotagonist36
                     </a>
                 </div>
             </div>
@@ -469,224 +497,51 @@
         </div>
     </section>
 
-    <!-- STUDIO DIVIDER — reframes everything below as the secondary "hire us" offering -->
-    <section class="py-12 bg-zinc-950 border-y border-zinc-800">
-        <div class="max-w-4xl mx-auto px-6 text-center">
-            <span class="text-zinc-500 text-xs font-medium uppercase tracking-widest">Behind the Sorcerer-Sword</span>
-            <h2 class="heading-font text-3xl md:text-4xl font-bold mt-3">We're also a professional audiobook studio for hire</h2>
-            <p class="text-zinc-400 mt-3 max-w-2xl mx-auto">The same Nashville team that builds this world can write, narrate, and produce your story too.</p>
-        </div>
-    </section>
-
-    <!-- SERVICES SECTION -->
-    <section id="services" class="py-24 bg-zinc-900">
-        <div class="max-w-6xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Hire Us · Audiobook Studio</span>
-                <h2 class="heading-font text-5xl font-bold mt-2 mb-4">Complete Story & Audiobook Creation</h2>
-                <p class="text-zinc-400 text-lg max-w-2xl mx-auto">From concept to finished audiobook, we write original content and produce immersive audio experiences with custom music</p>
-            </div>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-zinc-800 rounded-3xl p-8 border border-zinc-700 hover:border-yellow-400/30 transition-all">
-                    <div class="text-yellow-400 text-4xl mb-4">
-                        <i class="fa-solid fa-pen-fancy"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4">Original Content Creation</h3>
-                    <p class="text-zinc-400 mb-6">We craft original stories from scratch, specializing in LitRPG, GameLit, and immersive Sci-Fi with rich world-building and compelling characters.</p>
-                    <ul class="text-zinc-300 text-sm space-y-2">
-                        <li>• Custom story development</li>
-                        <li>• Genre expertise in LitRPG & Sci-Fi</li>
-                        <li>• Character-driven narratives</li>
-                        <li>• Chapter-by-chapter delivery</li>
-                    </ul>
-                </div>
-
-                <div class="bg-zinc-800 rounded-3xl p-8 border border-zinc-700 hover:border-yellow-400/30 transition-all">
-                    <div class="text-yellow-400 text-4xl mb-4">
-                        <i class="fa-solid fa-microphone"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4">Professional Narration</h3>
-                    <p class="text-zinc-400 mb-6">Expert voice acting that brings characters to life with distinct voices, proper pacing, and emotional depth that engages listeners.</p>
-                    <ul class="text-zinc-300 text-sm space-y-2">
-                        <li>• Character voice development</li>
-                        <li>• Immersive storytelling</li>
-                        <li>• Professional recording quality</li>
-                        <li>• Chapter-based production</li>
-                    </ul>
-                </div>
-
-                <div class="bg-zinc-800 rounded-3xl p-8 border border-zinc-700 hover:border-yellow-400/30 transition-all">
-                    <div class="text-yellow-400 text-4xl mb-4">
-                        <i class="fa-solid fa-music"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4">Musical Themes & Production</h3>
-                    <p class="text-zinc-400 mb-6">Custom musical themes and soundscapes that enhance your story's atmosphere, plus professional video production for each chapter.</p>
-                    <ul class="text-zinc-300 text-sm space-y-2">
-                        <li>• Custom musical composition</li>
-                        <li>• Atmospheric soundscapes</li>
-                        <li>• Video production</li>
-                        <li>• Complete audio mastering</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- PORTFOLIO / SAMPLES SECTION -->
-    <section id="samples" class="py-24 bg-zinc-900">
-        <div class="max-w-6xl mx-auto px-6">
-            <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
-                <div>
-                    <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Portfolio</span>
-                    <h2 class="heading-font text-5xl font-bold mt-2">Featured & Sample Work</h2>
-                </div>
-                <a href="https://www.youtube.com/@Neverendingnarratives37" target="_blank" 
-                   class="mt-6 md:mt-0 text-yellow-400 flex items-center gap-2 hover:gap-3 transition-all">
-                    Full Channel <i class="fa-solid fa-arrow-right"></i>
-                </a>
-            </div>
-
-            <!-- YOUR YOUTUBE VIDEO -->
-            <div class="mb-16 bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700">
-                <div class="relative pb-[56.25%] bg-black">
-                    <iframe 
-                        class="absolute inset-0 w-full h-full"
-                        src="https://www.youtube.com/embed/3lJzuzY5CFM?si=4HIvY-ic3gETlHtb" 
-                        title="Altar of Omnia – Professional Audiobook Sample"
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                        referrerpolicy="strict-origin-when-cross-origin"
-                        allowfullscreen>
-                    </iframe>
-                </div>
-                <div class="p-8">
-                    <div class="flex items-start justify-between">
-                        <div>
-                            <h3 class="font-semibold text-3xl">Altar of Omnia – The Unbound Path</h3>
-                            <p class="text-zinc-400 mt-1">Sci-Fi / LitRPG • Full chapter sample</p>
-                        </div>
-                        <a href="https://www.royalroad.com/profile/884453/fictions" target="_blank"
-                           class="text-xs bg-zinc-700 hover:bg-zinc-600 px-5 py-2 rounded-full transition-colors flex items-center gap-2">
-                            <i class="fa-solid fa-scroll"></i> Read on Royal Road
-                        </a>
-                    </div>
-                    <p class="text-zinc-400 text-sm mt-6 leading-relaxed">
-                        Professional narration, clean editing, and immersive sound design. 
-                        This is exactly how your audiobook will sound.
-                    </p>
-                </div>
-            </div>
-
-            <div class="text-center mb-8">
-                <span class="uppercase text-xs tracking-widest text-zinc-500">More Narration Samples</span>
-            </div>
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Human Trigger -->
-                <div class="bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700 hover:border-yellow-400/30 transition-all">
-                    <div class="relative pb-[56.25%] bg-black">
-                        <iframe 
-                            class="absolute inset-0 w-full h-full"
-                            src="https://www.youtube.com/embed/DoqWrw2XEaU?si=2dqJkdbhvFIXZkqL" 
-                            title="Human Trigger - Audiobook Sample"
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                            referrerpolicy="strict-origin-when-cross-origin"
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                    <div class="p-6">
-                        <h4 class="font-semibold mb-1 text-xl">Human Trigger</h4>
-                        <p class="text-zinc-400 text-sm">Professional Narration Sample</p>
-                    </div>
-                </div>
-
-                <!-- JackedIN -->
-                <div class="bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700 hover:border-yellow-400/30 transition-all">
-                    <div class="relative pb-[56.25%] bg-black">
-                        <iframe 
-                            class="absolute inset-0 w-full h-full"
-                            src="https://www.youtube.com/embed/SeiV6FAmK9Y?si=h0L-DEdKdbA9L8KB" 
-                            title="JackedIN - Audiobook Sample"
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                            referrerpolicy="strict-origin-when-cross-origin"
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                    <div class="p-6">
-                        <h4 class="font-semibold mb-1 text-xl">JackedIN</h4>
-                        <p class="text-zinc-400 text-sm">Professional Narration Sample</p>
-                    </div>
-                </div>
-
-                <!-- Vibe&Soul -->
-                <div class="bg-zinc-800 rounded-3xl overflow-hidden border border-zinc-700 hover:border-yellow-400/30 transition-all">
-                    <div class="relative pb-[56.25%] bg-black">
-                        <iframe 
-                            class="absolute inset-0 w-full h-full"
-                            src="https://www.youtube.com/embed/lHynSG9JZA0?si=8ULO03ynPsbJMZQI" 
-                            title="Vibe&Soul - Audiobook Sample"
-                            frameborder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                            referrerpolicy="strict-origin-when-cross-origin"
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                    <div class="p-6">
-                        <h4 class="font-semibold mb-1 text-xl">Vibe&Soul</h4>
-                        <p class="text-zinc-400 text-sm">Professional Narration Sample</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-center mt-12 text-zinc-400">
-                All samples professionally recorded & mastered in our Nashville studio.<br>
-                <a href="#contact" onclick="smoothScrollTo('contact')" class="text-yellow-400 underline">Want your book next?</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- ABOUT SECTION -->
-    <section id="about" class="py-24 bg-zinc-950">
+    <!-- ABOUT SECTION — the creator & the world -->
+    <section id="about" class="py-24 bg-[#0c0a09] border-t border-amber-900/30">
         <div class="max-w-6xl mx-auto px-6">
             <div class="grid md:grid-cols-2 gap-16 items-center">
                 <div>
-                    <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">About Us</span>
-                    <h2 class="heading-font text-5xl font-bold mt-2 mb-6">Passionate Storytellers in Nashville</h2>
-                    <p class="text-zinc-400 text-lg leading-relaxed mb-6">
-                        Founded by storytellers for storytellers, Neverending Narratives combines technical expertise with creative passion. Our Nashville-based studio specializes in transforming written works into immersive audio experiences.
+                    <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">About</span>
+                    <h2 class="heading-font text-4xl md:text-5xl font-bold mt-2 mb-6">One World, Told Every Way</h2>
+                    <p class="text-zinc-400 text-lg leading-relaxed mb-6 serif">
+                        Neverending Narratives is the home of the Sorcerer-Sword — a dark-fantasy LitRPG world told
+                        as a free browser action-RPG, narrated audiobooks, and original novels. Play it, hear it,
+                        read it; it's all the same ever-growing story.
                     </p>
-                    <p class="text-zinc-400 text-lg leading-relaxed mb-8">
-                        From fantasy epics to contemporary romance, we understand that every genre has its unique voice. Our team brings years of experience in both traditional publishing and indie authorship.
+                    <p class="text-zinc-400 text-lg leading-relaxed mb-8 serif">
+                        Every chapter, boss, and quest is built by a small independent team and funded directly by
+                        the people who love it. No paywalls on the core game — just a story that keeps expanding as
+                        long as you keep adventuring.
                     </p>
-                    
+
                     <div class="grid grid-cols-3 gap-8">
                         <div class="text-center stat-counter">
-                            <div class="text-3xl font-bold text-yellow-400"><i class="fa-solid fa-star"></i></div>
-                            <div class="text-zinc-500 text-sm">Premium Quality</div>
+                            <div class="text-3xl font-bold text-yellow-400"><i class="fa-solid fa-gamepad"></i></div>
+                            <div class="text-zinc-500 text-sm">Free to Play</div>
                         </div>
                         <div class="text-center stat-counter">
                             <div class="text-3xl font-bold text-yellow-400"><i class="fa-solid fa-music"></i></div>
-                            <div class="text-zinc-500 text-sm">Custom Music</div>
+                            <div class="text-zinc-500 text-sm">Original Score</div>
                         </div>
                         <div class="text-center stat-counter">
-                            <div class="text-3xl font-bold text-yellow-400"><i class="fa-solid fa-rocket"></i></div>
-                            <div class="text-zinc-500 text-sm">Fast Delivery</div>
+                            <div class="text-3xl font-bold text-yellow-400"><i class="fa-solid fa-infinity"></i></div>
+                            <div class="text-zinc-500 text-sm">Ever-Expanding</div>
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="relative">
-                    <div class="bg-gradient-to-br from-yellow-400 to-amber-600 rounded-3xl p-1">
-                        <div class="bg-zinc-900 rounded-3xl p-8">
+                    <div class="bg-gradient-to-br from-yellow-400 via-amber-600 to-red-900 rounded-3xl p-1">
+                        <div class="bg-[#0a0807] rounded-3xl p-8">
                             <div class="text-center mb-6">
-                                <i class="fa-solid fa-lightbulb text-yellow-400 text-4xl mb-4"></i>
-                                <h3 class="text-xl font-bold text-yellow-400 mb-4">Our Vision</h3>
-                                <p class="text-xl italic text-zinc-300 mb-4">
-                                    "Creating immersive audio experiences that transport listeners into worlds where every chapter comes alive through expert narration, custom music, and professional production."
+                                <i class="fa-solid fa-khanda text-yellow-400 text-4xl mb-4"></i>
+                                <h3 class="text-xl font-bold text-yellow-400 mb-4 heading-font">The Vision</h3>
+                                <p class="text-xl italic text-zinc-300 mb-4 serif">
+                                    "A single dark-fantasy world you can play, hear, and read — where every hour you
+                                    spend makes the next chapter possible."
                                 </p>
-                                <div class="text-yellow-400 font-semibold">— Neverending Narratives Team</div>
+                                <div class="text-yellow-400 font-semibold">— Neverending Narratives</div>
                             </div>
                         </div>
                     </div>
@@ -695,169 +550,44 @@
         </div>
     </section>
 
-    <!-- PROCESS SECTION -->
-    <section id="process" class="py-24 bg-zinc-900">
-        <div class="max-w-6xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Process</span>
-                <h2 class="heading-font text-5xl font-bold mt-2 mb-4">From Manuscript to Masterpiece</h2>
-                <p class="text-zinc-400 text-lg max-w-2xl mx-auto">Our streamlined process ensures quality results and clear communication every step of the way</p>
+    <!-- CONTACT / STAY IN TOUCH -->
+    <section id="contact" class="py-24 bg-[#0a0807] border-t border-amber-900/30">
+        <div class="max-w-3xl mx-auto px-6 text-center">
+            <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Get in Touch</span>
+            <h2 class="heading-font text-4xl md:text-5xl font-bold mt-2 mb-4">Questions? Just Reach Out</h2>
+            <p class="mt-2 text-zinc-400 serif max-w-xl mx-auto">
+                Buying the audiobooks, supporting the game, or just want to say hello? Email us directly — we read
+                every message.
+            </p>
+            <div class="mt-8">
+                <a href="mailto:neverendingnarratives@gmail.com"
+                   class="inline-flex items-center justify-center gap-3 bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-bold text-lg transition-all active:scale-95">
+                    <i class="fa-solid fa-envelope"></i> neverendingnarratives@gmail.com
+                </a>
             </div>
-
-            <div class="grid md:grid-cols-4 gap-8">
-                <div class="text-center">
-                    <div class="bg-yellow-400 text-zinc-950 rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-6">1</div>
-                    <h3 class="text-xl font-semibold mb-4">Consultation</h3>
-                    <p class="text-zinc-400">We discuss your vision, timeline, and requirements. Free quote within 24 hours.</p>
-                </div>
-                
-                <div class="text-center">
-                    <div class="bg-yellow-400 text-zinc-950 rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-6">2</div>
-                    <h3 class="text-xl font-semibold mb-4">Sample Chapter</h3>
-                    <p class="text-zinc-400">We record a sample chapter to ensure the voice and style match your expectations.</p>
-                </div>
-                
-                <div class="text-center">
-                    <div class="bg-yellow-400 text-zinc-950 rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-6">3</div>
-                    <h3 class="text-xl font-semibold mb-4">Full Production</h3>
-                    <p class="text-zinc-400">Professional recording, editing, and mastering with regular progress updates.</p>
-                </div>
-                
-                <div class="text-center">
-                    <div class="bg-yellow-400 text-zinc-950 rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-6">4</div>
-                    <h3 class="text-xl font-semibold mb-4">Delivery</h3>
-                    <p class="text-zinc-400">Final files delivered in all required formats, ready for distribution.</p>
-                </div>
+            <div class="flex justify-center gap-6 text-2xl mt-8 text-zinc-400">
+                <a href="https://www.youtube.com/@Neverendingnarratives37" target="_blank" class="hover:text-yellow-400"><i class="fa-brands fa-youtube"></i></a>
+                <a href="https://www.royalroad.com/profile/884453/fictions" target="_blank" class="hover:text-yellow-400"><i class="fa-solid fa-scroll"></i></a>
+                <a href="https://www.instagram.com/neverendingnarratives/" target="_blank" class="hover:text-yellow-400"><i class="fa-brands fa-instagram"></i></a>
+                <a href="https://www.facebook.com/search/top?q=neverendingnarratives" target="_blank" class="hover:text-yellow-400"><i class="fa-brands fa-facebook"></i></a>
             </div>
-        </div>
-    </section>
-
-    <!-- PRICING SECTION -->
-    <section id="pricing" class="py-24 bg-zinc-950">
-        <div class="max-w-6xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Pricing</span>
-                <h2 class="heading-font text-5xl font-bold mt-2 mb-4">Choose Your Story Experience</h2>
-                <p class="text-zinc-400 text-lg max-w-2xl mx-auto">From free monthly content to custom story creation - find the perfect plan for your needs</p>
-            </div>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-zinc-800 rounded-3xl p-8 border border-zinc-700">
-                    <div class="text-center mb-8">
-                        <h3 class="text-2xl font-bold mb-2">Essential</h3>
-                        <div class="text-4xl font-bold text-yellow-400 mb-2">FREE</div>
-                        <div class="text-zinc-400">monthly subscription</div>
-                    </div>
-                    <ul class="space-y-4 text-zinc-300">
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Email subscription</li>
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> 4 chapters per month</li>
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Latest Neverending Narratives story</li>
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Audiobook content in video form</li>
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Access to story updates</li>
-                    </ul>
-                    <a href="#contact" onclick="smoothScrollTo('contact')" 
-                       class="block text-center bg-zinc-700 hover:bg-zinc-600 text-white px-8 py-4 rounded-full font-semibold mt-8 transition-all">
-                        Subscribe Free
-                    </a>
-                </div>
-
-                <div class="bg-zinc-800 rounded-3xl p-8 border-2 border-yellow-400 relative">
-                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                        <span class="bg-yellow-400 text-zinc-950 px-6 py-2 rounded-full text-sm font-semibold">Most Popular</span>
-                    </div>
-                    <div class="text-center mb-8">
-                        <h3 class="text-2xl font-bold mb-2">Complete</h3>
-                        <div class="text-4xl font-bold text-yellow-400 mb-2">$25</div>
-                        <div class="text-zinc-400">one-time purchase</div>
-                    </div>
-                    <ul class="space-y-4 text-zinc-300">
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> All Essential benefits</li>
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Submit 1 custom story request</li>
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Written + audio + music (1st chapter)</li>
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Custom book cover included</li>
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> 1 revision • 1 week delivery</li>
-                    </ul>
-                    <a href="#contact" onclick="smoothScrollTo('contact')" 
-                       class="block text-center bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-semibold mt-8 transition-all">
-                        Get Started
-                    </a>
-                </div>
-
-                <div class="bg-zinc-800 rounded-3xl p-8 border border-zinc-700">
-                    <div class="text-center mb-8">
-                        <h3 class="text-2xl font-bold mb-2">Premium</h3>
-                        <div class="text-4xl font-bold text-yellow-400 mb-2">$150</div>
-                        <div class="text-zinc-400">one-time purchase</div>
-                    </div>
-                    <ul class="space-y-4 text-zinc-300">
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> All Complete benefits</li>
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Video with pictures & animations</li>
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Enhanced visual storytelling</li>
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Custom book cover included</li>
-                        <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> 1 revision • 2 week delivery</li>
-                    </ul>
-                    <a href="#contact" onclick="smoothScrollTo('contact')" 
-                       class="block text-center bg-zinc-700 hover:bg-zinc-600 text-white px-8 py-4 rounded-full font-semibold mt-8 transition-all">
-                        Get Started
-                    </a>
-                </div>
-            </div>
-
-            <div class="text-center mt-12 text-zinc-400">
-                <p class="mb-4">Want to continue your custom story beyond the first chapter? Let's discuss continuation pricing.</p>
-                <a href="#contact" onclick="smoothScrollTo('contact')" class="text-yellow-400 underline">Contact us for story continuation</a>
-            </div>
-        </div>
-    </section>
-
-    <!-- CONTACT SECTION -->
-    <section id="contact" class="py-24 bg-zinc-900">
-        <div class="max-w-3xl mx-auto px-6">
-            <div class="text-center mb-12">
-                <h2 class="heading-font text-5xl font-bold">Let's Bring Your Book to Ears Everywhere</h2>
-                <p class="mt-4 text-zinc-400">Fill out the form or email us directly at 
-                    <a href="mailto:neverendingnarratives@gmail.com" class="text-yellow-400 hover:underline">neverendingnarratives@gmail.com</a>
-                </p>
-            </div>
-
-            <form id="contact-form" class="space-y-8">
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-xs uppercase tracking-widest mb-2">Your Name</label>
-                        <input type="text" id="name" required class="w-full bg-zinc-800 border border-zinc-700 focus:border-yellow-400 rounded-2xl px-6 py-4 outline-none transition-colors">
-                    </div>
-                    <div>
-                        <label class="block text-xs uppercase tracking-widest mb-2">Email Address</label>
-                        <input type="email" id="email" required class="w-full bg-zinc-800 border border-zinc-700 focus:border-yellow-400 rounded-2xl px-6 py-4 outline-none transition-colors">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs uppercase tracking-widest mb-2">Book Title & Genre</label>
-                    <input type="text" id="book-info" placeholder="e.g. Altar of Omnia • Sci-Fi" class="w-full bg-zinc-800 border border-zinc-700 focus:border-yellow-400 rounded-2xl px-6 py-4 outline-none transition-colors">
-                </div>
-                <div>
-                    <label class="block text-xs uppercase tracking-widest mb-2">Tell us about your project</label>
-                    <textarea id="message" rows="6" required placeholder="Word count, target audience, any special requests..." class="w-full bg-zinc-800 border border-zinc-700 focus:border-yellow-400 rounded-3xl px-6 py-4 outline-none transition-colors resize-none"></textarea>
-                </div>
-                <button type="submit" class="w-full bg-yellow-400 hover:bg-amber-400 text-zinc-950 font-semibold py-6 rounded-3xl text-lg transition-all active:scale-95">
-                    Send Message — Get Your Quote in 24 Hours
-                </button>
-            </form>
         </div>
     </section>
 
     <!-- FOOTER -->
-    <footer class="bg-black py-16 border-t border-zinc-900">
+    <footer class="bg-black py-16 border-t border-amber-900/40">
         <div class="max-w-6xl mx-auto px-6">
             <div class="flex flex-col md:flex-row justify-between items-center gap-8">
                 <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-book-open text-4xl text-yellow-400"></i>
+                    <i class="fa-solid fa-khanda text-4xl text-yellow-400"></i>
                     <div class="heading-font text-3xl">Neverending Narratives</div>
                 </div>
-                
+
                 <div class="flex gap-8 text-sm">
-                    <a href="https://www.royalroad.com/profile/884453/fictions" target="_blank" class="hover:text-yellow-400">Our Written Works</a>
-                    <a href="#samples" onclick="smoothScrollTo('samples')" class="hover:text-yellow-400">Portfolio</a>
+                    <a href="/play/" class="hover:text-yellow-400">Play</a>
+                    <a href="#listen" onclick="smoothScrollTo('listen')" class="hover:text-yellow-400">Listen</a>
+                    <a href="#read" onclick="smoothScrollTo('read')" class="hover:text-yellow-400">Read</a>
+                    <a href="#fund" onclick="smoothScrollTo('fund')" class="hover:text-yellow-400">Fund</a>
                 </div>
 
                 <div class="flex gap-6 text-2xl">
@@ -867,20 +597,11 @@
                 </div>
             </div>
             <div class="text-center text-xs text-zinc-500 mt-16">
-                © 2026 Neverending Narratives • Nashville, Tennessee<br>
-                Professional Audiobook Production Studio
+                © 2026 Neverending Narratives<br>
+                The Sorcerer-Sword — a dark-fantasy LitRPG world
             </div>
         </div>
     </footer>
-
-    <!-- SUCCESS TOAST -->
-    <div id="toast" class="hidden fixed bottom-6 right-6 bg-zinc-800 border border-yellow-400 text-white px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-3 z-50">
-        <i class="fa-solid fa-check-circle text-yellow-400 text-2xl"></i>
-        <div>
-            <div class="font-medium">Message sent!</div>
-            <div class="text-sm text-zinc-400">We'll reply within 24 hours.</div>
-        </div>
-    </div>
 
     <script>
         function smoothScrollTo(sectionId) {
@@ -906,41 +627,23 @@
             });
         });
 
-        // Form handling
-        document.getElementById('contact-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const toast = document.getElementById('toast');
-            toast.classList.remove('hidden');
-            this.reset();
-            setTimeout(() => toast.classList.add('hidden'), 5000);
-        });
-
         // Animate stats on scroll
-        const observerOptions = {
-            threshold: 0.5,
-            rootMargin: '0px'
-        };
-
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.style.transform = 'scale(1.05)';
-                    setTimeout(() => {
-                        entry.target.style.transform = 'scale(1)';
-                    }, 300);
+                    setTimeout(() => { entry.target.style.transform = 'scale(1)'; }, 300);
                 }
             });
-        }, observerOptions);
+        }, { threshold: 0.5, rootMargin: '0px' });
 
-        document.querySelectorAll('.stat-counter').forEach(counter => {
-            observer.observe(counter);
-        });
+        document.querySelectorAll('.stat-counter').forEach(counter => observer.observe(counter));
 
         // ---------------------------------------------------------------
         // DONATION PROGRESS BAR — reads ONE manually-edited value.
-        // Hiro: update data-raised="..." on #fund-bar after each Ko-fi
-        // payout. This NEVER fakes a live total; it only reflects the
-        // number you set. (Swap in Ko-fi's goal-widget embed to go live.)
+        // Hiro: update data-raised="..." on #fund-bar after you tally
+        // Cash App donations. This NEVER fakes a live total; it only
+        // reflects the number you set.
         // ---------------------------------------------------------------
         (function () {
             const bar = document.getElementById('fund-bar');
@@ -963,14 +666,14 @@
                     ? fmt(raised) + ' raised — Goal 1 complete! ' + fmt(raised - goal1) + ' toward the $5,000 sprite goal'
                     : fmt(raised) + ' of ' + fmt(goal1) + ' toward the first goal');
             const active = document.getElementById(goalReached ? 'milestone-2' : 'milestone-1');
-            if (active) { active.classList.remove('border-zinc-700'); active.classList.add('border-yellow-400', 'bg-yellow-400/5'); }
+            if (active) { active.classList.remove('border-amber-900/30'); active.classList.add('border-yellow-400', 'bg-yellow-400/5'); }
             if (raised >= goal2) {
                 const m2 = document.getElementById('milestone-2');
-                if (m2) { m2.classList.remove('border-zinc-700'); m2.classList.add('border-yellow-400', 'bg-yellow-400/5'); }
+                if (m2) { m2.classList.remove('border-amber-900/30'); m2.classList.add('border-yellow-400', 'bg-yellow-400/5'); }
             }
         })();
 
-        console.log('%c✅ Neverending Narratives website loaded successfully!', 'color:#eab308; font-family:monospace');
+        console.log('%c⚔ The Sorcerer-Sword — Neverending Narratives', 'color:#eab308; font-family:monospace');
     </script>
 </body>
 </html>
