@@ -79,18 +79,20 @@ const CityUI = {
     el.querySelector('#companionsBody').innerHTML = h || '<div class="qtext">No one yet. The inn, the guild, the alleys, the grove.</div>';
   },
 
-  belt(items) { // items: array up to 8 of {label} (null = empty)
+  belt(items) { // only render FILLED slots so empty boxes do not clutter the screen (Hiro)
     this.els.belt.innerHTML = '';
+    let any = false;
     for (let i = 0; i < 8; i++) {
-      const s = document.createElement('div'); s.className = 'beltslot';
       const it = items[i];
-      if (it) { s.classList.add('filled'); s.title = it.label;
-        s.textContent = it.type === 'potion-health' ? '❤' : it.type.startsWith('potion') ? '⚗' : '◈';
-        const idx = i;
-        s.addEventListener('pointerdown', () => { if (this._onBelt) this._onBelt(idx); }); }
+      if (!it) continue;
+      any = true;
+      const s = document.createElement('div'); s.className = 'beltslot filled'; s.title = it.label;
+      s.textContent = it.type === 'potion-health' ? '❤' : it.type.startsWith('potion') ? '⚗' : '◈';
+      const idx = i;
+      s.addEventListener('pointerdown', () => { if (this._onBelt) this._onBelt(idx); });
       this.els.belt.appendChild(s);
     }
-    this.els.belt.style.display = 'flex';
+    this.els.belt.style.display = any ? 'flex' : 'none';
   },
 
   questlog(show, mains, flags) {

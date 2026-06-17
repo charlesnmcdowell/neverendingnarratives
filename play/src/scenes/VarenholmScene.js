@@ -80,6 +80,7 @@ class VarenholmScene extends WorldScene {
     // ---------- characters ----------
     this.bakeFrames({ 'fr-cookie': { col: '#8a2f3a', o: { headCol: '#b8884a', wpnLen: 0 }, r: 10 } });
     this.spawnPlayer(28 * T, (MH - 4) * T);
+    this.collectorSpot = { x: 28 * T, y: (MH - 10) * T }; // BOSS: The Collector trigger (Hiro)
     const palettes = ['fr-npc0', 'fr-npc1', 'fr-npc2', 'fr-npc3'];
     for (let i = 0; i < 10; i++)
       this.addNPC(palettes[i % 4], (6 + Math.random() * (MW - 12)) * T, (12 + Math.random() * 18) * T,
@@ -91,6 +92,29 @@ class VarenholmScene extends WorldScene {
     MusicMan.play('varenholm');
     this.floatText(this.player.x, this.player.y - 60, 'VARENHOLM — CROWN QUARTER', '#e7b450', 18);
     this.signDialog('THE COACH ROAD', Quests.varenholm.coach);
+
+    // ---------- WARLOCK HUNT (wq4): the climax — Cookie & the Thornwarden ----------
+    // Only the warlock, with Nyx's hunt active and Cookie not yet caged, sees the
+    // dancer waiting behind a living wall of thorns, her Druid protector on guard.
+    // tryHuntCapture('varenholm') stages the Thornwarden THEN Cookie (2 bosses:
+    // champ + rotwarden). Placed west of the guild on open ground, clear of the guild
+    // block (x20-34/y20-28), the statue (27,16), the coach + player spawn (~28,32-34).
+    // (Mutually exclusive with the druid-POV guildHall/Cookie scene via char gating.)
+    if (this.huntActive() && !flags['cap-cookie']) {
+      const hcX = 16 * T, hcY = 24 * T;
+      const hcG = this.add.graphics().setDepth(hcY + 4);
+      hcG.lineStyle(3, 0x1d3a1f, 0.95); // a living wall of thorns across the row
+      for (let i = -3; i <= 3; i++) { const bx = hcX + i * 11; hcG.lineBetween(bx, hcY + 14, bx + 6, hcY - 16); hcG.lineBetween(bx, hcY + 14, bx - 6, hcY - 14); }
+      hcG.fillStyle(0x86c06a, 0.9); for (let i = -3; i <= 3; i++) hcG.fillCircle(hcX + i * 11, hcY - 6, 2); // thorn-buds
+      hcG.fillStyle(0x8a2f3a, 1); hcG.fillRect(hcX - 5, hcY - 26, 10, 18);   // Cookie behind: red dancer
+      hcG.fillStyle(0xb8884a, 1); hcG.fillCircle(hcX, hcY - 30, 6);          // her head
+      hcG.fillStyle(0xf06a8a, 0.9); hcG.fillRect(hcX - 6, hcY - 12, 12, 3);  // a ribbon of red
+      hcG.fillStyle(0x3a5a2c, 1); hcG.fillRect(hcX + 14, hcY - 18, 14, 26);  // the Thornwarden in front
+      hcG.fillStyle(0x6b4a2a, 1); hcG.fillCircle(hcX + 21, hcY - 22, 7);     // his bark-skull
+      hcG.lineStyle(2, 0x86c06a, 0.8); hcG.strokeCircle(hcX + 21, hcY - 22, 11); // a crown of brambles
+      this.addLight(hcX, hcY, 80, false);
+      this.interactables.push({ x: hcX, y: hcY, label: 'a red dancer waits behind a wall of thorns', fn: () => this.tryHuntCapture('varenholm') });
+    }
 
     // coach home
     this.interactables.push({ x: 28 * T, y: (MH - 2) * T, label: 'take the coach back to Karridge', fn: () => {
@@ -144,6 +168,7 @@ class VarenholmScene extends WorldScene {
     const C = V.cookie, druid = GS.player.char === 'druid';
     const portrait = this.portraitCookie();
     if (flags['q-mq6-the-dancer'] === 'done') {
+      if (druid && this.crossingBeat(portrait)) return;   // DRUID POV: the cult comes for Cookie (dq)
       CityUI.dialog(C.name, '"Still here? The encore was YESTERDAY." She grins. "Road safe, pit-name. Send word if the ledger people get bold again."', [{ label: 'Leave', fn: close }], portrait); return;
     }
     const startJob = () => {
@@ -188,6 +213,92 @@ class VarenholmScene extends WorldScene {
       { label: 'Not yet', fn: close }], portrait);
   }
 
+  // ---------- DRUID CROSSING (dq): phase 1 — the cult comes for Cookie ----------
+  // Druid POV of the Varenholm crossing (the warlock-hunt climax seen from her side).
+  // The cult warlock arrives with cages; the druid breaks him once (capture-fight,
+  // reusing a collector boss). Sets q-dq-the-crossing='active' + dq-cross-warlock so the
+  // journal/AUTO can navigate. Later increments add the rematch, the flight up the spine,
+  // and the Shen Sama meet. Gated to a druid who has finished the dancer job; mutually
+  // exclusive with the warlock-POV hunt climax via char gating. Launched from guildHall
+  // (a menu beat, not a proximity proc) so it is inherently conversation-safe.
+  crossingBeat(portrait) {
+    const GS = window.GameState, flags = GS.world.flags, D = Quests.druidCrossing, W = D.warlock;
+    if (GS.player.char !== 'druid') return false;
+    if (flags[D.crossFlag] === 'done') return false;            // crossing already resolved
+    // surface THE CROSSING in the journal the moment the beat begins (the renderer shows the
+    // entry only once 'q-dq-the-crossing' is set; phase logic keys off the dq-cross-* flags, not this)
+    if (!flags[D.crossFlag] && flags['q-mq6-the-dancer'] === 'done') flags[D.crossFlag] = 'active';
+    const R = D.rematch;
+    if (flags[W.flag] && !flags[R.flag]) {                      // phase 2: the rematch — he gets back up, not alone
+      const rfight = () => {
+        CityUI.closeDialog();
+        this.startEncounter(R.banner[0], R.banner[1], R.pack.map(e => Object.assign({}, e)), win => {
+          if (!win) {
+            this.player.x = 28 * 32; this.player.y = 32 * 32;
+            this.floatText(this.player.x, this.player.y - 50, 'the ash road drives you back — Cookie hauls you up, fists still raised.', '#c8443a');
+            return;
+          }
+          flags[R.flag] = 1;
+          CityUI.dialog('THE CULT WARLOCK', R.down, [{ label: '(empty cages, and a ledger with your scent)', fn: () => {
+            CityUI.closeDialog();
+            this.floatText(this.player.x, this.player.y - 56, 'THE ASH ROAD IS THROWN BACK', '#7ac86a', 14);
+            if (typeof SaveSystem !== 'undefined' && SaveSystem.save) SaveSystem.save();
+          }}], portrait);
+        }, { zoneScale: true });
+      };
+      CityUI.dialog('THE CROSSING', R.druidLine, [{ label: '(he laughs into the cobbles)', fn: () => {
+        CityUI.dialog('THE CULT WARLOCK', R.warlockRise, [{ label: '(the ash on his coat stands up)', fn: () => {
+          CityUI.dialog(D.cookie.name, R.cookieLine, [
+            { label: R.opt[0], fn: rfight },
+            { label: R.opt[1], fn: rfight }], portrait);
+        }}]);
+      }}], portrait);
+      return true;
+    }
+    if (flags[R.flag] && !flags['dq-cross-flee']) {            // phase 3: the flight — up the spine, where fire keeps strays warm
+      const FL = D.flight;
+      CityUI.dialog('THE CROSSING', FL.text, [{ label: 'Climb toward the warm — up the spine trail', fn: () => {
+        flags['dq-cross-flee'] = 1;
+        CityUI.closeDialog();
+        if (typeof SaveSystem !== 'undefined' && SaveSystem.save) SaveSystem.save();
+        this.scene.start('MountainScene');                      // mirrors the warlock cult-coach route to the gated Dragonspine
+      }}], portrait);
+      return true;
+    }
+    if (flags['dq-cross-flee']) {                              // phases 1-3 done — Shen Sama meet (Dragonspine) is increment 5; offer the re-climb
+      CityUI.dialog('THE CROSSING', 'You are down off the spine for a breath, but the cold hollow stays with you — Ignis gone, her hearth out, and the shape in the snow of something that left no track. Cookie touches your sleeve. "The wyrm up there — Shen Sama — he\'s still in the warm ash, waiting on us. We don\'t leave him to it, cousin. Back up the trail." (The hunt for the missing flame climbs the Dragonspine.)',
+        [{ label: 'Climb back to the Dragonspine', fn: () => { CityUI.closeDialog(); this.scene.start('MountainScene'); } },
+         { label: 'Catch your breath first', fn: () => CityUI.closeDialog() }], portrait);
+      return true;
+    }
+    // phase 1: the dancer spots the tail, the cult warlock steps out of the lamplight
+    const fight = () => {
+      CityUI.closeDialog();
+      this.startEncounter(W.banner[0], W.banner[1], W.pack.map(e => Object.assign({}, e)), win => {
+        if (!win) {
+          this.player.x = 28 * 32; this.player.y = 32 * 32;
+          this.floatText(this.player.x, this.player.y - 50, 'the cages drag you both down a side street — Cookie hauls you back up.', '#c8443a');
+          return;
+        }
+        flags[D.crossFlag] = 'active';
+        flags[W.flag] = 1;
+        CityUI.dialog(W.name, W.down, [{ label: '(the cart-cage stands empty)', fn: () => {
+          CityUI.closeDialog();
+          this.floatText(this.player.x, this.player.y - 56, 'JOURNAL — THE CROSSING BEGINS', '#7ac86a', 14);
+          if (typeof SaveSystem !== 'undefined' && SaveSystem.save) SaveSystem.save();
+        }}], portrait);
+      }, { zoneScale: true });
+    };
+    CityUI.dialog(D.cookie.name, D.cookie.line, [{ label: 'Stand up slow', fn: () => {
+      CityUI.dialog(W.name, W.arrive, [{ label: '(she steps up beside you)', fn: () => {
+        CityUI.dialog(D.cookie.name, W.cookieQuip, [
+          { label: W.opt[0], fn: fight },
+          { label: W.opt[1], fn: fight }], portrait);
+      }}]);
+    }}], portrait);
+    return true;
+  }
+
   portraitCookie() {
     if (this._cookiePortrait) return this._cookiePortrait;
     const pc = document.createElement('canvas'); pc.width = pc.height = 72;
@@ -205,5 +316,31 @@ class VarenholmScene extends WorldScene {
     this.updateNPCs(dt);
     this.updatePrompt();
     this.updateAtmosphere(time, dt);
+
+    // --- BOSS: The Collector (Hiro) - one-time street ambush; avoidable, auto-full walks into it ---
+    const _vf = window.GameState.world.flags;
+    if (!_vf['varenholm-boss-collector'] && !this.encounterActive &&
+        (typeof CityUI === 'undefined' || !CityUI.dialogOpen()) &&
+        Math.hypot(this.player.x - this.collectorSpot.x, this.player.y - this.collectorSpot.y) < 130) {
+      _vf['varenholm-boss-collector'] = 'active';
+      this.startEncounter('THE COLLECTOR', 'it has come to add you to the set', [
+        { type: 'collector', boss: true, deathCol: '#b070f0', x: 640, y: 270, r: 20, hp: 640, maxhp: 640, spd: 140, col: '#4a3c5a', wpn: '#b070f0', dmgScale: 1.35 }
+      ], win => { _vf['varenholm-boss-collector'] = win ? 'cleared' : false; });
+    }
+
+    // --- DRUID CROSSING (dq): the cult comes for Cookie at the guild. Auto-fires for a
+    //     post-dancer druid so AUTO and a manual player both reach it WITHOUT pressing E at
+    //     the guild door (root cause of the bug: the crossing never triggered). Conversation-
+    //     safe: no proc while a dialog/cinematic/fight runs. Excludes the post-flight re-climb
+    //     state (dq-cross-flee) — that leg is handled by the guild-door interactable + routing. ---
+    if (window.GameState.player.char === 'druid' &&
+        _vf['q-mq6-the-dancer'] === 'done' && _vf['q-dq-the-crossing'] !== 'done' && !_vf['dq-cross-flee'] &&
+        !this.encounterActive && !this.cinematic &&
+        (typeof CityUI === 'undefined' || !CityUI.dialogOpen()) &&
+        time > (this._crossTrigT || 0) &&
+        Math.hypot(this.player.x - this.guildB.dx, this.player.y - this.guildB.dy) < 130) {
+      this._crossTrigT = time + 1200; // small re-arm so a just-closed dialog doesn't instantly reopen
+      this.crossingBeat(this.portraitCookie());
+    }
   }
 }

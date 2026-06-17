@@ -114,6 +114,20 @@ class GroveScene extends WorldScene {
     this.interactables.push({ x: dgX, y: dgY, label: 'descend into the root-hollow', fn: () => {
       window.GameState.world.zone = 'grove-dungeon'; this.scene.start('DungeonScene'); } });
 
+    // ---------- WARLOCK HUNT (wq4): Briar, the Green Orphan ----------
+    // Only the warlock, with Nyx's hunt active and Briar not yet caged, sees the
+    // thorn-thicket. tryHuntCapture('briar') runs the approach -> capture-fight.
+    if (this.huntActive() && !GS.world.flags['cap-briar']) {
+      const brX = 18 * T, brY = 42 * T;
+      const brG = this.add.graphics().setDepth(brY);
+      brG.fillStyle(0x14260f, 1); brG.fillCircle(brX, brY, 30);
+      brG.lineStyle(3, 0x4a7a32, 1);
+      for (let i = 0; i < 7; i++) { const a = i * 0.9; brG.lineBetween(brX, brY, brX + Math.cos(a) * 34, brY + Math.sin(a) * 34); }
+      brG.fillStyle(0x9af0c0, 0.9); brG.fillCircle(brX, brY - 4, 6);
+      this.addLight(brX, brY, 70, false);
+      this.interactables.push({ x: brX, y: brY, label: 'a green child waits in the thorns', fn: () => this.tryHuntCapture('briar') });
+    }
+
     // ---------- monster packs ----------
     this.packs = [];
     const mkPack = (px, py, kind) => {
@@ -153,6 +167,9 @@ class GroveScene extends WorldScene {
         wisp: { tex: 'fr-wisp', n: 2, name: 'WILL-O-WISPS', sub: 'follow the lights and you drown',
           spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'pyre', x: 640 + Math.cos(i * 2.6) * 190, y: 300 + Math.sin(i * 2.6) * 110,
             hp: 90, maxhp: 90, spd: 110, r: 11, col: '#3a7faf', dmgScale: 1.1 })) },
+        // --- BOSS: Heartrot, the Hollow Warden (Hiro monster expansion) ---
+        boss_heartrot: { tex: 'fr-treant', n: 1, name: 'HEARTROT, THE HOLLOW WARDEN', sub: 'the ley-rot given a body',
+          spawn: () => [{ type: 'rotwarden', boss: true, deathCol: '#7fbf6a', x: 640, y: 300, r: 30, hp: 720, maxhp: 720, spd: 64, col: '#3a5a2c', wpn: '#2c4420', dmgScale: 1.3 }] },
       };
       const d = defs[kind];
       const sprs = [];
@@ -164,7 +181,7 @@ class GroveScene extends WorldScene {
     };
     const packSpots = { wolves: [[20, 26], [36, 10], [8, 44]], hounds: [[44, 34], [24, 40]], rotshaman: [[30, 22]],
       goblins: [[14, 18], [48, 26]], vines: [[40, 42], [6, 30]], insects: [[24, 8], [54, 40]], bandits: [[46, 18]],
-      boar: [[16, 40]], treant: [[58, 16]], spider: [[10, 24]], harpy: [[50, 8]], wisp: [[30, 44]] };
+      boar: [[16, 40]], treant: [[58, 16]], spider: [[10, 24]], harpy: [[50, 8]], wisp: [[30, 44]], boss_heartrot: [[24, 34]] };
     for (const [kind, spots] of Object.entries(packSpots))
       for (const [sx, sy] of spots) {
         const id = 'pack-' + kind + '-' + sx + '-' + sy;
@@ -215,6 +232,7 @@ class GroveScene extends WorldScene {
     const spawn = GS.world.groveFromCity !== false ? { x: 34 * T, y: (MH - 4) * T } : { x: 34 * T, y: (MH - 4) * T };
     GS.world.groveFromCity = false;
     this.spawnPlayer(spawn.x, spawn.y);
+    this.territoryHpMult = 2; // forest tier (Hiro HP ladder)
     this.gateSouth = { x: 31 * T, y: HPX - T * 1.5, w: 6 * T, h: T * 1.5 };
     this.placeCompanions('grove');
     this.initEncounterHost(GROVE_THEME);
@@ -343,9 +361,11 @@ class GroveScene extends WorldScene {
     this.updateAtmosphere(time, dt);
 
     // pack wander + aggro
+    const talking = CityUI.dialogOpen() || this.encounterActive || this.cinematic;
     for (const pk of this.packs) {
       if (!pk.alive) continue;
       pk.wanderT -= dt;
+      if (talking) continue; // no wander/aggro while a dialog or cinematic is open
       for (const s of pk.sprs) {
         if (pk.wanderT <= 0) { s.tx = pk.x + (Math.random() - 0.5) * 110; s.ty = pk.y + (Math.random() - 0.5) * 110; }
         if (s.tx !== undefined) {
@@ -357,7 +377,7 @@ class GroveScene extends WorldScene {
       }
       if (pk.wanderT <= 0) pk.wanderT = 2 + Math.random() * 3;
       const d = Math.hypot(pk.sprs[0].x - this.player.x, pk.sprs[0].y - this.player.y);
-      if (d < 130) {
+      if (d < 130 && !CityUI.dialogOpen() && !this.encounterActive && !this.cinematic) {
         pk.alive = false;
         this.startEncounter(pk.def.name, pk.def.sub, pk.def.spawn(pk.def.n), win => {
           if (win) {
@@ -380,6 +400,7 @@ class GroveScene extends WorldScene {
     // DRUID-ONLY: the cult comes for HER — capture team on the south path after the camp falls
     const GS2 = window.GameState;
     if (GS2.player.char === 'druid' && GS2.world.flags['q-mq3-roots-that-rot'] && !GS2.world.flags['druid-capture'] && !this.druidAmbushDone &&
+        !CityUI.dialogOpen() && !this.encounterActive && !this.cinematic &&
         Math.hypot(this.player.x - 20 * 32, this.player.y - 38 * 32) < 120) {
       this.druidAmbushDone = true;
       const D = Quests.druid;

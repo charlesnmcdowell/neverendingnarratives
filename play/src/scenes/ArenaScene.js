@@ -104,6 +104,7 @@ class ArenaScene extends Phaser.Scene {
     // --- input: identical bindings to the source ---
     this.input.keyboard.on('keydown', e => {
       this.combat.keys[e.key.toLowerCase()] = true;
+      if (this.combat.P.evoPick) return; // item-14C: evo panel open -> number keys pick a road, not a combat action
       if (e.key === ' ') this.combat.doRoll();
       const k = e.key.toLowerCase();
       if (k === 'q') this.combat.doHeavy();
@@ -200,7 +201,7 @@ class ArenaScene extends Phaser.Scene {
     window.GameState.player = {
       char: P.char, kills: P.kills,
       level: P.char === 'ronin' ? 1 : Math.min(10, Math.floor(P.level || 1)),
-      bladeTier: P.bladeTier || 0, base: Object.assign({}, P.base),
+      bladeTier: P.bladeTier || 0, weaponLine: P.weaponLine || 'katana', base: Object.assign({}, P.base),
       nickname: this.combat.nickname, copper: purse, belt: []
     };
     window.GameState.world.flags.pitChampion = true;

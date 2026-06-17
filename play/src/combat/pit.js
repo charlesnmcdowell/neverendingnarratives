@@ -37,16 +37,18 @@ const KILLWORDS=['SLICED','UNMADE','HALVED','CARVED','REAPED','SUNDERED','GUTTED
 let kwIdx=Math.floor(Math.random()*KILLWORDS.length);
 let limbs=[]; // flying dismembered pieces
 const P={x:0,y:0,r:16,face:0,hp:45,kills:0,
+  evo10:null,evo20:null,evoPick:null,evoPickT:0,evoTier:0, // item-10: lv10/lv20 EVOLUTION branch keys + an open pick, its auto-default timer, and which tier (10|20) the open pick is for
   base:{STR:10,DEX:10,CON:10,ATK:10},
   char:'ronin',form:'human',formCD:0,heavyCDmax:2.2,wolfCD:0,
   rollT:0,rollCD:0,heavyCD:0,atkT:0,atkRecover:0,heavyWind:0,flash:0,dead:false,
   parryT:0,parryCD:0,ripoT:0,combo:0,comboT:0,atkPose:0,
   ft:{dmgTaken:0,heavy:0,slash:0,rolls:0,parries:0,t0:0,low:false}};
 let wolves=[],demons=[],fireballs=[],tracers=[];
-const lvl=()=>Math.min(10,Math.floor(P.level||1));
+const lvl=()=>Math.min(20,Math.floor(P.level||1));
 let buffs=[]; // {k,amt,until} from belt potions
 const buffAmt=k=>{let a=0;for(const b of buffs)if(b.k===k&&b.until>S.time)a+=b.amt;return a;};
-const stat=k=>(P.char==='ronin'?P.base[k]+P.kills*2:P.base[k]+3*(lvl()-1))+buffAmt(k);
+const RKIT=c=>c==='ronin';
+const stat=k=>(RKIT(P.char)?P.base[k]+P.kills*2:P.base[k]+3*(lvl()-1))+buffAmt(k)+lineStatBonus(k)+evoStatBonus(k);
 function usePotion(type){
   if(P.dead)return false;
   if(type==='potion-health'){const hl=Math.round(maxHP()*0.5);P.hp=Math.min(maxHP(),P.hp+hl);
@@ -66,37 +68,215 @@ const formHP=()=>{
   if(P.char==='seraph')return 1.2;
   return 1;
 };
-const maxHP=()=>Math.round(((P.char==='ronin'?34:45)+(stat('CON')-10)*5)*MODS.maxhp*(P.char==='warlock'?0.85:1)*formHP());
+const maxHP=()=>Math.round(((RKIT(P.char)?34:45)+(stat('CON')-10)*5)*MODS.maxhp*(P.char==='warlock'?0.85:1)*formHP());
 const UNLOCKS={druid:{3:'BEAR FORM UNLOCKED',6:'WOLF FORM UNLOCKED'},
                warlock:{3:'BONE DRAGON UNLOCKED',5:'SUCCUBI UNLOCKED',8:'ARCH DEVIL UNLOCKED'},
                seraph:{3:'CHAINS OF DECREE',6:'TRIUNE MAW',8:'HALO JUDGEMENT'}};
-function gainLevel(){ // +1.5 levels per kill, max 10
-  if(P.char==='ronin')return;
+// item-10 foundation (increment 1 — DESIGN DATA ONLY; not yet wired to UI/mechanics):
+// character EVOLUTIONS — a branch CHOICE at level 10, then a second at level 20 (the level cap is
+// raised 10->20 in a later increment). Each branch = a RETUNED reuse of the character's EXISTING kit
+// + a distinct look; NO new engine systems (constraint 6). Druid + Warlock first per
+// docs/knowledge base/10-future-features.md (Ronin growth = the dojo weapon lines, item 11 DONE;
+// Seraph last). This const is INERT until the lv10/20 choice UI + stat/look hooks land in later
+// increments, so adding it changes no behavior. `from` on a tier-20 branch names its tier-10 parent.
+const EVOLUTIONS={
+  druid:{
+    10:[
+      {key:'warden', name:'PRIMAL WARDEN', focus:'CON', look:'bear',
+       desc:'The bear-road — bark-skinned and immovable; thorns answer every blow.',
+       kit:'bear form hardier with a thorn aura on hit; roar taunts and roots'},
+      {key:'alpha',  name:'FERAL ALPHA',  focus:'DEX', look:'wolf',
+       desc:'The wolf-road — a faster, bleeding hunter who never runs alone.',
+       kit:'wolf form swifter; howl summons an extra wolf; claws cause bleed'}
+    ],
+    20:[
+      {from:'warden', key:'colossus',  name:'WORLDROOT COLOSSUS', focus:'CON', look:'bear',
+       desc:'A walking treant of the deep grove; the ground quakes where it steps.',
+       kit:'bear slam quakes for AoE stun; thorn aura intensified'},
+      {from:'alpha',  key:'sovereign', name:'DIRE MOON SOVEREIGN', focus:'DEX', look:'wolf',
+       desc:'Lord of the moon-pack; a full dire pack answers the lunar howl.',
+       kit:'howl summons a 3-wolf pack; bleed deepened'}
+    ]
+  },
+  warlock:{
+    10:[
+      {key:'binder', name:'DREADBINDER',     focus:'DEX', look:'caster',
+       desc:'The summoner-road — the bone dragon and succubi swarm at his word.',
+       kit:'more and stronger summons (bone dragon, succubi); cheaper conjures'},
+      {key:'herald', name:'INFERNAL HERALD', focus:'ATK', look:'devil',
+       desc:'The devil-road — hellfire pours through him toward the Arch Devil.',
+       kit:'arch-devil form hits harder; hexes burn'}
+    ],
+    20:[
+      {from:'binder', key:'lichlord',  name:'LICH SOVEREIGN',       focus:'DEX', look:'lich',
+       desc:'Death made permanent; an undead legion marches at the cold king.',
+       kit:'lich uptime extended; raises extra undead'},
+      {from:'herald', key:'archfiend', name:'ARCHFIEND ASCENDANT',  focus:'ATK', look:'devil',
+       desc:'The Sheol-escapee unbound; the Arch Devil lingers far longer.',
+       kit:'arch-devil duration extended; hellfire wider'}
+    ]
+  },
+  seraph:{
+    10:[
+      {key:'wrath', name:'SERAPH OF WRATH', focus:'ATK', look:'radiant',
+       desc:'The smite-road — the halo ray burns hotter and judgement falls heavier.',
+       kit:'halo ray hits harder; smite judgement intensified'},
+      {key:'aegis', name:'SERAPH OF AEGIS', focus:'CON', look:'guardian',
+       desc:'The ward-road — runic chains and an unbreaking grace shield the worthy.',
+       kit:'sturdier; grace ward lingers; chains of decree bind'}
+    ],
+    20:[
+      {from:'wrath', key:'judgement', name:'THRONE OF JUDGEMENT', focus:'ATK', look:'radiant',
+       desc:'The high seat of the burning court; the halo becomes a small sun.',
+       kit:'halo judgement widened; the smite ray reaches further'},
+      {from:'aegis', key:'bulwark',   name:'BULWARK OF THE DECREE', focus:'CON', look:'guardian',
+       desc:'An unbreakable bastion; the decree\'s chains hold the whole field.',
+       kit:'grace deepened; chains of decree bind all who near'}
+    ]
+  }
+};
+function gainLevel(){ // +1.5 levels per kill, max 20
+  if(RKIT(P.char))return;
   const ol=lvl();
-  P.level=Math.min(10,(P.level||1)+1.5);
+  P.level=Math.min(20,(P.level||1)+1.5);
   if(lvl()>ol){
     const u=(UNLOCKS[P.char]||{})[lvl()];
     showBanner('LEVEL '+lvl(),u?u.toLowerCase():'',u?1500:900,'#3df0c8');
     if(u){P.unlockMsg=u;flashFx(.2);vib([40,40,80]);}
     popup(P.x,P.y-64,'LEVEL '+lvl(),'#3df0c8',18);}
+  maybeOfferEvo(); // item-10 inc.3: at lv10 a druid/warlock chooses an EVOLUTION road
   UI.stats(diceN()+'d8','LV '+lvl()+' · KILLS '+P.kills);}
+// item-10 increment 3 — EVOLUTION branch choice at level 10 (druid + warlock). UI + STATE ONLY:
+// the picked branch's key is stored on P.evo10 (and mirrored to GameState.player.evo10 for persistence);
+// the per-branch stat/look EFFECTS are wired in later increments, so picking changes NO combat yet.
+// The choice is a brief frozen-scene panel that AUTO-DEFAULTS to the first road after a short window
+// (and instantly resolves with no input under headless/AUTO), so the gauntlet/autopilot never deadlock.
+// item-10 inc.6: now offers BOTH the lv10 choice AND the lv20 SECOND choice. The lv20 tier is
+// FILTERED to branches whose `from` matches the lv10 road already picked (so the first road
+// determines the second's options). lv10 is checked first so P.evo10 is always set before lv20.
+function maybeOfferEvo(){
+  if(P.evoPick)return;
+  if(P.char!=='druid'&&P.char!=='warlock'&&P.char!=='seraph')return;
+  const E=EVOLUTIONS[P.char]||{};
+  if(!P.evo10&&lvl()>=10){                          // lv10: the FIRST road choice (2 options)
+    const br=E[10];
+    if(!br||!br[0]||!br[1])return;
+    P.evoPick=br;P.evoPickT=30;P.evoTier=10;         // ~9s to choose; no input -> first road
+    showBanner('EVOLUTION',br[0].name+'  vs  '+br[1].name+' — press 1 or 2',2200,'#e7b450');
+    return;
+  }
+  if(P.evo10&&!P.evo20&&lvl()>=20){                 // lv20: the SECOND choice, gated by the lv10 road
+    const br=(E[20]||[]).filter(b=>b.from===P.evo10);
+    if(!br.length)return;                           // no continuation defined for this road
+    P.evoPick=br;P.evoPickT=30;P.evoTier=20;
+    const head=br[1]?br[0].name+'  vs  '+br[1].name:br[0].name;
+    showBanner('EVOLUTION',head+' — press 1'+(br[1]?' or 2':''),2200,'#e7b450');
+  }
+}
+function pickEvo(i){
+  if(!P.evoPick)return;
+  const b=P.evoPick[i]||P.evoPick[0];
+  const tier=P.evoTier||10;
+  if(tier===20)P.evo20=b.key;else P.evo10=b.key;    // write the slot for the tier being chosen
+  P.evoPick=null;P.evoPickT=0;P.evoTier=0;
+  try{if(typeof window!=='undefined'&&window.GameState&&window.GameState.player){
+    if(tier===20)window.GameState.player.evo20=b.key;else window.GameState.player.evo10=b.key;}}catch(e){}
+  showBanner('EVOLVED — '+b.name,b.desc||'',2000,'#e7b450');
+  popup(P.x,P.y-64,b.name,'#e7b450',16);flashFx(.18);vib([40,30,60]);
+}
+// item-14C: is the game currently AUTO-driven (or headless)? AUTO/headless take the default road
+// IMMEDIATELY; a MANUAL player instead gets a generous window to pick by key (1/2) or by click.
+function evoIsAuto(){
+  if(typeof window==='undefined')return true;         // headless tests / gauntlet
+  try{
+    if(window.QuestNav&&typeof window.QuestNav.mode==='number'&&window.QuestNav.mode>=1)return true; // AUTO: FIGHT or FULL
+    if(window.Autopilot&&window.Autopilot.on)return true;
+  }catch(e){}
+  return false;
+}
+// item-14C: the on-canvas rects of the evo cards (SAME geometry as drawEvoPanel) — used for BOTH
+// drawing and click hit-testing so a tap always lands exactly where the card is shown.
+function evoCardRects(){
+  const br=P.evoPick;if(!br)return[];
+  const n=Math.min(2,br.length||0);
+  const cx=W/2,cy=H/2,pw=Math.min(300,W*0.40),ph=160,gap=26,py=cy-54;
+  const out=[];
+  for(let i=0;i<n;i++){
+    const px=n===1?cx-pw/2:cx+(i===0?-(pw+gap/2):gap/2);
+    out.push({x:px,y:py,w:pw,h:ph,i:i});
+  }
+  return out;
+}
+// item-14C: resolve a click/tap against the evo cards -> pickEvo. Returns true if a card was hit
+// (a miss leaves the panel open). Works in BOTH combat hosts (ArenaScene + WorldScene route taps here).
+function evoClick(x,y){
+  if(!P.evoPick)return false;
+  for(const r of evoCardRects()){if(x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h){pickEvo(r.i);return true;}}
+  return false;
+}
+function evoTick(dt){                               // per-frame while a pick is open
+  if(!P.evoPick)return;
+  if(keys['1']){pickEvo(0);return;}                 // keyboard: road 1
+  if(P.evoPick[1]&&keys['2']){pickEvo(1);return;}   // keyboard: road 2 (only if a 2nd road exists)
+  if(evoIsAuto()){pickEvo(0);return;}               // AUTO / headless -> default road immediately (deadlock-proof)
+  P.evoPickT=(P.evoPickT||0)-dt;                     // MANUAL: a generous failsafe window (still can't softlock)
+  if(P.evoPickT<=0)pickEvo(0);
+}
 // ronin weapon forms: stats double from 10 -> 20 (NODACHI) -> 40 (ODACHI). Permanent.
-const roninTier=()=>P.char!=='ronin'?0:(stat('STR')>=40?2:(stat('STR')>=20?1:0));
+const roninTier=()=>!RKIT(P.char)?0:(stat('STR')>=40?2:(stat('STR')>=20?1:0));
+// item-11 foundation: ronin weapon LINE (katana = default). All lines share the bladeTier
+// 0/1/2 ladder; for now only the tier NAMES differ (spear/rifle movesets + art land in later
+// runs). Katana names/subs are byte-identical to the old banner, so behavior is unchanged.
+const WPN_LINE_NAMES={
+  katana:[['KATANA',''],['NODACHI','the blade grows with its legend'],['ODACHI','the blade is taller than the man was']],
+  spear :[['YARI',''],['NAGAE-YARI','the reach outgrows the man'],['JUMONJI-YARI','the cross-blade takes two at once']],
+  rifle :[['TANEGASHIMA',''],['LONG RIFLE','the range outgrows the room'],['OZUTSU','a hand-cannon that ends arguments']],
+};
+// item-11 increment 5: per-LINE stat-doubling tier CURVES. Each ronin weapon LINE weights ONE
+// stat as it climbs the bladeTier ladder, so the dojo line CHOICE changes GROWTH, not just flavor.
+// Katana = balanced (NO entry below => lineStatBonus returns 0 => byte-identical to before, so the
+// gauntlet/headless ronin, which runs the default katana line, is unaffected). Spear weights DEX
+// (its reach/thrust focus), rifle weights ATK (its slow heavy shot). The bonus is keyed to the
+// SAME tier ladder as the weapon name, reading as a doubling curve at the tier-up moments.
+// CRITICAL: no line focuses STR, and roninTier() reads stat('STR'); since lineStatBonus('STR') is
+// therefore always 0, the tier THRESHOLD is never shifted (tier-up timing identical across lines)
+// and stat('STR') cannot recurse back into roninTier().
+const LINE_FOCUS={spear:'DEX',rifle:'ATK'};   // katana: balanced => no focus bonus
+const LINE_TIER_BONUS=[0,12,28];              // extra focus-stat points per bladeTier (0/1/2)
+const lineStatBonus=k=>{
+  if(!RKIT(P.char))return 0;
+  const wl=P.weaponLine||'katana';
+  if(LINE_FOCUS[wl]!==k)return 0;
+  return LINE_TIER_BONUS[roninTier()]||0;};
+// item-10 increment 4/5: DRUID + WARLOCK lv10 EVOLUTION branch stat focus. The picked road
+// (P.evo10) grants a small bonus to its focus stat — DRUID warden=CON (tankier bear) / alpha=DEX
+// (swifter wolf); WARLOCK binder=DEX (summon-swarm caster) / herald=ATK (hellfire devil-road).
+// Reads EVOLUTIONS[P.char][10] so each char draws its OWN branch focus. With NO evo10 this returns
+// 0 => stats byte-identical to before, so an un-evolved druid/warlock and the ronin/seraph are
+// unaffected. Reads only P.evo10 + the EVOLUTIONS data — never calls stat(), so no recursion (same
+// forward-reference safety as lineStatBonus above).
+const EVO_FOCUS_BONUS=6;            // focus-stat points granted by EACH chosen road (lv10 + lv20 stack)
+const evoStatBonus=k=>{
+  if(P.char!=='druid'&&P.char!=='warlock'&&P.char!=='seraph')return 0;
+  const E=EVOLUTIONS[P.char]||{};let b=0;
+  if(P.evo10){const br=(E[10]||[]).find(x=>x.key===P.evo10);if(br&&br.focus===k)b+=EVO_FOCUS_BONUS;}
+  if(P.evo20){const br=(E[20]||[]).find(x=>x.key===P.evo20);if(br&&br.focus===k)b+=EVO_FOCUS_BONUS;}
+  return b;};
 function checkRoninForm(){
-  if(P.char!=='ronin')return;
+  if(!RKIT(P.char))return;
   const t=roninTier();
   if(t===(P.bladeTier||0))return;
   P.bladeTier=t;
   P.r=[16,19,23][t];
   flashFx(.3);S.shake=Math.max(S.shake,10);vib([50,60,90]);
   leafBurst(P.x,P.y,22,'#e7b450');
-  showBanner(t===2?'ODACHI':'NODACHI',
-    t===2?'the blade is taller than the man was':'the blade grows with its legend',1600,'#e7b450');}
+  const _wl=WPN_LINE_NAMES[P.weaponLine||'katana']||WPN_LINE_NAMES.katana, _nm=_wl[t]||_wl[0];
+  showBanner(_nm[0],_nm[1],1600,'#e7b450');}
 const dmgBonus=()=>6+Math.floor((stat('STR')-10)/2)+P.kills;
 const moveSpd=()=>185+(stat('DEX')-10)*4;
 const rollCDmax=()=>Math.max(.55,1.15-(stat('DEX')-10)*.035);
 const atkRec=()=>Math.max(.17,.34-(stat('ATK')-10)*.009);
-const diceN=()=>P.char==='ronin'?1+P.kills:lvl();
+const diceN=()=>RKIT(P.char)?1+P.kills:lvl();
 let nickname='NOBODY',styleScore={untouched:0,headsman:0,quicksand:0,breath:0,corpse:0,mirror:0};
 
 let enemies=[],particles=[],popups=[],zones=[],swings=[],bullets=[];
@@ -121,6 +301,8 @@ function doSlash(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.atkRecover>0|
     autoFace();hexBolt();return;}
   if(P.char==='druid'){autoFace();druidSlash();return;}
   if(P.char==='seraph'){autoFace();seraphSlash();return;}
+  if(RKIT(P.char)&&P.weaponLine==='spear'){autoFace();roninSpear();return;}
+  if(RKIT(P.char)&&P.weaponLine==='rifle'){autoFace();roninRifle();return;} // item-11: rifle LINE — slow ranged matchlock shot // item-11: spear LINE — reach/thrust, pierces a line
   autoFace();P.atkRecover=atkRec();P.ft.slash++;
   if(P.comboT<=0)P.combo=0;
   const st=P.combo;P.atkPose=st;P.combo=(P.combo+1)%3;P.comboT=1.1;
@@ -139,7 +321,7 @@ function doSlash(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.atkRecover>0|
     P.x+=Math.cos(ba)*66;P.y+=Math.sin(ba)*66;clampArena(P);
     P.parryT=2.3*MODS.parryWin;P.parryCD=0;            // auto-parry stance on the retreat
     popup(P.x,P.y-46,'ZANSHIN — guard up','#e7b450',12);}}
-function doParry(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.rollT>0||P.heavyWind>0||P.channel||P.paralyzeT>0)return;
+function doParry(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.rollT>0||P.heavyWind>0||P.channel||P.paralyzeT>0||P.silenceT>0)return;
   if(P.char==='druid'){cycleForm();return;}
   if(P.parryCD>0)return;
   if(P.char==='warlock'){if(P.lich){fade();return;}portal();return;}
@@ -149,7 +331,7 @@ function doParry(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.rollT>0||P.he
 /* ============ DRUID ============ */
 function setBtnLabel(id,txt){UI.btnLabel(id,txt);}
 function updateLabels(){
-  if(P.char==='ronin'){setBtnLabel('bSlash','SLASH');setBtnLabel('bHeavy','HEAVY');setBtnLabel('bParry','PARRY');setBtnLabel('bRoll','ROLL');return;}
+  if(RKIT(P.char)){setBtnLabel('bSlash','SLASH');setBtnLabel('bHeavy','HEAVY');setBtnLabel('bParry','PARRY');setBtnLabel('bRoll','ROLL');return;}
   if(P.char==='warlock'){
     if(P.lich){setBtnLabel('bSlash','SCYTHE');setBtnLabel('bHeavy','SUMMON');
       setBtnLabel('bParry','FADE');setBtnLabel('bRoll','DRIFT');return;}
@@ -508,6 +690,74 @@ function exitDevil(){
   leafBurst(P.x,P.y,16,'#b070f0');
   showBanner('THE PACT ENDS','',800,'#b070f0');
   updateLabels();}
+
+/* ---- ARCH DEVIL OUTRO CINEMATIC (Hiro item 5): devil-timer expiry -> taunt -> Seraph descends -> guaranteed Lich ----
+   Fires EVERY time arch-devil mode runs out (warlock only). Phases driven by setTimeout (same as killEnemy/winFight),
+   so they resolve under the headless tests' simulated clock too. */
+let archCine=null;      // {ph:1taunt|2descend|3strike|4ascend, seraphY, fade}
+let archLastTaunt=-1;   // avoid an immediate repeat taunt
+let archCineFight=-1;   // softlock guard: the guaranteed-Lich outro plays at most once per pit fight
+function archVoice(speaker,line){ if(typeof window!=='undefined'&&window.VoiceMan&&line){ try{window.VoiceMan.say(speaker,line);}catch(e){} } }
+function archBank(){ return (typeof window!=='undefined'&&window.Quests&&window.Quests.archDevilOutro)||null; }
+function archDevilOutro(){
+  // guard: warlock only, alive, not already a lich / already rising / dead, in a real fight or the demo, not already playing
+  if(P.char!=='warlock'||P.lich||P.dead||P.lichRiseT>0||archCine||(S.mode!=='fight'&&S.mode!=='demo')){exitDevil();return;}
+  if(S.mode==='fight'&&S.fight===archCineFight){exitDevil();return;} // already cast down once this fight — plain revert (prevents a devil<->lich softlock)
+  archCineFight=S.fight;
+  P.devilT=0;P.r=16;updateLabels();              // the borrowed form falls away
+  P.channel=null;P.heavyWind=0;P.rollT=0;P.parryT=0;P.silenceT=0;
+  P.paralyzeT=Math.max(P.paralyzeT,5);           // he cannot act while the scene plays
+  archCine={ph:1,seraphY:-270,fade:1};
+  camFocus(P.x,P.y-20,1.7,3.0);S.slow=0.6;
+  flashFx(.22);S.shake=Math.max(S.shake,8);leafBurst(P.x,P.y,16,'#d03a4a');
+  const bank=archBank();
+  // PHASE 1 — the arch devil, loosed at last, taunts the world
+  const taunts=bank?bank.taunts:['The mortal plane is mine to take.'];
+  let ti=Math.floor(Math.random()*taunts.length);
+  if(taunts.length>1&&ti===archLastTaunt)ti=(ti+1)%taunts.length;
+  archLastTaunt=ti;const taunt=taunts[ti];
+  showBanner('THE ARCH DEVIL',taunt,2600,'#d03a4a');
+  archVoice('THE ARCH DEVIL',taunt);
+  // PHASE 2 — the Seraphim descends from above
+  setTimeout(()=>{ if(!archCine)return;
+    archCine.ph=2;
+    const seraph=bank?bank.seraph:'Vile demon - away with you. Back to hell you go.';
+    camFocus(P.x,P.y-40,1.6,2.6);flashFx(.16);
+    showBanner('THE SERAPHIM',seraph,2400,'#ffe9a8');
+    archVoice('THE SERAPHIM',seraph);
+  },2800);
+  // PHASE 3 — the angel casts the devil down; death signs the ledger -> the Lich rises
+  setTimeout(()=>{ if(!archCine)return;
+    archCine.ph=3;
+    rays.push({x:P.x,y:P.y+archCine.seraphY,a:Math.PI/2,len:Math.abs(archCine.seraphY)+34,w:16,t:.45,judge:true});
+    flashFx(.34);S.shake=Math.max(S.shake,14);S.slow=0.5;camFocus(P.x,P.y,1.85,2.4);
+    leafBurst(P.x,P.y,22,'#fff6dc');
+    if(S.mode==='fight'){
+      // force the existing warlock death->Lich pipeline (mirrors hurtPlayer's warlock branch exactly)
+      P.hp=1;P.lichRiseT=3;P.paralyzeT=3;P.channel=null;P.heavyWind=0;P.rollT=0;P.parryT=0;
+      summonDemons('dragon');                    // the phylactery rises with him; the frame loop calls enterLich() at lichRiseT<=0
+      P.lichForceT=14;                           // GUARANTEED return: this gifted lich always resurrects (~12s natural, 14s hard cap) so it can't strand on a tanky swarm
+      showBanner('THE DEVIL IS CAST DOWN','death signs the ledger — three seconds',2400,'#9af0c0');
+    }else{
+      exitDevil();                               // demo attract loop: banish + plain revert, never trap the demo in a forced death
+    }
+    archCine.ph=4;                               // the visitor withdraws
+  },5200);
+}
+function drawArchCine(){ // world-space; only runs in the browser (draw() early-returns when ctx is null)
+  if(!archCine||archCine.ph<2)return;
+  const a=archCine.fade==null?1:archCine.fade;
+  const sx=P.x, sy=P.y+archCine.seraphY;
+  ctx.save();ctx.globalAlpha=0.14*a;            // a pillar of dawn pouring down with the angel
+  const grd=ctx.createLinearGradient(sx,sy-200,sx,sy+26);
+  grd.addColorStop(0,'rgba(255,246,220,0)');grd.addColorStop(1,'rgba(255,246,220,0.9)');
+  ctx.fillStyle=grd;
+  ctx.beginPath();ctx.moveTo(sx-12,sy-210);ctx.lineTo(sx+12,sy-210);ctx.lineTo(sx+44,sy+26);ctx.lineTo(sx-44,sy+26);ctx.closePath();ctx.fill();
+  ctx.restore();
+  ctx.save();ctx.globalAlpha=a;                 // the visitor from the place above
+  drawFighter(sx,sy,20,Math.PI/2,'#cfd6e4',{seraphim:true,robe:true,flying:true,spear:true,spearLen:40,headCol:'#e8e4da'});
+  ctx.restore();
+}
 function devilClaw(){ // CLAW: roll to whoever he's targeting, then carve
   let tgt=null,bd=1e9;
   for(const d of demons){if(d.hp<=0||d.arch)continue;const dd=dist(P,d);if(dd<bd){bd=dd;tgt=d;}} // his own first — arch succubi are off the menu
@@ -586,7 +836,7 @@ function enterLich(){
   popup(P.x,P.y-64,'GUARD THE DRAGON — IT HOLDS YOUR SOUL','#9af0c0',13);
   updateLabels();}
 function resurrectWarlock(){
-  P.lich=false;P.hp=maxHP();P.r=16;P.fadeT=0;P.fadeCD=0;
+  P.lich=false;P.hp=maxHP();P.r=16;P.fadeT=0;P.fadeCD=0;P.lichForceT=0;
   flashFx(.3);S.shake=Math.max(S.shake,10);vib([50,50,100]);
   leafBurst(P.x,P.y,22,'#b070f0');
   showBanner('BACK TO THE LIVING','the ledger reopens — a warlock again',2000,'#b070f0');
@@ -739,7 +989,7 @@ function updWolves(dt){
     clampArena(w);
     const mv=Math.hypot(w.x-(w._lx??w.x),w.y-(w._ly??w.y));
     w.walkP+=mv*.2;w._mv=mv>0.2;w._lx=w.x;w._ly=w.y;}}
-function doHeavy(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.heavyWind>0||P.rollT>0||P.paralyzeT>0)return;
+function doHeavy(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.heavyWind>0||P.rollT>0||P.paralyzeT>0||P.silenceT>0)return;
   if(P.char==='druid'){autoFace();druidHeavy();return;} // druid uses per-form cooldowns
   if(P.heavyCD>0)return;
   if(P.char==='warlock'){
@@ -769,6 +1019,9 @@ function strike(a,arc,range,dmg,heavy){
     if(Math.abs(da)>arc/2)continue;
     hitEnemy(e,dmg,heavy,a);}}
 function hitEnemy(e,dmg,heavy,a){
+  // Warden's ward: untouchable until every totem is broken (Hiro boss puzzle)
+  if(e.type==='warden'&&enemies.some(t=>t.type==='totem'&&!t.dead)){
+    popup(e.x,e.y-30,'WARDED - break the totems','#5ad2ff',12);return;}
   // Door's shield: frontal block (heavy strikes break the guard)
   if(e.type==='door'&&!(e.brokenT>0)){
     let fd=Math.atan2(P.y-e.y,P.x-e.x)-e.face;
@@ -786,6 +1039,48 @@ function hitEnemy(e,dmg,heavy,a){
   popup(e.x+rnd(-8,8),e.y-26,dmg,heavy?'#e7b450':'#d8cdb8',heavy?18:14);
   blood(e.x,e.y,heavy?14:7);S.hitPause=Math.max(S.hitPause,heavy?.06:.03);vib(heavy?30:12);
   if(e.hp<=0)killEnemy(e,heavy);}
+// item-11 SPEAR: a thrust that hits EVERY foe along a line (reach + pierce). Reuses hitEnemy so
+// all per-enemy rules (warden ward, door guard, grave parry) still apply. kb = extra shove.
+function pierceLine(a,len,w,dmg,heavy,kb){
+  const ca=Math.cos(a),sa=Math.sin(a);
+  for(const e of enemies){if(e.dead)continue;
+    const rx=e.x-P.x,ry=e.y-P.y;
+    const proj=rx*ca+ry*sa, perp=Math.abs(-rx*sa+ry*ca);
+    if(proj<-e.r||proj>len+e.r||perp>w/2+e.r)continue;
+    hitEnemy(e,dmg,heavy,a);
+    if(kb&&!e.dead){e.x+=ca*kb;e.y+=sa*kb;clampArena(e);}}}
+function roninSpear(){ // DEX reach line: two quick thrusts, then a long lunge that pierces the rank
+  P.atkRecover=atkRec()*1.12;P.ft.slash++; // a hair slower than the katana flurry (longer haft)
+  if(P.comboT<=0)P.combo=0;
+  const st=P.combo;P.atkPose=st;P.combo=(P.combo+1)%3;P.comboT=1.1;
+  const f=nearestRealFoe(), tier=roninTier();
+  if(f){const a=ang(P,f);P.x+=Math.cos(a)*16;P.y+=Math.sin(a)*16;clampArena(P);} // press the advance
+  if(st===2){ // the LUNGE: charge through, long reach, knockback, pierces a whole line
+    P.atkRecover=Math.max(P.atkRecover,0.85);
+    const a=f?ang(P,f):P.face;P.face=a;
+    P.x+=Math.cos(a)*40;P.y+=Math.sin(a)*40;clampArena(P);
+    const len=150+tier*22, w=34;
+    const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*1.25);
+    swings.push({x:P.x,y:P.y,a,arc:0.4,range:len,t:.16,heavy:true,col:'#cdd6e0',style:2});
+    S.shake=Math.max(S.shake,7);vib([30,40]);flashFx(.1);
+    pierceLine(a,len,w,dmg,true,18);
+    popup(P.x,P.y-46,'NUKITSUKE — the long lunge','#9fb6c9',12);return;}
+  // light thrust: long, narrow, pierces a line (trimmed single-target dmg, multi-hit reach)
+  const len=120+tier*18, w=26;
+  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*0.8);
+  swings.push({x:P.x,y:P.y,a:P.face,arc:0.35,range:len,t:.14,heavy:false,col:'#c3ccd6',style:2});
+  pierceLine(P.face,len,w,dmg,false,0);}
+function roninRifle(){ // item-11 RIFLE: ATK matchlock — slow, heavy ranged shot (reuses the bullets system, friendly flag)
+  P.atkRecover=atkRec()*2.0;P.ft.slash++; // long reload between shots
+  const f=nearestRealFoe(), tier=roninTier();
+  const a=f?ang(P,f):P.face;P.face=a;P.atkPose=0;
+  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*(1.6+tier*0.35)); // ATK focus; scales with tier
+  const muzX=P.x+Math.cos(a)*(P.r+12),muzY=P.y-6+Math.sin(a)*(P.r+12);
+  bullets.push({x:muzX,y:muzY,vx:Math.cos(a)*640,vy:Math.sin(a)*640,r:5,dmg,friendly:true});
+  for(let k=0;k<10;k++)particles.push({x:muzX,y:muzY,vx:Math.cos(a+rnd(-.4,.4))*rnd(80,230),vy:Math.sin(a+rnd(-.4,.4))*rnd(80,230)-20,t:rnd(.15,.4),col:k%2?'#ffe9a8':'#e7b450',r:rnd(1.5,3)});
+  for(let k=0;k<5;k++)particles.push({x:muzX,y:muzY,vx:rnd(-40,40),vy:rnd(-60,-10),t:rnd(.4,.8),col:'#9a958c',r:rnd(2,4),noG:true});
+  S.shake=Math.max(S.shake,6);vib([30,20,40]);flashFx(.08);
+  popup(P.x,P.y-46,'TANEGASHIMA — fire','#d8c89a',12);}
 function gibs(e,n){for(let i=0;i<n&&particles.length<240;i++){
   const a=rnd(0,Math.PI*2),s=rnd(80,260);
   particles.push({x:e.x,y:e.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-60,t:rnd(.45,.9),col:e.col,r:rnd(2.5,5.5),chunk:true});}}
@@ -838,7 +1133,16 @@ function killEnemy(e,heavy){
   if(dismembered)dismember(e,fatality);
   kwIdx=(kwIdx+1)%KILLWORDS.length;
   const word=dismembered&&Math.random()<.5?'DECAPITATED':KILLWORDS[kwIdx];
-  if(!e.minion){
+  if(e.boss){
+    // pure VISUAL death cinematic — no banner text, no dialogue (Hiro: monster expansion)
+    S.slow=2.4;S.fatal=true;
+    camFocus(e.x,e.y,2.5,2.2);
+    flashFx(.45);S.shake=Math.max(S.shake,22);vib([60,80,140]);
+    const dc=e.deathCol||'#ffffff';
+    for(let k=0;k<54&&particles.length<240;k++){const a=rnd(0,6.3),s=rnd(120,420);
+      particles.push({x:e.x,y:e.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,t:rnd(.5,1.3),col:dc,r:rnd(2,5.5),noG:true});}
+    dismember(e,true);
+  }else if(!e.minion){
     popup(e.x,e.y-66,word,fatality?'#ff3d5a':'#f0a83d',fatality?26:20);
     if(fatality){
       S.slow=1.6;S.fatal=true;
@@ -853,14 +1157,14 @@ function killEnemy(e,heavy){
     }
   }
   if(e.minion){P.hp=Math.min(maxHP(),P.hp+5);popup(e.x,e.y-34,'+5 HP','#7fbf6a',13);
-    if(P.char==='ronin'){ // summons feed the ronin's blade too
+    if(RKIT(P.char)){ // summons feed the ronin's blade too
       P.kills++;
       popup(e.x,e.y-50,'+2 ALL STATS','#3df0c8',15);
       UI.stats(diceN()+'d8','KILLS '+P.kills);
       checkRoninForm();}
     else{P.kills++;popup(e.x,e.y-50,'+1.5 LVL','#3df0c8',13);gainLevel();}}
   else{P.kills++;const hpUp=maxHP();P.hp=Math.min(hpUp,P.hp+10);
-    if(P.char==='ronin'){
+    if(RKIT(P.char)){
       popup(e.x,e.y-50,'+2 ALL STATS','#3df0c8',18);
       popup(e.x,e.y-28,'KATANA  '+diceN()+'d8','#3df0c8',14);
       UI.stats(diceN()+'d8','KILLS '+P.kills);
@@ -948,7 +1252,8 @@ const FIGHTS=[
  {name:'THE FORMER CHAMPION',rec:'112 — 1. The 1 was retirement.',taunt:'"I know what the Pit gave you, nobody. It gave it to me first."',
   spawn:i=>[mkEnemy({type:'champ',hp:200*i,maxhp:200*i,spd:115,r:20,col:'#8a3a3a',feeds:0,thrallT:2})]},
  {name:"BELLOW'S SECRET",rec:'Undefeated. Unfed. Unwise.',taunt:'Bellow, sweating: "You weren\'t supposed to get this far."',
-  spawn:i=>[mkEnemy({type:'beast',hp:340*i,maxhp:340*i,spd:88,r:30,col:'#3f3a44',phase:1})]}
+  spawn:i=>[mkEnemy({type:'beast',hp:340*i,maxhp:340*i,spd:88,r:30,col:'#3f3a44',phase:1}),
+            mkEnemy({type:'grave',boss:true,deathCol:'#c8443a',x:arena.x+150,hp:1400*i,maxhp:1400*i,spd:110,r:22,col:'#5a2a34',wpn:'#c8443a',dmgScale:1.2,stance:'open',stanceT:1})]}
 ];
 function spawnFight(){
   const i=1+S.fight*0.30; // difficulty scale
@@ -967,7 +1272,7 @@ function spawnFight(){
     for(const e of enemies){e.hp=Math.round(e.hp*2);e.maxhp=Math.round(e.maxhp*2);} // Hiro: DOUBLE all enemy HP after fight 3
   }
   zones=[];swings=[];particles=[];popups=[];bullets=[];limbs=[];wolves=[];P.wolfCD=0;P.glaive=null;
-  demons=[];fireballs=[];tracers=[];P.channel=null;P.slowT=0;P.paralyzeT=0;P.wardT=0;
+  demons=[];fireballs=[];tracers=[];P.channel=null;P.slowT=0;P.paralyzeT=0;P.paraImmuneT=0;P.wardT=0;P.silenceT=0;
   if(P.devilT>0){P.devilT=0;P.r=16;updateLabels();}
   if(P.char==='druid'){P.form='human';P.r=16;P.formT=0;P.humanCD=0;updateLabels();}
   cam.x=cam.tx=W/2;cam.y=cam.ty=H/2;cam.z=cam.tz=1;cam.hold=0;S.fatal=false;
@@ -981,6 +1286,7 @@ function hurtPlayer(dmg,from){
   if(P.rollT>0||P.dead)return;
   if(P.kneelT>0){popup(P.x,P.y-40,'IMMORTAL','#ffe9a8',12);return;} // grace: nothing touches him
   if(P.lichRiseT>0){popup(P.x,P.y-40,'THE PACT HOLDS','#9af0c0',12);return;} // the kneeling cinematic
+  if(archCine){popup(P.x,P.y-40,'SPARED','#fff6dc',11);return;} // untouchable through the arch-devil outro cinematic
   if(P.lich&&demons.some(d=>d.type==='dragon'&&d.hp>0)){ // dragons aloft = the lich cannot bleed
     popup(P.x,P.y-40,'PHYLACTERY','#9af0c0',12);return;}
   if(P.fadeT>0){popup(P.x,P.y-40,'FADED','#9af0c0',12);return;} // beyond reach
@@ -1080,6 +1386,7 @@ function updEnemyVs(e,dt,P){
     else e.face=ang(e,P);};
   const beginAttack=(wind)=>{e.attacking=true;e.tele=wind;e.teleMax=wind;e.lockA=ang(e,P);};
   e.cool-=dt*(e.worthy?3:1); // the WORTHY move like the buff demands
+  e.paraCD=Math.max(0,(e.paraCD||0)-dt); // per-enemy paralyze cooldown (>=10s between stuns)
 
   switch(e.type){
    case 'door':
@@ -1127,7 +1434,7 @@ function updEnemyVs(e,dt,P){
          const sp2=e.spell||0;e.spell=(sp2+1)%3;e.cool=2.6;
          if(sp2===0)zones.push({x:P.x,y:P.y,r:54,tele:.75,life:3.5,type:'fire'});
          else if(sp2===1)zones.push({x:P.x,y:P.y,r:62,tele:.75,life:.1,type:'ice',dmg:4*e.dmgScale});
-         else zones.push({x:P.x,y:P.y,r:70,tele:.75,life:.1,type:'bolt'});
+         else zones.push({x:P.x,y:P.y,r:70,tele:.75,life:.1,type:'bolt',owner:e});
          if(!e.mageShield){e.mageShield=true;e.hp+=e.maxhp;e.maxhp*=2; // shield on successful cast
            popup(e.x,e.y-34,'SHIELDED','#5ad2ff',13);}}
        break;}
@@ -1288,6 +1595,60 @@ function updEnemyVs(e,dt,P){
           e.cool=2.2;showBanner('','',1);popup(e.x,e.y-50,'!','#c8443a',26);}
         else if(dToP<e.r+95)beginAttack(.62);}}
     break;
+   case 'rotwarden': // Heartrot (Grove): poison pools + root slam + self-regen
+    e.regenT=(e.regenT===undefined?1:e.regenT)-dt;
+    if(e.regenT<=0){e.regenT=1;
+      if(e.flash<=0&&e.hp<e.maxhp){const amt=Math.round(e.maxhp*0.012);
+        e.hp=Math.min(e.maxhp,e.hp+amt);popup(e.x,e.y-e.r-10,'+'+amt,'#7fbf6a',11);}}
+    if(e.attacking){e.tele-=dt;
+      if(e.tele<=0){e.attacking=false;e.cool=2.4;S.shake=Math.max(S.shake,7);
+        zones.push({x:P.x,y:P.y,r:70,tele:.7,life:.1,type:'bolt',owner:e});
+        for(let i2=0;i2<12&&particles.length<240;i2++)particles.push({x:e.x,y:e.y,vx:rnd(-80,80),vy:rnd(-80,40),t:.4,col:'#3a5a2c',r:2.5});}}
+    else{chase(.7,e.r+P.r+30);
+      e.spitT=(e.spitT===undefined?2.4:e.spitT)-dt;
+      if(e.spitT<=0){e.spitT=rnd(2.6,3.6);
+        zones.push({x:P.x,y:P.y,r:58,tele:.6,life:4.5,type:'venom',dmgScale:e.dmgScale,owner:e});}
+      if(e.cool<=0&&dToP<e.r+90)beginAttack(.8);}
+    break;
+   case 'frostdrake': // Aurgelm (Mountain): kites, frost fields + ice volley
+    {const a=ang(e,P);e.face=a;
+     if(e.castT>0){e.castT-=dt;
+       if(Math.random()<.4&&particles.length<240)particles.push({x:e.x+rnd(-14,14),y:e.y+rnd(-10,10),vx:0,vy:-20,t:.3,col:'#bfe6ff',r:2,noG:true});
+       if(e.castT<=0){e.cool=2.4;zones.push({x:P.x,y:P.y,r:66,tele:.7,life:4,type:'frost',owner:e});}
+       break;}
+     if(dToP<200){e.x-=Math.cos(a)*e.spd*dt;e.y-=Math.sin(a)*e.spd*dt;}
+     else if(dToP>340){e.x+=Math.cos(a)*e.spd*.7*dt;e.y+=Math.sin(a)*e.spd*.7*dt;}
+     if(e.cool<=0){
+       if(Math.random()<.5){e.castT=1.1;popup(e.x,e.y-e.r-8,'RIME BREATH','#5ad2ff',11);}
+       else{e.cool=1.5;zones.push({x:P.x,y:P.y,r:54,tele:.6,life:.1,type:'ice',dmg:5*e.dmgScale});}}}
+    break;
+   case 'warden': // Provost Mortain (Ashenveil): immune until totems break; raises dead + bolts
+    {const a=ang(e,P);e.face=a;
+     if(dToP<200){e.x-=Math.cos(a)*e.spd*dt;e.y-=Math.sin(a)*e.spd*dt;}
+     e.raiseT=(e.raiseT===undefined?2:e.raiseT)-dt;
+     if(e.raiseT<=0){e.raiseT=3;
+       const skels=enemies.filter(x=>x.type==='skel'&&!x.dead).length;
+       if(skels<6){const ra=rnd(0,Math.PI*2),sx=e.x+Math.cos(ra)*60,sy=e.y+Math.sin(ra)*60;
+         enemies.push(mkEnemy({type:'skel',minion:true,x:sx,y:sy,hp:40*e.dmgScale,maxhp:40*e.dmgScale,spd:120,r:11,col:'#c8c2b0',dmgScale:e.dmgScale}));
+         popup(sx,sy-20,'RISE','#9af0c0',12);}}
+     e.castT=(e.castT===undefined?3:e.castT)-dt;
+     if(e.castT<=0){e.castT=4;zones.push({x:P.x,y:P.y,r:60,tele:.7,life:.1,type:'bolt',owner:e});}}
+    break;
+   case 'totem': // Mortain's wards - inert anchors; break them all to drop his immunity
+    break;
+   case 'collector': // The Collector (Varenholm): silence + slow control caster
+    {const a=ang(e,P);e.face=a;e.meleeCD=(e.meleeCD||0)-dt;
+     if(dToP<160){e.x-=Math.cos(a)*e.spd*dt;e.y-=Math.sin(a)*e.spd*dt;}
+     else if(dToP>260){e.x+=Math.cos(a)*e.spd*dt;e.y+=Math.sin(a)*e.spd*dt;}
+     if(e.castT>0){e.castT-=dt;
+       if(Math.random()<.4&&particles.length<240)particles.push({x:e.x+rnd(-12,12),y:e.y+rnd(-12,12),vx:0,vy:-18,t:.3,col:'#b070f0',r:2,noG:true});
+       if(e.castT<=0){e.cool=3.0;
+         if(dToP<300&&P.rollT<=0&&!(P.wardT>0)){P.silenceT=3.2;P.slowT=Math.max(P.slowT,2);
+           popup(P.x,P.y-46,'SILENCED','#b070f0',14);vib(40);}}
+       break;}
+     if(dToP<e.r+P.r+30&&e.meleeCD<=0){e.meleeCD=1.4;if(P.rollT<=0)hurtPlayer(rnd(6,9)*e.dmgScale,e);}
+     if(e.cool<=0){e.castT=.9;popup(e.x,e.y-e.r-8,'HEXING','#b070f0',11);}}
+    break;
   }
   clampArena(e);
   // separation
@@ -1299,7 +1660,7 @@ function updEnemyVs(e,dt,P){
 function show(id,data){UI.screen(id||null,data||null);}
 function statRows(prevK,nowK){
   const rows=[];
-  if(P.char==='ronin'){
+  if(RKIT(P.char)){
     const defs=[['STR (damage)','STR'],['DEX (speed / roll)','DEX'],['CON (health)','CON'],['ATK (attack speed)','ATK']];
     for(const[lbl,k]of defs){
       const a=P.base[k]+prevK*2,b=P.base[k]+nowK*2;
@@ -1308,8 +1669,8 @@ function statRows(prevK,nowK){
     rows.push(['KATANA',db+'d8',db>da?'+'+(db-da)+' die \u25b2':'']);
     rows.push(['MAX HP',''+maxHP(),'']);
     return rows;}
-  const L=lvl(),pl=Math.min(10,Math.floor(1+prevK*1.5));
-  rows.push(['LEVEL',L+' / 10',L>pl?'+'+(L-pl)+' \u25b2':'']);
+  const L=lvl(),pl=Math.min(20,Math.floor(1+prevK*1.5));
+  rows.push(['LEVEL',L+' / 20',L>pl?'+'+(L-pl)+' \u25b2':'']);
   rows.push([P.char==='druid'?'GLAIVE':P.char==='seraph'?'SPEAR':'SPELLS',diceN()+'d8','']);
   rows.push(['MAX HP',''+maxHP(),'']);
   const UL=P.char==='druid'?[['BEAR FORM',3],['WOLF FORM',6]]
@@ -1324,19 +1685,20 @@ function toBoard(){
   const f=FIGHTS[S.fight];
   const oddsAgainst=Math.max(1,12-P.kills*1.5);
   let oddsTxt='ODDS: '+(oddsAgainst<=1?'EVEN MONEY. The Pit fears you.':oddsAgainst.toFixed(0)+'-to-1 against you');
-  if(P.char!=='ronin'){oddsTxt+='   ·   LEVEL '+lvl()+'/10';
+  if(!RKIT(P.char)){oddsTxt+='   ·   LEVEL '+lvl()+'/20';
     if(P.unlockMsg){oddsTxt+='  —  '+P.unlockMsg;
       setTimeout(()=>showBanner(P.unlockMsg,'',1400,'#3df0c8'),400);P.unlockMsg=null;}}
   const rows=statRows(prevKills,P.kills);prevKills=P.kills;
   // After the third fight, Bellow buys his fighters out — 15 silver to walk. Default choice. (Hiro)
-  const canLeave=S.fight>=3&&!encounterCb;
+  const canLeave=S.fight>=3&&!encounterCb&&!S.declinedPot;
   S.canLeave=canLeave;
   const offer=canLeave?'Bellow leans over the rail: "You\'ve made your name, '+nickname+'. Walk now and the house pays you FIFTEEN SILVER — or stay, and the deck gets... fuller." (default: take the purse)':'';
   show('board',{foeName:f.name,foeRec:f.rec,foeTaunt:f.taunt,odds:oddsTxt,rows,crowd:'The crowd calls you: '+nickname,canLeave,offer,leaveSilver:15});}
 function startFight(){
+  if(S.canLeave)S.declinedPot=true; // declined Bellow's buy-out: never offered again this Pit run (Hiro)
   S.mode='fight';show(null);
   UI.hud(true);UI.controls(true);UI.name(nickname);
-  UI.stats(diceN()+'d8',(P.char==='ronin'?'':'LV '+lvl()+' · ')+'KILLS '+P.kills);
+  UI.stats(diceN()+'d8',(RKIT(P.char)?'':'LV '+lvl()+' · ')+'KILLS '+P.kills);
   spawnFight();showBanner(FIGHTS[S.fight].name,'fight '+(S.fight+1)+' of '+FIGHTS.length,1500);}
 const NICKBANKS={
  ronin:{styles:{
@@ -1396,7 +1758,7 @@ function startEncounter(list,cb){
   encounterCb=cb||null;
   enemies=list.map(o=>mkEnemy(o));
   zones=[];swings=[];particles=[];popups=[];bullets=[];limbs=[];wolves=[];P.wolfCD=0;P.glaive=null;
-  demons=[];fireballs=[];tracers=[];P.channel=null;P.slowT=0;P.paralyzeT=0;P.wardT=0;
+  demons=[];fireballs=[];tracers=[];P.channel=null;P.slowT=0;P.paralyzeT=0;P.paraImmuneT=0;P.wardT=0;P.silenceT=0;
   if(P.devilT>0){P.devilT=0;P.r=16;updateLabels();}
   if(P.char==='druid'){P.form='human';P.r=16;P.formT=0;P.humanCD=0;updateLabels();}
   cam.x=cam.tx=W/2;cam.y=cam.ty=H/2;cam.z=cam.tz=1;cam.hold=0;S.fatal=false;
@@ -1407,7 +1769,7 @@ function startEncounter(list,cb){
   if(P.lich){P.lich=false;P.r=16;updateLabels();}P.fadeT=0;P.fadeCD=0;P.lichRiseT=0; // each fight begins among the living
   P.ft={dmgTaken:0,heavy:0,slash:0,rolls:0,parries:0,t0:NOW(),low:false};
   S.mode='fight';UI.hud(true);UI.controls(true);UI.name(nickname);
-  UI.stats(diceN()+'d8',(P.char==='ronin'?'':'LV '+lvl()+' · ')+'KILLS '+P.kills);
+  UI.stats(diceN()+'d8',(RKIT(P.char)?'':'LV '+lvl()+' · ')+'KILLS '+P.kills);
   UI.boss(false,'');}
 function winFight(){
   if(encounterCb){const cb=encounterCb;encounterCb=null;
@@ -1416,7 +1778,7 @@ function winFight(){
   S.fight++;
   if(S.fight>=FIGHTS.length){
     S.mode='victory';UI.hud(false);UI.controls(false);
-    show('victory',{stats:P.kills+' kills · '+(P.char==='ronin'?'katana '+diceN()+'d8':'level '+lvl()+' · '+diceN()+'d8')+' · they call you '+nickname});return;}
+    show('victory',{stats:P.kills+' kills · '+(RKIT(P.char)?'katana '+diceN()+'d8':'level '+lvl()+' · '+diceN()+'d8')+' · they call you '+nickname});return;}
   showBanner(nickname,renamed?'the crowd renames you':'the crowd roars',1700);flashFx(.15);
   setTimeout(toBoard,1500);}
 let dqOrder=[],dqIdx=0;
@@ -1452,7 +1814,7 @@ function lose(){
     seraph:'HINTS — the HALO RAY fires every second: whatever it KILLS rises as your minion, then returns to you as half your health. '
          +'The spear is a slow heavy POKE — keep your distance and land it clean. ASCEND lifts you above harm. '
          +'You are immortal: the first fall in any duel buys your foe ten seconds of glory — then you rise at full strength. The second fall is final.'};
-  show('death',{stats:_deathStats,quote:_deathQuote,hints:HINTS[P.char]||''});}
+  show('death',{stats:_deathStats,quote:_deathQuote,hints:HINTS[P.char]||(RKIT(P.char)?HINTS.ronin:'')});}
 /* ============ CHARACTER INTROS (automated demos) ============ */
 const BIOS={
  ronin:'The wandering samurai — said to have never lost a duel. He has traveled from the far east to become the greatest swordsman in the world. No magic. No levels. No enchantments or tricks. Just pure skill, and the vigor of defeated foes.',
@@ -1526,7 +1888,7 @@ const DEMOS={
   {at:19.4,cap:'He seeks the worthy. The Pit will do for a start. — tap ENTER THE PIT'}]};
 function demoReset(){
   const ch=demo.char;
-  P.char=ch;P.kills=0;P.level=ch==='ronin'?1:10;P.bladeTier=0;P.form='human';P.r=16;
+  P.char=ch;P.kills=0;P.level=RKIT(ch)?1:10;P.bladeTier=0;P.weaponLine=P.weaponLine||'katana';P.form='human';P.r=16;
   P.dead=false;P.channel=null;P.glaive=null;P.devilT=0;P.wardT=0;P.slowT=0;P.paralyzeT=0;
   P.formT=0;P.humanCD=0;P.wolfCD=0;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;
   P.parryCD=0;P.parryT=0;P.heavyCD=0;P.heavyWind=0;P.rollCD=0;P.rollT=0;P.atkRecover=0;P.flash=0;P.hexCD=0;
@@ -1539,7 +1901,7 @@ function demoReset(){
   P.x=arena.x-arena.r*.3;P.y=arena.y;
   cam.x=cam.tx=W/2;cam.y=cam.ty=H/2;cam.z=cam.tz=1;cam.hold=0;S.fatal=false;S.slow=0;
   demo.t=0;demo.step=0;
-  UI.stats(diceN()+'d8',ch==='ronin'?'KILLS 0':'LV '+lvl());
+  UI.stats(diceN()+'d8',RKIT(ch)?'KILLS 0':'LV '+lvl());
   updateLabels();}
 function startIntro(ch){
   demo.char=ch;demo.script=DEMOS[ch];
@@ -1555,9 +1917,10 @@ function endIntro(){
   S.mode='title';
   fullReset(demo.char);}
 function fullReset(ch){
-  S.fight=0;P.kills=0;prevKills=0;nickname='NOBODY';
+  S.fight=0;P.kills=0;prevKills=0;nickname='NOBODY';S.declinedPot=false;S.canLeave=false;
   if(ch)P.char=ch;
-  P.form='human';P.r=16;P.wolfCD=0;P.formT=0;P.humanCD=0;P.bladeTier=0;P.slowT=0;P.paralyzeT=0;P.wardT=0;P.devilT=0;P.hexCD=0;P.level=1;P.unlockMsg=null;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;wolves=[];demons=[];fireballs=[];P.channel=null;P.glaive=null;P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;P.lich=false;P.fadeT=0;P.fadeCD=0;P.lichRiseT=0;
+  P.form='human';P.r=16;P.wolfCD=0;P.formT=0;P.humanCD=0;P.bladeTier=0;P.weaponLine='katana';P.slowT=0;P.paralyzeT=0;P.wardT=0;P.silenceT=0;P.devilT=0;P.hexCD=0;P.level=1;P.unlockMsg=null;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;wolves=[];demons=[];fireballs=[];P.channel=null;P.glaive=null;P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;P.lich=false;P.fadeT=0;P.fadeCD=0;P.lichRiseT=0;P.lichForceT=0;archCine=null;archCineFight=-1;P.evo10=null;P.evo20=null;P.evoPick=null;P.evoPickT=0;P.evoTier=0;
+  try{if(typeof window!=='undefined'&&window.GameState&&window.GameState.player){window.GameState.player.evo10=null;window.GameState.player.evo20=null;}}catch(e){}
   styleScore={untouched:0,headsman:0,quicksand:0,breath:0,corpse:0,mirror:0};
   updateLabels();
   dctx.clearRect(0,0,W,H);toBoard();}
@@ -1579,6 +1942,7 @@ function tick(now){
     L.t-=dt;L.x+=L.vx*dt;L.y+=L.vy*dt;L.vx*=.93;L.vy*=.93;L.rot+=L.vr*dt;L.vr*=.95;
     if(L.t<=0){stampLimb(L);limbs.splice(i,1);}}
   if(S.mode!=='fight'&&S.mode!=='demo'){draw();return;}
+  if(P.evoPick){evoTick(dt);draw();return;} // item-10: EVOLUTION choice freezes the scene until picked/auto-default
   if(S.mode==='demo'){ // automated intro: fire script steps, keep the star alive
     demo.t+=dt;
     if(P.hp<maxHP()*.45)P.hp=Math.round(maxHP()*.8);
@@ -1597,17 +1961,28 @@ function tick(now){
     P.parryT=Math.max(0,P.parryT-dt);P.parryCD=Math.max(0,P.parryCD-dt);
     P.formCD=Math.max(0,P.formCD-dt);P.wolfCD=Math.max(0,P.wolfCD-dt);
     P.slowT=Math.max(0,(P.slowT||0)-dt);P.wardT=Math.max(0,(P.wardT||0)-dt);P.hexCD=Math.max(0,(P.hexCD||0)-dt);
+    P.silenceT=Math.max(0,(P.silenceT||0)-dt); // Collector's hex: abilities locked (Hiro boss)
     if(P.lichRiseT>0){P.lichRiseT-=dt; // the kneel: three seconds where death watches him change
       if(Math.random()<.4&&particles.length<240)particles.push({x:P.x+rnd(-16,16),y:P.y-6+rnd(-18,8),
         vx:rnd(-15,15),vy:rnd(-50,-15),t:rnd(.3,.5),col:'#9af0c0',r:2,noG:true});
       if(P.lichRiseT<=0){P.paralyzeT=0;enterLich();}}
+    if(P.lich&&P.lichForceT>0){P.lichForceT-=dt; if(P.lichForceT<=0){P.channel=null;resurrectWarlock();}} // cinematic lich: hard return even if the resurrection channel keeps getting interrupted
     if(P.fadeT>0){P.fadeT-=dt;
       if(Math.random()<.3&&particles.length<240)particles.push({x:P.x+rnd(-16,16),y:P.y-12+rnd(-14,10),
         vx:rnd(-20,20),vy:rnd(-30,-6),t:rnd(.25,.45),col:'#9af0c0',r:1.8,noG:true});
       if(P.fadeT<=0)popup(P.x,P.y-44,'SEEN AGAIN','#8a93a8',11);}
-    if(P.devilT>0){P.devilT-=dt;if(P.devilT<=0)exitDevil();}
+    if(P.devilT>0){P.devilT-=dt;if(P.devilT<=0)archDevilOutro();}
+    if(archCine){ // the outro cinematic: keep him frozen until the strike, animate the angel, then clear once the lich is up
+      if(archCine.ph<3&&!P.lich)P.paralyzeT=Math.max(P.paralyzeT,0.4);
+      if(archCine.ph>=2&&archCine.ph<4){ archCine.seraphY+=((-72)-archCine.seraphY)*Math.min(1,dt*3.2);
+        if(particles.length<240&&Math.random()<.5)particles.push({x:P.x+rnd(-26,26),y:P.y+archCine.seraphY+rnd(-8,20),vx:rnd(-8,8),vy:rnd(14,42),t:rnd(.5,1.0),col:'#fff6dc',r:rnd(1,2.4),noG:true}); }
+      else if(archCine.ph>=4){ archCine.seraphY-=200*dt; archCine.fade=Math.max(0,(archCine.fade==null?1:archCine.fade)-dt*0.8);
+        if(P.lich||archCine.seraphY<-300||archCine.fade<=0)archCine=null; }
+    }
     P.cdVines=Math.max(0,(P.cdVines||0)-dt);P.cdRoar=Math.max(0,(P.cdRoar||0)-dt);P.cdHowl=Math.max(0,(P.cdHowl||0)-dt);
+    P.paraImmuneT=Math.max(0,(P.paraImmuneT||0)-dt); // grace window after a stun so stacked enemies can't chain-lock
     if(P.paralyzeT>0){P.paralyzeT-=dt;
+      if(P.paralyzeT<=0)P.paraImmuneT=Math.max(P.paraImmuneT,3.5); // just recovered -> brief paralyze immunity
       if(Math.random()<.3&&particles.length<240)particles.push({x:P.x+rnd(-12,12),y:P.y-20+rnd(-10,10),
         vx:rnd(-40,40),vy:rnd(-40,40),t:.15,col:'#f0e05a',r:2});}
     if(P.char==='druid'){
@@ -1683,7 +2058,7 @@ function tick(now){
         swings.push({x:z.x,y:z.y,a:0,arc:7,range:z.r,t:.18,heavy:false,col:'#5ad2ff',ring:true});
         zones.splice(i,1);}
       else if(z.tele<=0&&z.type==='bolt'){
-        if(dist(z,P)<z.r&&P.rollT<=0&&!(P.wardT>0)){P.paralyzeT=3;
+        if(dist(z,P)<z.r&&P.rollT<=0&&!(P.wardT>0)&&(P.paraImmuneT||0)<=0&&(!z.owner||(z.owner.paraCD||0)<=0)){P.paralyzeT=3;if(z.owner)z.owner.paraCD=10;
           if(P.channel){P.channel=null;}
           popup(P.x,P.y-44,'PARALYZED','#f0e05a',15);vib(60);}
         swings.push({x:z.x,y:z.y,a:0,arc:7,range:z.r,t:.18,heavy:false,col:'#f0e05a',ring:true});
@@ -1699,10 +2074,32 @@ function tick(now){
         for(const e of enemies){if(e.dead)continue;
           if(dist(z,e)<z.r){e.stunT=Math.max(e.stunT||0,2);
             dotDamage(e,1,'#7fd05a');}}}
+      if(z.life<=0)zones.splice(i,1);}
+    else if(z.type==='venom'){z.life-=dt; // lingering poison pool: DoT, and ROOTS you if you linger (Hiro boss)
+      if(dist(z,P)<z.r&&P.rollT<=0){z.tick=(z.tick||0)-dt;
+        if(z.tick<=0){z.tick=.5;hurtPlayer(3*(z.dmgScale||1),null);popup(P.x,P.y-40,'POISONED','#7fd05a',11);}
+        z.dwell=(z.dwell||0)+dt;
+        if(z.dwell>=1.2&&P.paralyzeT<=0&&!(P.wardT>0)&&(P.paraImmuneT||0)<=0&&(!z.owner||(z.owner.paraCD||0)<=0)){P.paralyzeT=1.1;if(z.owner)z.owner.paraCD=10;if(P.channel)P.channel=null;
+          popup(P.x,P.y-46,'ROOTED','#3a7a2c',14);vib(50);z.dwell=0;}}
+      else z.dwell=0;
+      if(z.life<=0)zones.splice(i,1);}
+    else if(z.type==='frost'){z.life-=dt; // lingering rime field: slows, then FREEZES if you camp it (Hiro boss)
+      if(dist(z,P)<z.r&&P.rollT<=0){P.slowT=Math.max(P.slowT,1.2);
+        z.dwell=(z.dwell||0)+dt;
+        if(z.dwell>=1.4&&P.paralyzeT<=0&&!(P.wardT>0)&&(P.paraImmuneT||0)<=0&&(!z.owner||(z.owner.paraCD||0)<=0)){P.paralyzeT=1.0;if(z.owner)z.owner.paraCD=10;if(P.channel)P.channel=null;
+          popup(P.x,P.y-46,'FROZEN','#5ad2ff',14);vib(50);z.dwell=0;}}
+      else z.dwell=0;
       if(z.life<=0)zones.splice(i,1);}}
   // bullets
   for(let i=bullets.length-1;i>=0;i--){const b=bullets[i];
     b.x+=b.vx*dt;b.y+=b.vy*dt;
+    if(b.friendly){ // item-11 RIFLE: player matchlock ball — hits the first foe it reaches, never the player
+      let hit=false;
+      for(const e of enemies){if(e.dead)continue;
+        if(Math.hypot(b.x-e.x,b.y-e.y)<e.r+b.r){hitEnemy(e,Math.round(b.dmg),true,Math.atan2(b.vy,b.vx));hit=true;break;}}
+      if(hit){for(let k=0;k<6;k++)particles.push({x:b.x,y:b.y,vx:rnd(-90,90),vy:rnd(-90,40),t:rnd(.15,.35),col:'#e7b450',r:rnd(1,2.5)});bullets.splice(i,1);continue;}
+      if(Math.hypot(b.x-arena.x,b.y-arena.y)>arena.r+30)bullets.splice(i,1);
+      continue;}
     const tb=demonTaunt();
     if(tb&&Math.hypot(b.x-tb.x,b.y-tb.y)<tb.r+b.r){
       hurtDemon(tb,Math.round(b.dmg),b.src);bullets.splice(i,1);continue;}
@@ -1903,7 +2300,7 @@ function drawFighter(x,y,r,face,col,o={}){
     ctx.strokeStyle=C('#e7b450');ctx.lineWidth=1.2;                    // gold winding between the hands
     ctx.beginPath();ctx.moveTo(gx,gy);ctx.lineTo(g2x,g2y);ctx.stroke();
     ctx.save();ctx.translate(tx2,ty2);ctx.rotate(face);                // leaf blade
-    ctx.fillStyle=C('#fff6dc');ctx.strokeStyle='#000';ctx.lineWidth=1.5;
+    ctx.fillStyle=C(o.spearBladeCol||'#fff6dc');ctx.strokeStyle='#000';ctx.lineWidth=1.5;
     ctx.beginPath();ctx.moveTo(15,0);ctx.lineTo(0,-4.5);ctx.lineTo(-3,0);ctx.lineTo(0,4.5);ctx.closePath();ctx.fill();ctx.stroke();
     ctx.restore();
     ctx.fillStyle=SKIN;
@@ -2130,7 +2527,8 @@ function draw(){
   // zones
   for(const z of zones){
     if(z.tele>0){
-      const zc=z.type==='fire'?'220,110,40':(z.type==='ice'?'90,210,255':(z.type==='bolt'?'240,224,90':'200,68,58'));
+      const zcMap={fire:'220,110,40',ice:'90,210,255',bolt:'240,224,90',venom:'127,208,90',frost:'120,200,255'};
+      const zc=zcMap[z.type]||'200,68,58';
       ctx.strokeStyle='rgba('+zc+',.85)';
       ctx.lineWidth=3;ctx.setLineDash([6,6]);
       ctx.beginPath();ctx.arc(z.x,z.y,z.r,0,7);ctx.stroke();ctx.setLineDash([]);
@@ -2146,7 +2544,17 @@ function draw(){
       ctx.fillStyle='rgba(220,110,40,'+(0.25+0.1*Math.sin(S.time*14))+')';
       ctx.beginPath();ctx.arc(z.x,z.y,z.r,0,7);ctx.fill();
       for(let i=0;i<2;i++)if(particles.length<240)particles.push({x:z.x+rnd(-z.r,z.r)*.7,y:z.y+rnd(-z.r,z.r)*.7,
-        vx:0,vy:-rnd(30,70),t:rnd(.2,.5),col:'#e08030',r:rnd(1.5,3)});}}
+        vx:0,vy:-rnd(30,70),t:rnd(.2,.5),col:'#e08030',r:rnd(1.5,3)});}
+    else if(z.type==='venom'){
+      ctx.fillStyle='rgba(127,208,90,'+(0.20+0.08*Math.sin(S.time*6))+')';
+      ctx.beginPath();ctx.arc(z.x,z.y,z.r,0,7);ctx.fill();
+      if(particles.length<240&&Math.random()<.3)particles.push({x:z.x+rnd(-z.r,z.r)*.7,y:z.y+rnd(-z.r,z.r)*.7,
+        vx:0,vy:-rnd(15,40),t:rnd(.3,.6),col:'#7fd05a',r:rnd(1.5,3),noG:true});}
+    else if(z.type==='frost'){
+      ctx.fillStyle='rgba(120,200,255,'+(0.18+0.07*Math.sin(S.time*5))+')';
+      ctx.beginPath();ctx.arc(z.x,z.y,z.r,0,7);ctx.fill();
+      if(particles.length<240&&Math.random()<.25)particles.push({x:z.x+rnd(-z.r,z.r)*.7,y:z.y+rnd(-z.r,z.r)*.7,
+        vx:0,vy:-rnd(10,30),t:rnd(.3,.6),col:'#bfe6ff',r:rnd(1.5,3),noG:true});}}
   // enemies
   for(const e of enemies){
     if(e.dead&&e.deathT>2)continue;
@@ -2163,14 +2571,14 @@ function draw(){
       phase:e.walkP,moving:e._mv,
       shield:T==='door'&&!e.dead&&!(e.brokenT>0),
       twoHand:(T==='door'||T==='brute'||T==='hook')?false:undefined,
-      thickWpn:T==='door'||T==='brute'||T==='chain',
-      wpnLen:(T==='hound'||T==='beast'||T==='gunner'||T==='thrall'||T==='stitch')?0:
+      thickWpn:T==='door'||T==='brute'||T==='chain'||T==='rotwarden',
+      wpnLen:(T==='hound'||T==='beast'||T==='gunner'||T==='thrall'||T==='stitch'||T==='frostdrake'||T==='totem')?0:
         (T==='necro'?e.r*1.6:e.r*1.2),
       wpnCol:T==='grave'&&e.stance==='parry'?'#e7b450':
         (T==='necro'?'#5a4a3a':(T==='skel'?'#b8b0a0':e.wpn)),
       wpnSwing:e.attacking?Math.sin(S.time*26)*.18-.4:0,
-      gun:T==='gunner',robe:T==='necro'||T==='stitch',hood:T==='necro',
-      quad:T==='hound',hulk:T==='beast',skull:T==='skel',
+      gun:T==='gunner',robe:T==='necro'||T==='stitch'||T==='warden'||T==='collector',hood:T==='necro'||T==='warden'||T==='collector',
+      quad:T==='hound'||T==='frostdrake',hulk:T==='beast'||T==='rotwarden',skull:T==='skel'||T==='totem',
       headCol:T==='beast'?'#2a2030':(T==='champ'?'#3a1c1c':null)});
     // champ aura
     if(e.type==='champ'&&e.feeds>0&&!e.dead){
@@ -2359,10 +2767,20 @@ function draw(){
         const bw4=48,bx4=P.x-24,by4=P.y-P.r-30; // rising back to his feet
         ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(bx4,by4,bw4,5);
         ctx.fillStyle='#ffe9a8';ctx.fillRect(bx4+1,by4+1,(bw4-2)*Math.max(0,1-P.kneelT/10),3);}
-      drawFighter(P.x,P.y-lift+(P.kneelT>0?5:0),P.r*(P.kneelT>0?.92:1),P.face,'#cfd6e4',{seraphim:true,robe:true,flash:P.flash,
+      // item-10 inc.7: SERAPH lv10 branch tint — WRATH (smite-road) a warmer radiant gold;
+      // AEGIS (ward-road) a cooler steel-white. Default (no evo10) = the original colors.
+      const _srCol =P.evo10==='wrath'?'#e0d2a8':(P.evo10==='aegis'?'#c2cedd':'#cfd6e4');
+      const _srHead=P.evo10==='wrath'?'#f2e8c4':(P.evo10==='aegis'?'#dde6ee':'#e8e4da');
+      drawFighter(P.x,P.y-lift+(P.kneelT>0?5:0),P.r*(P.kneelT>0?.92:1),P.face,_srCol,{seraphim:true,robe:true,flash:P.flash,
         dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,
         flying:P.ascendT>0,haloGone:P.heavyWind>0,
-        spear:P.kneelT<=0,spearLen:46,poke:P.atkRecover>0,headCol:'#e8e4da'});
+        spear:P.kneelT<=0,spearLen:46,poke:P.atkRecover>0,headCol:_srHead});
+      if(P.evo20==='judgement'){ // item-10 inc.7 capstone: a bright sun-gold halo (wrath->throne road)
+        ctx.strokeStyle='rgba(255,224,120,'+(0.45+0.25*Math.sin(S.time*6))+')';ctx.lineWidth=2.5;
+        ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+14,0,7);ctx.stroke();}
+      else if(P.evo20==='bulwark'){ // item-10 inc.7 capstone: a cold steel ward ring (aegis->bulwark road)
+        ctx.strokeStyle='rgba(190,210,240,'+(0.45+0.25*Math.sin(S.time*5))+')';ctx.lineWidth=3;
+        ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+15,0,7);ctx.stroke();}
     }else if(P.char==='warlock'&&P.lich){
       const bob=Math.sin(S.time*2.2)*4, lift=12+bob; // he does not walk anymore
       ctx.save();ctx.globalAlpha=P.fadeT>0?.12:.3;ctx.fillStyle='#000'; // small far shadow
@@ -2396,8 +2814,13 @@ function draw(){
         ctx.beginPath();ctx.moveTo(P.x,P.y-18);
         ctx.lineTo(P.x+sw2*26,P.y-34-fl2*6);ctx.lineTo(P.x+sw2*40,P.y-20-fl2*10);ctx.stroke();
         ctx.beginPath();ctx.moveTo(P.x+sw2*26,P.y-34-fl2*6);ctx.lineTo(P.x+sw2*24,P.y-10);ctx.stroke();}
-      drawFighter(P.x,P.y,P.r,P.face,'#5a1a24',{hulk:true,flash:P.flash,
-        dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,headCol:'#2a0c12'});
+      // item-10 inc.5: INFERNAL HERALD (herald road) burns the Arch Devil a brighter hellfire red.
+      // item-10 inc.6: the lv20 ARCHFIEND ASCENDANT capstone deepens it further still.
+      const _archfiend=P.evo20==='archfiend';
+      const _adCol=_archfiend?'#7e1820':(P.evo10==='herald'?'#6e1c26':'#5a1a24'),
+            _adHead=_archfiend?'#420e12':(P.evo10==='herald'?'#3a1014':'#2a0c12');
+      drawFighter(P.x,P.y,P.r,P.face,_adCol,{hulk:true,flash:P.flash,
+        dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,headCol:_adHead});
       { // horns
         const hx3=P.x+Math.cos(P.face)*P.r*.75,hy3=P.y+Math.sin(P.face)*P.r*.75;
         ctx.strokeStyle='#e8d8c0';ctx.lineWidth=3;
@@ -2425,11 +2848,23 @@ function draw(){
         ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+16,0,7);ctx.stroke();
         ctx.fillStyle='rgba(90,210,255,.07)';
         ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+16,0,7);ctx.fill();}
-      drawFighter(P.x,P.y,P.r,P.face,'#241a30',{warlock:true,robe:true,flash:P.flash,
+      // item-10 inc.5: WARLOCK lv10 branch tint — DREADBINDER (binder) a paler bone/violet caster
+      // cast; INFERNAL HERALD (herald) a redder hellfire cast. Default (no evo10) = original colors.
+      const _wkCol =P.evo10==='binder'?'#2a2238':(P.evo10==='herald'?'#3a1a26':'#241a30');
+      const _wkHead=P.evo10==='binder'?'#b0a8d0':(P.evo10==='herald'?'#b08a8a':'#9a9ab0');
+      const _wkTip =P.evo10==='binder'?'#c080ff':(P.evo10==='herald'?'#ff6a4a':'#b070f0');
+      const _wkWpn =P.evo10==='herald'?'#4a2630':'#3a3046';
+      drawFighter(P.x,P.y,P.r,P.face,_wkCol,{warlock:true,robe:true,flash:P.flash,
         dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,
-        wpnLen:30,wpnCol:'#3a3046',staffTip:true,tipCol:'#b070f0',twoHand:false,
-        headCol:'#9a9ab0',
+        wpnLen:30,wpnCol:_wkWpn,staffTip:true,tipCol:_wkTip,twoHand:false,
+        headCol:_wkHead,
         wpnSwing:P.channel?-1.0:(P.atkRecover>0?0.6:0)});
+      if(P.evo20==='lichlord'){ // item-10 inc.6 capstone: cold grave-light halo (binder->lich road)
+        ctx.strokeStyle='rgba(150,240,200,'+(0.4+0.2*Math.sin(S.time*6))+')';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+13,0,7);ctx.stroke();}
+      else if(P.evo20==='archfiend'){ // item-10 inc.6 capstone: deep ember halo (herald->fiend road)
+        ctx.strokeStyle='rgba(255,90,60,'+(0.4+0.2*Math.sin(S.time*7))+')';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+13,0,7);ctx.stroke();}
       // channel bar with summon thresholds
       if(P.channel){
         const t=P.channel.t,bw=64;
@@ -2454,13 +2889,26 @@ function draw(){
         ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(bx2,by2,bw2,5);
         ctx.fillStyle='#7fbf6a';ctx.fillRect(bx2+1,by2+1,(bw2-2)*Math.max(0,P.formT/6),3);}
       if(P.form==='bear'){
-        drawFighter(P.x,P.y,P.r,P.face,'#6a4a2c',{hulk:true,bear:true,flash:P.flash,
-          dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,headCol:'#4a3420'});
+        // item-10 inc.4: PRIMAL WARDEN (bear-road) tints the bear bark/stone; default = original colors.
+        const _bCol=P.evo10==='warden'?'#5a4326':'#6a4a2c', _bHead=P.evo10==='warden'?'#3a2a18':'#4a3420';
+        drawFighter(P.x,P.y,P.r,P.face,_bCol,{hulk:true,bear:true,flash:P.flash,
+          dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,headCol:_bHead});
+        if(P.evo10==='warden'){ // thorn-aura ring marks the warden road
+          ctx.strokeStyle='rgba(150,120,70,'+(0.4+0.2*Math.sin(S.time*7))+')';ctx.lineWidth=2;
+          ctx.beginPath();ctx.arc(P.x,P.y,P.r+9,0,7);ctx.stroke();}
+        if(P.evo20==='colossus'){ // item-10 inc.6 capstone: a heavier worldroot ring
+          ctx.strokeStyle='rgba(110,90,50,'+(0.5+0.25*Math.sin(S.time*5))+')';ctx.lineWidth=3;
+          ctx.beginPath();ctx.arc(P.x,P.y,P.r+15,0,7);ctx.stroke();}
       }else if(P.form==='wolf'){
-        drawFighter(P.x,P.y,P.r*1.2,P.face,'#4a5a4c',{quad:true,flash:P.flash,
+        // item-10 inc.4: FERAL ALPHA (wolf-road) tints the wolf moon-silver + a brighter ring; default = original.
+        const _wCol=P.evo10==='alpha'?'#5a6470':'#4a5a4c';
+        drawFighter(P.x,P.y,P.r*1.2,P.face,_wCol,{quad:true,flash:P.flash,
           dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv});
-        ctx.strokeStyle='rgba(127,191,106,.5)';ctx.lineWidth=1.5;
+        ctx.strokeStyle=P.evo10==='alpha'?'rgba(185,205,235,.65)':'rgba(127,191,106,.5)';ctx.lineWidth=P.evo10==='alpha'?2:1.5;
         ctx.beginPath();ctx.arc(P.x,P.y,P.r+7,0,7);ctx.stroke();
+        if(P.evo20==='sovereign'){ // item-10 inc.6 capstone: a cold lunar halo
+          ctx.strokeStyle='rgba(210,225,255,'+(0.45+0.25*Math.sin(S.time*6))+')';ctx.lineWidth=2.5;
+          ctx.beginPath();ctx.arc(P.x,P.y,P.r+13,0,7);ctx.stroke();}
       }else{
         if(P.glaive)drawGlaive(P.glaive);
         drawFighter(P.x,P.y,P.r,P.face,'#2c4430',{druid:true,flash:P.flash,
@@ -2470,6 +2918,17 @@ function draw(){
           wpnSwing:P.atkRecover>0?0.8:0});}
     }else{
     {const bt=roninTier();
+    if(P.weaponLine==='spear'){
+    drawFighter(P.x,P.y,P.r,P.face,'#2c3440',{samurai:true,armor:bt,spear:true,
+      spearLen:bt===2?70:(bt===1?58:48),spearBladeCol:'#dfe6ee',flash:P.flash,
+      dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,
+      roll:P.rollT>0,rollSpin:P.rollT>0?(1-P.rollT/.32)*Math.PI*2:0,
+      poke:P.atkRecover>0});
+    }else if(P.weaponLine==='rifle'){
+    drawFighter(P.x,P.y,P.r,P.face,'#2c3440',{samurai:true,armor:bt,gun:true,flash:P.flash,
+      dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,
+      roll:P.rollT>0,rollSpin:P.rollT>0?(1-P.rollT/.32)*Math.PI*2:0});
+    }else
     drawFighter(P.x,P.y,P.r,P.face,'#2c3440',{samurai:true,armor:bt,flash:P.flash,
       dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,
       roll:P.rollT>0,rollSpin:P.rollT>0?(1-P.rollT/.32)*Math.PI*2:0,
@@ -2489,6 +2948,7 @@ function draw(){
     // katana glow tier
     if(P.kills>=2&&!P.dead){ctx.strokeStyle='rgba(231,180,80,'+Math.min(.5,P.kills*.06)+')';ctx.lineWidth=1.5;
       ctx.beginPath();ctx.arc(P.x,P.y,P.r+5,0,7);ctx.stroke();}}
+  drawArchCine(); // the arch-devil outro: pillar of dawn + the descending Seraphim
   // swings
   for(const s of swings){
     const pr=s.t/(s.heavy?.18:.14);
@@ -2535,23 +2995,60 @@ function draw(){
   const v=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.35,W/2,H/2,Math.max(W,H)*.75);
   v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.55)');
   ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
+  if(P.evoPick)drawEvoPanel();
+}
+// item-10 inc.3: on-canvas EVOLUTION choice panel (only while a pick is open; null-ctx safe via draw()'s guard).
+function drawEvoPanel(){
+  const br=P.evoPick;if(!br)return;
+  ctx.save();ctx.textAlign='center';
+  ctx.fillStyle='rgba(6,4,10,.86)';ctx.fillRect(0,0,W,H);
+  const cx=W/2,cy=H/2;
+  const n=Math.min(2,br.length||0);   // lv20 filtered picks can offer a single road
+  ctx.fillStyle='#e7b450';ctx.font='bold 20px "Courier New",monospace';
+  ctx.fillText('CHOOSE YOUR EVOLUTION',cx,cy-118);
+  ctx.fillStyle='#cfc6b4';ctx.font='12px "Courier New",monospace';
+  ctx.fillText((n>1?'press 1 / 2  or click a card':'press 1  or click the card')+(P.evoPickT>0?'    ('+Math.ceil(P.evoPickT)+'s)':''),cx,cy-92);
+  const rs=evoCardRects();          // item-14C: same rects used for click hit-testing
+  for(let i=0;i<n;i++){
+    // center a lone card; place two side by side
+    const r=rs[i],px=r.x,py=r.y,pw=r.w,ph=r.h,col=i===0?'#7fbf6a':'#b070f0';
+    ctx.fillStyle='rgba(20,15,10,.96)';ctx.fillRect(px,py,pw,ph);
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.strokeRect(px,py,pw,ph);
+    const mx=px+pw/2;
+    ctx.fillStyle=col;ctx.font='bold 15px "Courier New",monospace';
+    ctx.fillText((i+1)+'.  '+br[i].name,mx,py+30);
+    ctx.fillStyle='#cfc6b4';ctx.font='11px "Courier New",monospace';
+    let yy=evoWrap(br[i].desc||'',mx,py+54,pw-26,15);
+    ctx.fillStyle='#9a8f7c';ctx.font='italic 10px "Courier New",monospace';
+    evoWrap(br[i].kit||'',mx,Math.max(yy+8,py+ph-44),pw-26,13);
+  }
+  ctx.restore();
+}
+function evoWrap(txt,cx,y,maxw,lh){ // tiny centered word-wrap; returns the y after the last line
+  const words=(''+txt).split(' ');let line='',yy=y;
+  for(const w of words){const t=line?line+' '+w:w;
+    if(ctx.measureText(t).width>maxw&&line){ctx.fillText(line,cx,yy);yy+=lh;line=w;}else line=t;}
+  if(line){ctx.fillText(line,cx,yy);yy+=lh;}
+  return yy;
 }
 /* ============ HOST API ============ */
 const api={
   frame:tick,resize,keys,mouse,stick,
   doSlash,doParry,doHeavy,doRoll,heavyRelease,
   startIntro,endIntro,startFight,fullReset,toBoard,
-  pointerAttack:(x,y)=>{if(S.mode==='fight'){mouse.x=x;mouse.y=y;P.face=ang(P,mouse);doSlash();}},
+  pointerAttack:(x,y)=>{if(P.evoPick){evoClick(x,y);return;}if(S.mode==='fight'){mouse.x=x;mouse.y=y;P.face=ang(P,mouse);doSlash();}},
   pointerMove:(x,y)=>{mouse.x=x;mouse.y=y;},
   clearDecals:()=>{},
   get S(){return S;},get P(){return P;},get enemies(){return enemies;},
   get demons(){return demons;},get wolves(){return wolves;},
   get nickname(){return nickname;},get FIGHTS(){return FIGHTS;},
   maxHP,lvl,diceN,stat,
+  // item-10 inc.6: evolution internals exposed for the qa_questlines headless evo-beat checks
+  get EVOLUTIONS(){return EVOLUTIONS;},maybeOfferEvo,pickEvo,evoTick,evoClick,get evoRects(){return evoCardRects();},
   drawFighter, // render-only reuse: city NPCs/player share the arena art style
   startEncounter,setMods,usePotion,mkEnemy,addAlly,
   setPlayerSnapshot:(snap)=>{P.char=snap.char;P.kills=snap.kills;P.level=snap.level;
-    P.bladeTier=snap.bladeTier||0;Object.assign(P.base,snap.base);nickname=snap.nickname;
+    P.bladeTier=snap.bladeTier||0;P.weaponLine=snap.weaponLine||'katana';Object.assign(P.base,snap.base);nickname=snap.nickname;
     P.form='human';P.r=[16,19,23][P.bladeTier||0]||16;updateLabels();},
 };
 return api;

@@ -12,7 +12,7 @@ class WorldScene extends Phaser.Scene {
     this.walkP = 0; this.face = -Math.PI / 2;
     this.encounterActive = false;
     const GS = window.GameState;
-    if (!GS.player) GS.player = { char: 'ronin', kills: 20, level: 1, bladeTier: 1,
+    if (!GS.player) GS.player = { char: 'ronin', kills: 20, level: 1, bladeTier: 1, weaponLine: 'katana',
       base: { STR: 10, DEX: 10, CON: 10, ATK: 10 }, nickname: 'THE HEADSMAN', copper: 200, belt: [] };
     if (!GS.player.artifacts) GS.player.artifacts = [];
     if (!GS.world.questCounts) GS.world.questCounts = {};
@@ -38,7 +38,11 @@ class WorldScene extends Phaser.Scene {
       'fr-player': GSP.char === 'druid' ? { col: '#2c4430', o: { druid: true, wpnLen: 26, wpnCol: '#d8e4d0', twin: true } }
         : GSP.char === 'warlock' ? { col: '#241a30', o: { warlock: true, robe: true, wpnLen: 30, wpnCol: '#3a3046', staffTip: true, tipCol: '#b070f0', twoHand: false, headCol: '#9a9ab0' } }
         : GSP.char === 'seraph' ? { col: '#cfd6e4', o: { seraphim: true, robe: true, spear: true, spearLen: 46, headCol: '#e8e4da' } }
-        : { col: '#2c3440', o: { samurai: true, armor: GSP.bladeTier || 0, wpnLen: (GSP.bladeTier === 2 ? 62 : GSP.bladeTier === 1 ? 46 : 30), wpnCol: '#e7d9a8', thickWpn: GSP.bladeTier === 2 } },
+        : (GSP.weaponLine === 'spear'
+          ? { col: '#2c3440', o: { samurai: true, armor: GSP.bladeTier || 0, spear: true, spearLen: (GSP.bladeTier === 2 ? 70 : GSP.bladeTier === 1 ? 58 : 48), spearBladeCol: '#dfe6ee', headCol: '#caa27a' } }
+          : GSP.weaponLine === 'rifle'
+          ? { col: '#2c3440', o: { samurai: true, armor: GSP.bladeTier || 0, gun: true, headCol: '#caa27a' } }
+          : { col: '#2c3440', o: { samurai: true, armor: GSP.bladeTier || 0, wpnLen: (GSP.bladeTier === 2 ? 62 : GSP.bladeTier === 1 ? 46 : 30), wpnCol: '#e7d9a8', thickWpn: GSP.bladeTier === 2 } }),
       'fr-npc0': { col: '#4a3c30', o: {} }, 'fr-npc1': { col: '#39414a', o: { hood: true } },
       'fr-npc2': { col: '#4a2f33', o: { robe: true, headCol: '#caa27a' } }, 'fr-npc3': { col: '#3c4434', o: {} },
       'fr-wolf': { col: '#3a4a3c', o: { quad: true } },
@@ -53,7 +57,7 @@ class WorldScene extends Phaser.Scene {
     const DIRS = 8, PH = 4;
     // the player's look only changes with character/blade-tier — NEVER destroy a texture
     // a live sprite is using (that's a black screen on WebGL)
-    const frSig = GSP.char + ':' + (GSP.bladeTier || 0);
+    const frSig = GSP.char + ':' + (GSP.bladeTier || 0) + ':' + (GSP.weaponLine || 'katana');
     for (const [key, look] of Object.entries(looks)) {
       if (this.textures.exists(key)) {
         if (key !== 'fr-player' || window.__frPlayerSig === frSig) continue;
@@ -156,7 +160,7 @@ class WorldScene extends Phaser.Scene {
   spawnPlayer(x, y) {
     this.player = this.add.sprite(x, y, 'fr-player', 0).setDepth(y);
     this.keys = this.input.keyboard.addKeys('W,A,S,D,E,J,M,ESC,ONE,TWO,THREE,FOUR,FIVE,SIX,SEVEN,EIGHT');
-    this.input.keyboard.on('keydown-E', () => { if (!this.encounterActive) this.tryInteract(); });
+    this.input.keyboard.on('keydown-E', () => { if (!this.encounterActive) { QuestNav.stop(); this.tryInteract(); } }); // manual interact outranks the AUTO walk (item 14D); AUTO's own interact goes via drive()->tryInteract, not this key handler
     this.input.keyboard.on('keydown-J', () => { if (this.encounterActive) return;
       this.qlogOpen = !this.qlogOpen; CityUI.questlog(this.qlogOpen, Quests.mainFor(), window.GameState.world.flags); });
     this.input.keyboard.on('keydown-M', () => { if (!this.encounterActive) WorldMapUI.toggle(); });
@@ -175,7 +179,7 @@ class WorldScene extends Phaser.Scene {
     CityUI.belt(window.GameState.player.belt);
     // mobile: stick moves, tapping the prompt interacts, tapping belt slots drinks
     TouchStick.attach(this, p => { if (this.encounterActive) this.encCombat.pointerAttack(p.x, p.y); });
-    CityUI._onPrompt = () => { if (!this.encounterActive) this.tryInteract(); };
+    CityUI._onPrompt = () => { if (!this.encounterActive) { QuestNav.stop(); this.tryInteract(); } }; // mobile prompt-tap: manual interact outranks the AUTO walk (item 14D)
     CityUI._onBelt = i => this.useBeltSlot(i, this.encounterActive);
     CityUI._onJournal = () => { this.qlogOpen = !this.qlogOpen;
       CityUI.questlog(this.qlogOpen, Quests.mainFor(), window.GameState.world.flags); };
@@ -187,7 +191,7 @@ class WorldScene extends Phaser.Scene {
     // a tracked walk continues across zone loads
     if (QuestNav.tracking) this.time.delayedCall(150, () => QuestNav.replan(this));
     // zone music + autosave heartbeat
-    const zoneTrack = { 'karridge-city': 'city', 'thorn-grove': 'grove', 'grove-dungeon': 'dungeon', 'dragonspine': 'mountain', 'ashenveil': 'ashenveil' }[window.GameState.world.zone];
+    const zoneTrack = { 'karridge-city': 'city', 'thorn-grove': 'grove', 'grove-dungeon': 'dungeon', 'dragonspine': 'mountain', 'ashenveil': 'ashenveil', 'ash-lower': 'ashenveil' }[window.GameState.world.zone];
     if (zoneTrack) MusicMan.play(zoneTrack);
     SaveSystem.save();
     this.time.addEvent({ delay: 10000, loop: true, callback: () => { if (!this.encounterActive) SaveSystem.save(); } });
@@ -305,8 +309,88 @@ class WorldScene extends Phaser.Scene {
     CityUI.dialog(name, text, [{ label: 'Leave', fn: () => CityUI.closeDialog() }]);
   }
 
+  // ---------- WARLOCK HUNT (wq4): shared capture helper ----------
+  // Nyx's five-name hunt. Each zone drops ONE interactable that calls
+  // this.tryHuntCapture(id) — it gates on warlock + active hunt, plays the
+  // approach dialogue and two warlock options, runs the boss capture-fight,
+  // then shows the capture beat, sets the cap-* flag, and tallies "N OF 5
+  // CAGED". Keeps per-scene wiring to a single line. Returns true if the beat
+  // ran (callers early-return), false if the warlock isn't on the hunt.
+  huntIds() { return ['cap-briar', 'cap-ossuary', 'cap-cinder', 'cap-whisper', 'cap-cookie']; }
+
+  huntActive() {
+    const GS = window.GameState;
+    return !!(GS.player && GS.player.char === 'warlock'
+      && Quests.warlockHunt && GS.world.flags[Quests.warlockHunt.huntFlag] === 'active');
+  }
+
+  huntCaged() {
+    const flags = window.GameState.world.flags;
+    return this.huntIds().filter(f => flags[f]).length;
+  }
+
+  // key: 'briar' | 'ossuary' | 'cinder' | 'whisper' (zone targets) or 'varenholm' (the climax).
+  tryHuntCapture(key) {
+    if (!this.huntActive()) return false;
+    const WH = Quests.warlockHunt, flags = window.GameState.world.flags;
+    const climax = (key === 'varenholm');
+    const t = climax ? WH.varenholm : (WH.targets || []).find(x => x.id === key);
+    if (!t) return false;
+    const title = t.banner[0], sub = t.banner[1];
+    if (flags[t.flag]) {            // already caged — acknowledge and stop
+      this.signDialog(title, 'A cage already holds this one; the black carriage keeps it. The hunt moves on.');
+      return true;
+    }
+    // shared fight -> capture tail (targets and climax both end here)
+    const fight = () => {
+      CityUI.closeDialog();
+      this.startEncounter(title, sub, t.pack.map(e => Object.assign({}, e)), win => {
+        if (!win) {
+          this.floatText(this.player.x, this.player.y - 50, 'the quarry slips your leash. the carriage waits.', '#c8443a');
+          return;
+        }
+        flags[t.flag] = true;
+        const n = this.huntCaged();
+        CityUI.dialog(title, t.capture, [{
+          label: n < 5 ? '(latch the cage — ' + n + ' of 5)' : '(five cages. the road turns home.)',
+          fn: () => {
+            CityUI.closeDialog();
+            this.floatText(this.player.x, this.player.y - 56, n + ' OF 5 CAGED', '#b070f0', 16);
+            if (typeof SaveSystem !== 'undefined' && SaveSystem.save) SaveSystem.save();
+          }
+        }]);
+      }, { zoneScale: true });
+    };
+    // approach + the two warlock options (the climax stages two speakers first)
+    if (climax) {
+      CityUI.dialog(title, t.approach, [{ label: '(the bodyguard steps in)', fn: () =>
+        CityUI.dialog(t.protect.name, t.protect.line, [{ label: '(and then the dancer)', fn: () =>
+          CityUI.dialog(t.cookie.name, t.cookie.line, [
+            { label: '"Two cages, then. Hold still."', fn: fight },
+            { label: '"Never corner a dancer? Watch me."', fn: fight }]) }]) }]);
+    } else {
+      CityUI.dialog(title, t.approach, [
+        { label: t.opt[0], fn: fight },
+        { label: t.opt[1], fn: fight }]);
+    }
+    return true;
+  }
+
   // ---------- clearing encounters (pit combat host) ----------
   initEncounterHost(theme) {
+    // touch attack buttons must drive the ACTIVE overworld encounter (bound once; Hiro mobile fix)
+    window.__activeWorld = this;
+    if (!window.__worldBtnsBound) {
+      window.__worldBtnsBound = true;
+      const cur = () => window.__activeWorld;
+      const tap = (id, down, up) => { const el = document.getElementById(id); if (!el) return;
+        el.addEventListener('pointerdown', e => { e.preventDefault(); const w = cur(); if (w && w.encounterActive && w.encCombat) down(w.encCombat); });
+        if (up) el.addEventListener('pointerup', () => { const w = cur(); if (w && w.encounterActive && w.encCombat) up(w.encCombat); }); };
+      tap('bSlash', c => c.doSlash());
+      tap('bHeavy', c => c.doHeavy(), c => c.heavyRelease());
+      tap('bRoll', c => c.doRoll());
+      tap('bParry', c => c.doParry());
+    }
     const W = 1280, H = 720, DPR = 0.55;
     const texKey = 'enc-frame-' + this.scene.key;
     if (this.textures.exists(texKey)) this.textures.remove(texKey);
@@ -353,6 +437,7 @@ class WorldScene extends Phaser.Scene {
         return;
       }
       this.encCombat.keys[e.key.toLowerCase()] = true;
+      if (this.encCombat.P.evoPick) return; // item-14C: evo panel open -> number keys pick a road, not a belt item / action
       if (e.key === ' ') this.encCombat.doRoll();
       const k = e.key.toLowerCase();
       if (k === 'q') this.encCombat.doHeavy();
@@ -491,13 +576,21 @@ class WorldScene extends Phaser.Scene {
     const GS = window.GameState, P = GS.player;
     const fs = this.fieldScale();
     const zd = (opts && opts.zoneScale) ? this.zoneDifficulty() : { hp: 1, dmg: 1 };
+    const ENEMY_HP_SCALE = 0.5; // base enemy HP tuning
+    // bosses x5; regular monsters scale by territory (this.territoryHpMult): forest 2, undead 4, mountain 8 (Hiro)
+    const terr = this.territoryHpMult || 1;
     pack = pack.map(e => Object.assign({}, e, {
-      hp: Math.round(e.hp * fs * zd.hp),
-      maxhp: Math.round((e.maxhp || e.hp) * fs * zd.hp),
-      dmgScale: (e.dmgScale || 1) * zd.dmg }));
+      hp: Math.max(1, Math.round(e.hp * fs * zd.hp * ENEMY_HP_SCALE * (e.boss ? 5 : terr))),
+      maxhp: Math.max(1, Math.round((e.maxhp || e.hp) * fs * zd.hp * ENEMY_HP_SCALE * (e.boss ? 5 : terr))),
+      dmgScale: (e.dmgScale || 1) * zd.dmg * (this.territoryDmgMult || 1) }));
     this.encounterActive = true;
     if (window.IS_PHONE) this.cameras.main.setZoom(1); // the arena frame needs the full window
     this.encImg.setVisible(true);
+    // The combat overlay sits at depth 95, but field sprites use setDepth(y) (hundreds+),
+    // so non-combat monsters/NPCs would otherwise draw on top of the fight. Hide every
+    // currently-visible field object for the duration of the encounter; restored in onEnd.
+    this._hiddenForEnc = this.children.list.filter(o => o !== this.encImg && o.visible);
+    this._hiddenForEnc.forEach(o => o.setVisible(false));
     this.encCombat.setPlayerSnapshot(P);
     this.encCombat.setMods(this.artifactMods());
     // the companion fights beside you
@@ -510,10 +603,13 @@ class WorldScene extends Phaser.Scene {
       P.kills = this.encCombat.P.kills;
       P.level = Math.min(10, Math.floor(this.encCombat.P.level || P.level));
       P.bladeTier = this.encCombat.P.bladeTier || P.bladeTier;
+      P.weaponLine = this.encCombat.P.weaponLine || P.weaponLine || 'katana';
       P.nickname = this.encCombat.nickname;
       CityUI.setIdentity(P.nickname); CityUI.belt(P.belt);
       this.encounterActive = false;
       this.encImg.setVisible(false);
+      // restore the field sprites we hid when the encounter began
+      if (this._hiddenForEnc) { this._hiddenForEnc.forEach(o => o.setVisible(true)); this._hiddenForEnc = null; }
       if (window.IS_PHONE) this.cameras.main.setZoom(1.18); // lean back in for the road
       document.getElementById('hud').style.display = 'none';
       document.getElementById('controls').style.display = 'none';

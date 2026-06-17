@@ -68,6 +68,21 @@ class AshenveilScene extends WorldScene {
     this.add.text(ddx, by * T - 10, 'THE ASHENVEIL ACADEMY', { fontFamily: 'Courier New', fontSize: '11px', color: '#9af0c0' }).setOrigin(0.5).setDepth(ddy + 2);
     this.addLight(ddx, ddy, 120, false);
     this.interactables.push({ x: ddx, y: ddy - 10, label: 'enter the ASHENVEIL ACADEMY', fn: () => this.nyxDialog() });
+    // ---------- STAIRS DOWN to the lower levels (item 13 raid zone; "not a metaphor") ----------
+    const slx = 33 * T, sly = 15 * T;
+    const slg = this.add.graphics().setDepth(sly);
+    slg.fillStyle(0x0c0a12, 1); slg.fillRect(slx - 26, sly - 14, 52, 30);
+    slg.lineStyle(1, 0x9af0c0, 0.6); slg.strokeRect(slx - 26, sly - 14, 52, 30);
+    for (let i = 0; i < 4; i++) { slg.lineStyle(1, 0x9af0c0, 0.4); slg.lineBetween(slx - 22 + i * 12, sly - 10, slx - 22 + i * 12, sly + 10); }
+    this.add.text(slx, sly - 22, 'THE LOWER LEVELS', { fontFamily: 'Courier New', fontSize: '9px', color: '#9af0c0' }).setOrigin(0.5).setDepth(sly + 2);
+    this.addLight(slx, sly, 70, false);
+    this.interactables.push({ x: slx, y: sly, label: 'descend the stairs to the LOWER LEVELS', fn: () => {
+      // light the optional lower-levels objective the moment a champion chooses to descend (item 13
+      // gate) so the journal/AUTO can navigate the undercroft; never auto-set, so it can't divert the main quest.
+      const _fl = window.GameState.world.flags; if (!_fl['q-ash-raid'] && !_fl['ash-lower-boss']) _fl['q-ash-raid'] = 'active';
+      window.GameState.world.zone = 'ash-lower';
+      this.scene.start('AshLowerScene');
+    }});
 
     // ---------- the working dead ----------
     this.bakeFrames({ 'fr-deadworker': { col: '#8a8474', o: { skull: true } },
@@ -91,8 +106,28 @@ class AshenveilScene extends WorldScene {
     this.interactables.push({ x: 38 * T, y: 24 * T, label: 'read the boundary stone', fn: () =>
       this.signDialog('THE BOUNDARY STONE', 'ASHENVEIL PROVING GROUNDS — VISITORS REGISTER AT THE ACADEMY. The letters are carved deep and recent. Below them, older, almost worn away: a name the rumors only whisper, and below THAT, scratched by some long-dead student: "the lower levels are NOT a metaphor."') });
 
+    // ---------- WARLOCK HUNT (wq4): Whisper, the Ninth Ward ----------
+    // Only the warlock, with Nyx's hunt active and Whisper not yet caged, sees the
+    // blindfolded listener standing in a fallow row. tryHuntCapture('whisper') runs
+    // the approach -> capture-fight (collector boss). Placed in the open lower-middle
+    // field, clear of the Academy (x28-43/y5-13), the hedge blocks ([8,10],[34,18],
+    // [14,22]), and the other interactables (working dead 10,14 / boundary 38,24 /
+    // carriage 24,30).
+    if (this.huntActive() && !flags['cap-whisper']) {
+      const wsX = 16 * T, wsY = 28 * T;
+      const wsG = this.add.graphics().setDepth(wsY);
+      wsG.lineStyle(2, 0x2a2430, 0.8); wsG.lineBetween(wsX - 34, wsY + 10, wsX + 34, wsY + 6); // the fallow row
+      wsG.fillStyle(0x6a6470, 1); wsG.fillRect(wsX - 6, wsY - 8, 12, 22);   // grey shift
+      wsG.fillStyle(0xc8c2b8, 1); wsG.fillCircle(wsX, wsY - 14, 7);         // pale head, cocked to listen
+      wsG.fillStyle(0x9af0c0, 0.95); wsG.fillRect(wsX - 7, wsY - 15, 14, 3); // bound eyes (academy green)
+      for (let i = 0; i < 4; i++) { wsG.lineStyle(1, 0x9af0c0, 0.35 - i * 0.07); wsG.strokeCircle(wsX, wsY - 14, 16 + i * 9); } // what she hears
+      this.addLight(wsX, wsY, 70, false);
+      this.interactables.push({ x: wsX, y: wsY, label: 'a blindfolded woman listens to an empty field', fn: () => this.tryHuntCapture('whisper') });
+    }
+
     // ---------- player + the carriage home ----------
     this.spawnPlayer(24 * T, (MH - 4) * T);
+    this.territoryHpMult = 4; // undead tier (Hiro HP ladder)
     const cg = this.add.graphics().setDepth((MH - 3) * T);
     cg.fillStyle(0x0c0a12); cg.fillRect(24 * T - 60, (MH - 3) * T - 16, 58, 32);
     cg.lineStyle(1, 0x9af0c0, 0.5); cg.strokeRect(24 * T - 60, (MH - 3) * T - 16, 58, 32);
@@ -142,10 +177,18 @@ class AshenveilScene extends WorldScene {
       gravewights: { tex: 'fr-gravewight', n: 2, name: 'GRAVE WIGHTS', sub: 'they remember how to fence',
         spawn: n => Array.from({ length: n }, (_, i) => ({ type: 'grave', x: 640 + Math.cos(i * 3.1) * 180, y: 300 + Math.sin(i * 3.1) * 110,
           hp: 320, maxhp: 320, spd: 130, r: 14, col: '#4a4452', stance: 'open', stanceT: 1, dmgScale: 1.4 })) },
+      // --- BOSS: Provost Mortain (Hiro) - immune until his 3 totems are broken ---
+      boss_mortain: { tex: 'fr-darkmage', n: 1, name: 'PROVOST MORTAIN', sub: 'break his wards before you can touch him',
+        spawn: () => [
+          { type: 'warden', boss: true, deathCol: '#9af0c0', x: 640, y: 268, r: 22, hp: 700, maxhp: 700, spd: 95, col: '#5a6a4a', wpn: '#9af0c0', dmgScale: 1.4 },
+          { type: 'totem', x: 470, y: 360, r: 16, hp: 120, maxhp: 120, spd: 0, col: '#cfc6b4', wpn: '#9a9080', dmgScale: 1 },
+          { type: 'totem', x: 810, y: 360, r: 16, hp: 120, maxhp: 120, spd: 0, col: '#cfc6b4', wpn: '#9a9080', dmgScale: 1 },
+          { type: 'totem', x: 640, y: 200, r: 16, hp: 120, maxhp: 120, spd: 0, col: '#cfc6b4', wpn: '#9a9080', dmgScale: 1 },
+        ] },
     };
     for (const [kind, spots] of Object.entries({ skeletons: [[10, 18], [34, 26]], zombies: [[18, 26], [40, 16]],
       vampires: [[8, 7]], werewolves: [[42, 30]], darkmages: [[16, 12]],
-      wraiths: [[30, 8]], ghouls: [[22, 28]], bonegolem: [[44, 22]], banshees: [[6, 24]], gravewights: [[38, 10]] }))
+      wraiths: [[30, 8]], ghouls: [[22, 28]], bonegolem: [[44, 22]], banshees: [[6, 24]], gravewights: [[38, 10]], boss_mortain: [[24, 32]] }))
       for (const [sx, sy] of spots) mkPack(sx * T, sy * T, A_DEFS[kind]);
 
     this.initEncounterHost(null);
@@ -159,29 +202,55 @@ class AshenveilScene extends WorldScene {
   }
 
   nyxDialog() {
-    const W = Quests.warlockEpilogue, flags = window.GameState.world.flags, N = W.nyx;
+    const W = Quests.warlockEpilogue, H = Quests.warlockHunt, flags = window.GameState.world.flags, N = W.nyx;
     if (window.GameState.player.char !== 'warlock') { // the Matron receives exactly one champion
       const refusal = 'A registrar with no pulse takes your name without writing it down. "The Academy is not receiving. The proving grounds are THAT way." Behind the cold doors, something pauses — weighs you the way a ledger weighs a number it does not need yet — and moves on.';
       this.signDialog('THE ASHENVEIL ACADEMY', refusal); return;
     }
-    if (flags['q-wq3-the-matron'] === 'done') {
-      this.signDialog('THE ASHENVEIL ACADEMY', 'The great hall is empty. The cold is not. Somewhere below — and the lower levels are not a metaphor — the web is already drafting your first contract.'); return;
-    }
     const portrait = this.nyxPortrait();
-    const done = () => {
+    const cagedCount = () => H.targets.reduce((n, t) => n + (flags[t.flag] ? 1 : 0), 0) + (flags[H.varenholm.flag] ? 1 : 0);
+
+    // the hunt is delivered and done: the great hall, and the web's next name
+    if (flags[H.huntFlag] === 'done') {
+      this.signDialog('THE ASHENVEIL ACADEMY', 'The great hall is empty. The cold is not. Somewhere below — and the lower levels are not a metaphor — the web is already drafting your next contract.'); return;
+    }
+
+    // the hunt is on: DELIVER when all five are caged, otherwise send the warlock back out
+    if (flags[H.huntFlag] === 'active') {
+      const caged = cagedCount();
+      if (caged >= 5) {
+        const D = H.deliver;
+        flags[H.huntFlag] = 'done';
+        flags['credits-rolled'] = true;
+        CityUI.dialog(D.name, D.line, [{ label: D.go[0], fn: () => {
+          CityUI.closeDialog();
+          this.floatText(this.player.x, this.player.y - 60, 'THE WARLOCK\'S ROAD — complete', '#9af0c0', 16);
+          setTimeout(() => CityUI.credits(D.credits), 2200);
+        }}], portrait);
+      } else {
+        const left = 5 - caged;
+        const midHunt = 'The Matron does not rise. She reads the empty floor where the cages will stand, and finds it wanting. "' + caged + ' of five, warlock. The web does not pay on credit." A pause, precise as a ledger line. "Bring me the rest — ' + left + ' still breathing, still loose — and the Order may scream your name into a pillow forever. The black carriage knows the way back out."';
+        CityUI.dialog(N.name, midHunt, [{ label: '"' + left + ' to go. The hunt continues."', fn: () => CityUI.closeDialog() }], portrait);
+      }
+      return;
+    }
+
+    // first meeting: the reveal, the offer, and the LAUNCH of the hunt (no credits yet)
+    const launch = () => {
       flags['q-wq3-the-matron'] = 'done';
-      flags['credits-rolled'] = true;
-      CityUI.dialog(N.name, N.done, [{ label: 'The hunt continues. It hunts for the web now.', fn: () => {
-        CityUI.closeDialog();
-        this.floatText(this.player.x, this.player.y - 60, 'THE WARLOCK\'S ROAD — complete', '#9af0c0', 16);
-        setTimeout(() => CityUI.credits(N.credits), 2200);
-      }}], portrait);
+      flags[H.huntFlag] = 'active';
+      const L = H.launch;
+      CityUI.dialog(L.name, L.brief, [{ label: 'Read the five names.', fn: () =>
+        CityUI.dialog(L.name, L.charge, [{ label: L.go[0], fn: () => {
+          CityUI.closeDialog();
+          this.floatText(this.player.x, this.player.y - 60, 'THE HUNT — bring back five, breathing', '#9af0c0', 16);
+        }}], portrait) }], portrait);
     };
     CityUI.dialog(N.name, N.reveal1, [{ label: '"You keep meticulous books, Matron."', fn: () =>
       CityUI.dialog(N.name, N.reveal2, [{ label: '"I see the shape. Name the terms."', fn: () =>
         CityUI.dialog(N.name, N.offer, [
-          { label: '"Protection for procurement. Clean arithmetic. Accepted."', fn: done },
-          { label: '"Point the web at the prey. I\'ll mind the bruising."', fn: done }], portrait) }], portrait) }], portrait);
+          { label: '"Protection for procurement. Clean arithmetic. Accepted."', fn: launch },
+          { label: '"Point the web at the prey. I\'ll mind the bruising."', fn: launch }], portrait) }], portrait) }], portrait);
   }
 
   nyxPortrait() {
@@ -203,9 +272,11 @@ class AshenveilScene extends WorldScene {
     this.updateAtmosphere(time, dt);
 
     // feral packs wander + aggro (guild hunts; the Veil restocks every visit)
+    const talking = CityUI.dialogOpen() || this.encounterActive || this.cinematic;
     for (const pk of this.packs) {
       if (!pk.alive) continue;
       pk.wanderT -= dt;
+      if (talking) continue; // no wander/aggro while a dialog or cinematic is open
       for (const s of pk.sprs) {
         if (pk.wanderT <= 0) { s.tx = pk.x + (Math.random() - 0.5) * 110; s.ty = pk.y + (Math.random() - 0.5) * 110; }
         if (s.tx !== undefined) {
@@ -217,7 +288,7 @@ class AshenveilScene extends WorldScene {
       }
       if (pk.wanderT <= 0) pk.wanderT = 2 + Math.random() * 3;
       const d = Math.hypot(pk.sprs[0].x - this.player.x, pk.sprs[0].y - this.player.y);
-      if (d < 130) {
+      if (d < 130 && !CityUI.dialogOpen() && !this.encounterActive && !this.cinematic) {
         pk.alive = false;
         this.startEncounter(pk.def.name, pk.def.sub, pk.def.spawn(pk.def.n), win => {
           if (win) {

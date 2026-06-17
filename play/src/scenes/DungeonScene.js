@@ -56,6 +56,7 @@ class DungeonScene extends WorldScene {
 
     this.bakeFrames();
     this.spawnPlayer(5 * T, 4 * T);
+    this.territoryHpMult = 2; // root-hollow (forest tier) (Hiro HP ladder)
     if (window.GameState.world.activeFollower) this.spawnFollower(window.GameState.world.activeFollower);
     this.initEncounterHost(GROVE_THEME);
     this.cameras.main.setBounds(0, 0, WPX, HPX).startFollow(this.player, true, 0.12, 0.12);
@@ -77,6 +78,9 @@ class DungeonScene extends WorldScene {
       [{ type: 'brute', x: 640, y: 260, hp: 220, maxhp: 220, spd: 72, r: 21, col: '#3a4a44', dmgScale: 1.3 },
        { type: 'skel', x: 520, y: 340, hp: 60, maxhp: 60, spd: 125, r: 11, col: '#b8b0a0', dmgScale: 1 },
        { type: 'skel', x: 760, y: 340, hp: 60, maxhp: 60, spd: 125, r: 11, col: '#b8b0a0', dmgScale: 1 }]);
+    // --- BOSS: Ossuar, the Marrow Throne (Hiro monster expansion) ---
+    mk(38, 27, 'dg-boss-ossuar', 'OSSUAR, THE MARROW THRONE', 'the thing the Keeper was set to guard',
+      [{ type: 'necro', boss: true, deathCol: '#7fd0ff', x: 640, y: 260, r: 20, hp: 700, maxhp: 700, spd: 70, col: '#b8b0a0', wpn: '#7fd0ff', dmgScale: 1.35 }]);
 
     // the artifact chest — guarded by the keeper ambush
     const propsTex = this.textures.get('cainos-props');
@@ -91,6 +95,20 @@ class DungeonScene extends WorldScene {
       GS.player.artifacts.push('ley-shard');
       this.floatText(35 * T, 25 * T - 50, 'LEY-SHARD — abilities +10% damage (permanent)', '#3df0c8', 15);
     }});
+
+    // ---------- WARLOCK HUNT (wq4): Ossuary, the Quiet Boy ----------
+    // Only the warlock, with Nyx's hunt active and Ossuary not yet caged, sees the
+    // bone-cairn. tryHuntCapture('ossuary') runs the approach -> capture-fight (necro boss).
+    if (this.huntActive() && !GS.world.flags['cap-ossuary']) {
+      const osX = 7 * T, osY = 14 * T;
+      const osG = this.add.graphics().setDepth(osY);
+      osG.fillStyle(0x0d0b10, 1); osG.fillEllipse(osX, osY + 4, 60, 30);
+      osG.fillStyle(0x9a9284, 0.85);
+      for (let i = 0; i < 9; i++) { const a = i * 0.7; osG.fillRect(osX + Math.cos(a) * 18 - 2, osY + Math.sin(a) * 10 - 6, 4, 12); }
+      osG.fillStyle(0xcfe6ff, 0.95); osG.fillCircle(osX, osY - 8, 6);
+      this.addLight(osX, osY, 75, false);
+      this.interactables.push({ x: osX, y: osY, label: 'a quiet boy sits among the bones', fn: () => this.tryHuntCapture('ossuary') });
+    }
 
     // exit
     this.interactables.push({ x: 5 * T, y: 3 * T, label: 'climb back to the grove', fn: () => {
@@ -107,7 +125,7 @@ class DungeonScene extends WorldScene {
 
     for (const a of this.ambushes) {
       if (a.done || window.GameState.world.flags[a.id]) continue;
-      if (Math.hypot(a.x - this.player.x, a.y - this.player.y) < 110) {
+      if (Math.hypot(a.x - this.player.x, a.y - this.player.y) < 110 && !CityUI.dialogOpen() && !this.encounterActive && !this.cinematic) {
         a.done = true;
         this.startEncounter(a.name, a.sub, a.pack, win => {
           if (win) window.GameState.world.flags[a.id] = 'cleared';

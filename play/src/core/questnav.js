@@ -11,7 +11,7 @@ const QuestNav = {
   path: [], pathI: 0,
   autoDialog: false,             // FULL opened the current dialog
   dialogT: 0,
-  _zoneOf: { 'karridge-city': 'CityScene', 'thorn-grove': 'GroveScene', 'grove-dungeon': 'DungeonScene', 'varenholm': 'VarenholmScene', 'dragonspine': 'MountainScene', 'ashenveil': 'AshenveilScene' },
+  _zoneOf: { 'karridge-city': 'CityScene', 'thorn-grove': 'GroveScene', 'grove-dungeon': 'DungeonScene', 'varenholm': 'VarenholmScene', 'dragonspine': 'MountainScene', 'ashenveil': 'AshenveilScene', 'ash-lower': 'AshLowerScene' },
 
   cycleMode() {
     this.setMode((this.mode + 1) % 3);
@@ -58,6 +58,19 @@ const QuestNav = {
       if (!f['varenholm-show-seen']) return at('varenholm', 1248, 416, true, 'the Civic Auditorium');
       return at('varenholm', 864, 896, true, 'the Adventurers Guild — Cookie');
     }
+    // the Druid's Varenholm CROSSING must happen BEFORE the road home: after the dancer
+    // job, route her to the cult crossing (the Adventurers Guild — Cookie) until it
+    // resolves. Once the flight (dq-cross-flee) is set, the Shen Sama meet is up on the
+    // gated Dragonspine (reachable only via the guild re-climb), so funnel her there.
+    if (f['q-mq6-the-dancer'] === 'done' && druid && f['q-dq-the-crossing'] !== 'done') {
+      if (f['dq-cross-flee']) { // phases 1-3 done — find Shen Sama on the Dragonspine
+        if (GS.world.zone === 'dragonspine') return at('dragonspine', 26 * T, 8 * T, true, 'Shen Sama — the cold hollow');
+        if (GS.world.zone === 'varenholm') return at('varenholm', 864, 896, true, 'the guild — climb back to the Dragonspine');
+        return at('karridge-city', 1656, 744, true, 'the heartland coach to Varenholm');
+      }
+      if (GS.world.zone === 'varenholm') return at('varenholm', 864, 896, true, 'the Adventurers Guild — the crossing');
+      return at('karridge-city', 1656, 744, true, 'the heartland coach to Varenholm');
+    }
     // after Cookie: the road home rolls the credits — guide her to the coach so she's never stranded
     if (f['q-mq6-the-dancer'] === 'done' && druid && !f['credits-rolled']) {
       if (GS.world.zone === 'varenholm') return at('varenholm', 896, 1088, true, 'the coach home — your road south');
@@ -73,6 +86,64 @@ const QuestNav = {
         return at('ashenveil', 1136, 416, true, 'the Ashenveil academy — Lady Nyx');
       }
     }
+    // the warlock's hunt (wq4): five cages in order, then deliver them to Nyx. Dragonspine
+    // and Varenholm are reachable only via the cult coach in the city (1538,744).
+    if (warlock && f['q-wq4-the-hunt'] === 'active') {
+      const hunt = [
+        ['cap-briar', 'thorn-grove', 18 * T, 42 * T, 'Briar in the thorn-grove'],
+        ['cap-ossuary', 'grove-dungeon', 7 * T, 14 * T, 'Ossuary in the dungeon'],
+        ['cap-cinder', 'dragonspine', 34 * T, 18 * T, 'Cinder on the Dragonspine'],
+        ['cap-whisper', 'ashenveil', 16 * T, 28 * T, 'Whisper at the Academy'],
+        ['cap-cookie', 'varenholm', 16 * T, 24 * T, 'Cookie in Varenholm'],
+      ];
+      const next = hunt.find(h => !f[h[0]]);
+      if (!next) return at('ashenveil', 1136, 416, true, 'Lady Nyx — deliver the five cages');
+      const gated = next[1] === 'dragonspine' || next[1] === 'varenholm';
+      if (gated && GS.world.zone !== next[1]) // gated zones: only the city's cult coach can get the warlock there
+        return at('karridge-city', 1538, 744, true, 'the cult coach — ' + next[4]);
+      return at(next[1], next[2], next[3], true, next[4]);
+    }
+    // the ronin's epilogue (rq): after his original ending, Marlow's tip -> the guild clerk.
+    // (Beats 2+ — the spine passage, Vorathiel, the temple — are wired in following runs.)
+    const ronin = GS.player && GS.player.char === 'ronin';
+    if (ronin && f['q-mq5-ash-and-silence'] === 'done') {
+      if (!f['q-rq-epilogue']) return at('karridge-city', 640, 704, true, 'the Last Lantern \u2014 Marlow');
+      if (f['q-rq-epilogue'] === 'active' && !f['rq-epi-guild'])
+        return at('karridge-city', 1568, 704, true, 'the Adventurers Guild \u2014 the clerk');
+      // beat 3: the spine passage. Once the guild gave the writ, only the city's spine-coach can
+      // reach the gated Dragonspine; there the ronin searches for the Seraphim (Vorathiel descent wired next run).
+      if (f['rq-epi-guild'] && !f['rq-epi-vorathiel']) {
+        if (GS.world.zone !== 'dragonspine') return at('karridge-city', 1538, 744, true, 'the spine-coach \u2014 up the Dragonspine');
+        return at('dragonspine', 1088, 576, false, 'search the peak for the Seraphim');
+      }
+      // beat 6: the defiled temple. After Vorathiel, head to the Skyreach shrine and close the gate;
+      // once cleared, the Seraphim arrives at the scarred shrine (beat 7 wired a following run).
+      // Off the spine, route to the city spine-coach (mirrors the vorathiel guard).
+      if (f['rq-epi-vorathiel'] === 'done' && !f['rq-epi-temple']) {
+        if (GS.world.zone !== 'dragonspine') return at('karridge-city', 1538, 744, true, 'the spine-coach \u2014 up the Dragonspine');
+        return at('dragonspine', 32 * T, 5 * T, true, 'the defiled Skyreach shrine \u2014 close the gate');
+      }
+      if (f['rq-epi-temple'] === 'done' && !f['rq-epi-seraph']) {
+        if (GS.world.zone !== 'dragonspine') return at('karridge-city', 1538, 744, true, 'the spine-coach \u2014 up the Dragonspine');
+        return at('dragonspine', 32 * T, 5 * T, true, 'the Seraphim \u2014 the scarred shrine');
+      }
+      // beat 8: the angel has spoken (rq-epi-seraph done) but the epilogue is not yet closed —
+      // carry word back to the city guild for the turn-in. Once q-rq-epilogue is 'done', fall to null.
+      if (f['rq-epi-seraph'] === 'done' && f['q-rq-epilogue'] !== 'done')
+        return at('karridge-city', 1568, 704, true, 'the Adventurers Guild \u2014 report to the clerk');
+    }
+    // ---- OPTIONAL SIDE RAID: the Ashenveil lower levels (item 13). LOWEST priority — it
+    // only routes when q-ash-raid is active and the finale isn't cleared, so it can never
+    // divert a main questline (every story beat returns earlier). Path: the Academy stairs
+    // down -> the Warden of the Unfiled (proximity mini-boss) -> the Deep Door finale. Once
+    // ash-lower-boss is set the raid resolves to null (the story rests) — never a hard-block.
+    if (f['q-ash-raid'] === 'active' && !f['ash-lower-boss']) {
+      if (GS.world.zone === 'ash-lower') {
+        if (!f['ash-lower-miniboss']) return at('ash-lower', 22 * T, 8 * T, false, 'the Warden of the Unfiled');
+        return at('ash-lower', 20 * T, 2 * T + 38, true, 'the DEEP DOOR \u2014 the last room');
+      }
+      return at('ashenveil', 33 * T, 15 * T, true, 'the stairs to the LOWER LEVELS');
+    }
     return null;
   },
 
@@ -80,11 +151,13 @@ const QuestNav = {
   nextHop(from, to) {
     const HOPS = {
       'karridge-city': { 'thorn-grove': { x: 1120, y: 24, interact: false }, 'grove-dungeon': { x: 1120, y: 24, interact: false }, 'varenholm': { x: 1656, y: 744, interact: true }, 'dragonspine': { x: 1120, y: 24, interact: false }, 'ashenveil': { x: 1656, y: 744, interact: true } },
-      'thorn-grove': { 'karridge-city': { x: 1088, y: 1572, interact: false }, 'varenholm': { x: 1088, y: 1572, interact: false }, 'grove-dungeon': { x: 1984, y: 1344, interact: true }, 'dragonspine': { x: 2216, y: 320, interact: false } },
+      'thorn-grove': { 'karridge-city': { x: 1088, y: 1572, interact: false }, 'varenholm': { x: 1088, y: 1572, interact: false }, 'grove-dungeon': { x: 1984, y: 1344, interact: true }, 'dragonspine': { x: 2216, y: 320, interact: false }, 'ashenveil': { x: 1088, y: 1572, interact: false } },
       'grove-dungeon': { 'thorn-grove': { x: 160, y: 96, interact: true }, 'karridge-city': { x: 160, y: 96, interact: true }, 'varenholm': { x: 160, y: 96, interact: true }, 'dragonspine': { x: 160, y: 96, interact: true } },
-      'varenholm': { 'karridge-city': { x: 896, y: 1088, interact: true }, 'thorn-grove': { x: 896, y: 1088, interact: true }, 'grove-dungeon': { x: 896, y: 1088, interact: true }, 'dragonspine': { x: 896, y: 1088, interact: true } },
-      'dragonspine': { 'thorn-grove': { x: 864, y: 1380, interact: false }, 'karridge-city': { x: 864, y: 1380, interact: false }, 'grove-dungeon': { x: 864, y: 1380, interact: false }, 'varenholm': { x: 864, y: 1380, interact: false } },
+      'varenholm': { 'karridge-city': { x: 896, y: 1088, interact: true }, 'thorn-grove': { x: 896, y: 1088, interact: true }, 'grove-dungeon': { x: 896, y: 1088, interact: true }, 'dragonspine': { x: 896, y: 1088, interact: true }, 'ashenveil': { x: 896, y: 1088, interact: true } },
+      'dragonspine': { 'thorn-grove': { x: 864, y: 1380, interact: false }, 'karridge-city': { x: 864, y: 1380, interact: false }, 'grove-dungeon': { x: 864, y: 1380, interact: false }, 'varenholm': { x: 864, y: 1380, interact: false }, 'ashenveil': { x: 864, y: 1380, interact: false } },
       'ashenveil': { 'karridge-city': { x: 738, y: 992, interact: true }, 'thorn-grove': { x: 738, y: 992, interact: true }, 'grove-dungeon': { x: 738, y: 992, interact: true }, 'varenholm': { x: 738, y: 992, interact: true }, 'dragonspine': { x: 738, y: 992, interact: true } },
+      // the undercroft climbs back to Ashenveil via the stair interactable (failsafe — AUTO can never be stranded below)
+      'ash-lower': { 'ashenveil': { x: 640, y: 819, interact: true }, 'karridge-city': { x: 640, y: 819, interact: true }, 'thorn-grove': { x: 640, y: 819, interact: true }, 'grove-dungeon': { x: 640, y: 819, interact: true }, 'varenholm': { x: 640, y: 819, interact: true }, 'dragonspine': { x: 640, y: 819, interact: true } },
     };
     return (HOPS[from] || {})[to] || null;
   },

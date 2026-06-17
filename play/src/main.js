@@ -50,8 +50,21 @@ const config = {
   backgroundColor: '#0a0808',
   pixelArt: true,
   physics: { default: 'arcade', arcade: { debug: false } },
-  scale: { mode: fillScreen ? Phaser.Scale.ENVELOP : Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-  scene: [ArenaScene, CityScene, GroveScene, DungeonScene, VarenholmScene, MountainScene, AshenveilScene]
+  scale: { mode: window.IS_PHONE ? Phaser.Scale.ENVELOP : Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+  scene: [ArenaScene, CityScene, GroveScene, DungeonScene, VarenholmScene, MountainScene, AshenveilScene, AshLowerScene]
 };
 
 window.game = new Phaser.Game(config);
+
+// Mobile: keep the canvas filling the screen across orientation changes (Hiro mobile fix)
+(function () {
+  const apply = () => { try {
+    const phone = Math.min(window.innerWidth, window.innerHeight) <= 520;
+    if (window.game && window.game.scale) {
+      window.game.scale.scaleMode = phone ? Phaser.Scale.ENVELOP : Phaser.Scale.FIT;
+      window.game.scale.refresh();
+    }
+  } catch (e) {} };
+  window.addEventListener('resize', apply);
+  window.addEventListener('orientationchange', () => setTimeout(apply, 250));
+})();
