@@ -573,6 +573,7 @@ class WorldScene extends Phaser.Scene {
   }
 
   startEncounter(name, sub, pack, onEnd, opts) {
+    if (this.encounterActive) return; // never start a second encounter over a live one (no duplicate HUD/combat)
     const GS = window.GameState, P = GS.player;
     const fs = this.fieldScale();
     const zd = (opts && opts.zoneScale) ? this.zoneDifficulty() : { hp: 1, dmg: 1 };
@@ -584,6 +585,7 @@ class WorldScene extends Phaser.Scene {
       maxhp: Math.max(1, Math.round((e.maxhp || e.hp) * fs * zd.hp * ENEMY_HP_SCALE * (e.boss ? 5 : terr))),
       dmgScale: (e.dmgScale || 1) * zd.dmg * (this.territoryDmgMult || 1) }));
     this.encounterActive = true;
+    try { CityUI.hud(false); } catch (e) {} // hide the city top bar during combat — the fight HUD owns the top now (prevents a duplicate health-bar/top-controls overlay)
     if (window.IS_PHONE) this.cameras.main.setZoom(1); // the arena frame needs the full window
     this.encImg.setVisible(true);
     // The combat overlay sits at depth 95, but field sprites use setDepth(y) (hundreds+),
@@ -613,6 +615,7 @@ class WorldScene extends Phaser.Scene {
       if (window.IS_PHONE) this.cameras.main.setZoom(1.18); // lean back in for the road
       document.getElementById('hud').style.display = 'none';
       document.getElementById('controls').style.display = 'none';
+      try { CityUI.hud(true); } catch (e) {} // bring the city HUD back now the fight HUD is gone
       onEnd(win);
     });
     const b = document.getElementById('banner'), b1 = b.querySelector('.b1');

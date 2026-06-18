@@ -28,7 +28,7 @@
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
   html,body{width:100%;height:100%;overflow:hidden;background:var(--ink);font-family:'Courier New',monospace;color:var(--bone);touch-action:none}
   input{user-select:text;-webkit-user-select:text}
-  #game-container{position:fixed;inset:0}
+  #game-container{position:fixed;inset:0;touch-action:none;overscroll-behavior:none}
   #game-container canvas{image-rendering:pixelated}
   /* ---------- HUD ---------- */
   #hud{position:fixed;top:0;left:0;right:0;padding:max(8px,env(safe-area-inset-top)) 12px 6px;display:none;pointer-events:none;z-index:5}
@@ -43,17 +43,17 @@
   #bosshpw{height:8px;background:#1b1410;border:1px solid #000}
   #bosshp{height:100%;background:linear-gradient(#b78a2f,#7a5414)}
   /* ---------- TOUCH CONTROLS ---------- */
-  #controls{position:fixed;inset:0;display:none;z-index:6;pointer-events:none}
+  #controls{position:fixed;inset:0;display:none;z-index:30;pointer-events:none}
   .btn{position:absolute;border-radius:50%;border:2px solid rgba(231,180,80,.5);background:rgba(20,14,9,.55);color:var(--gold);
        display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:11px;letter-spacing:2px;
-       text-transform:uppercase;backdrop-filter:blur(2px);box-shadow:inset 0 0 18px rgba(0,0,0,.6);pointer-events:auto}
+       text-transform:uppercase;backdrop-filter:blur(2px);box-shadow:inset 0 0 18px rgba(0,0,0,.6);pointer-events:auto;touch-action:none}
   .btn:active,.btn.held{background:rgba(200,146,58,.35);border-color:var(--gold)}
   .btn .cd{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.65);transform-origin:center;display:none}
   #bSlash{right:18px;bottom:max(26px,env(safe-area-inset-bottom));width:92px;height:92px;font-size:13px}
   #bHeavy{right:124px;bottom:max(20px,env(safe-area-inset-bottom));width:66px;height:66px}
   #bRoll{right:34px;bottom:calc(max(26px,env(safe-area-inset-bottom)) + 104px);width:66px;height:66px}
   #bParry{right:124px;bottom:calc(max(20px,env(safe-area-inset-bottom)) + 82px);width:66px;height:66px}
-  #stickBase{position:fixed;width:110px;height:110px;border-radius:50%;border:2px solid rgba(216,205,184,.25);
+  #stickBase{position:fixed;width:110px;height:110px;border-radius:50%;border:2px solid rgba(216,205,184,.25);touch-action:none;
              background:rgba(20,14,9,.35);display:none;pointer-events:none}
   #stickNub{position:fixed;width:48px;height:48px;border-radius:50%;background:rgba(216,205,184,.45);display:none;pointer-events:none}
   #interactPrompt{pointer-events:auto !important;cursor:pointer}
@@ -83,12 +83,11 @@
   .crowdname{margin-top:8px;font-size:11px;letter-spacing:3px;color:var(--torch);text-transform:uppercase;text-align:center}
   /* board buttons: nearer the slate and smaller, so Take-the-purse doesn't crowd out Fight (Hiro) */
   #board .tap{margin-top:16px;padding:9px 22px;font-size:12px;letter-spacing:2px}
-  #onboardHints{display:none;position:fixed;left:50%;bottom:118px;transform:translateX(-50%);z-index:44;max-width:min(92vw,520px);text-align:center;background:rgba(15,11,8,.93);border:1px solid #2c2118;box-shadow:0 0 0 1px #000,0 8px 30px #000;padding:12px 18px;font-size:13px;line-height:1.85;color:#cfc6b4;letter-spacing:.4px;cursor:pointer}
+  #onboardHints{display:none;position:fixed;left:50%;top:60px;transform:translateX(-50%);z-index:30;max-width:min(92vw,520px);text-align:center;background:rgba(15,11,8,.93);border:1px solid #2c2118;box-shadow:0 0 0 1px #000,0 8px 30px #000;padding:12px 18px;font-size:13px;line-height:1.85;color:#cfc6b4;letter-spacing:.4px;cursor:pointer}
   #onboardHints b{color:#e7b450;letter-spacing:2px;text-transform:uppercase;font-size:12px}
   #onboardHints .ob-dismiss{display:block;margin-top:6px;font-size:10px;color:#6b5d4f;letter-spacing:1px}
   #pauseMenu .tap{margin-top:0}
-  #rotateHint{display:none;position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:47;background:rgba(15,11,8,.92);border:1px solid #2c2118;color:#e7b450;font-size:12px;letter-spacing:1px;padding:8px 14px;pointer-events:none}
-  @media (orientation:portrait) and (max-width:560px){#rotateHint{display:block}}
+  #rotateHint{display:none;position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:47;background:rgba(15,11,8,.92);border:1px solid #2c2118;color:#e7b450;font-size:12px;letter-spacing:1px;padding:8px 14px;max-width:min(54vw,240px);text-align:center;pointer-events:auto;cursor:pointer}
   /* announce banner */
   #banner{position:fixed;left:0;right:0;top:32%;text-align:center;z-index:8;pointer-events:none;display:none}
   #banner .b1{font-size:clamp(22px,7vw,40px);letter-spacing:6px;color:var(--gold);text-transform:uppercase;text-shadow:0 0 24px rgba(240,168,61,.55),3px 3px 0 #1a0f04}
@@ -158,7 +157,7 @@
   .qtext{font-size:12px;line-height:1.6;color:var(--bone);opacity:.9;margin-top:3px}
   .qobj{font-size:11px;color:#3df0c8;margin-top:4px}
 </style>
-<script>window.__BUILD="1781665835";</script>
+<script>window.__BUILD="1781736462";</script>
 </head>
 <body>
 <div id="game-container"></div>
@@ -203,7 +202,7 @@
 </div>
 <div id="bossw"><div id="bossname"></div><div id="bosshpw"><div id="bosshp" style="width:100%"></div></div></div>
 
-<div id="stickBase" style="z-index:7"></div><div id="stickNub" style="z-index:7"></div>
+<div id="stickBase" style="z-index:30"></div><div id="stickNub" style="z-index:30"></div>
 <div id="controls">
   <div class="btn" id="bSlash">SLASH<div class="cd"></div></div>
   <div class="btn" id="bHeavy">HEAVY<div class="cd"></div></div>
@@ -307,33 +306,33 @@
   </div>
 </div>
 
-<script src="lib/phaser.min.js?v=1781665835"></script>
-<script src="config.js?v=1781665835"></script>
-<script src="assets/embedded.js?v=1781665835"></script>
-<script src="src/core/money.js?v=1781665835"></script>
-<script src="src/core/dialog.js?v=1781665835"></script>
-<script src="src/core/worldmap.js?v=1781665835"></script>
-<script src="src/core/autopilot.js?v=1781665835"></script>
-<script src="src/core/questnav.js?v=1781665835"></script>
-<script src="src/core/touchstick.js?v=1781665835"></script>
-<script src="src/core/save.js?v=1781665835"></script>
-<script src="src/core/music.js?v=1781665835"></script>
-<script src="src/core/voice.js?v=1781665835"></script>
-<script src="src/core/settings.js?v=1781665835"></script>
-<script src="src/world/citymap.js?v=1781665835"></script>
-<script src="src/world/quests.js?v=1781665835"></script>
-<script src="src/world/companions.js?v=1781665835"></script>
-<script src="src/core/companionAI.js?v=1781665835"></script>
-<script src="src/combat/pit.js?v=1781665835"></script>
-<script src="src/scenes/ArenaScene.js?v=1781665835"></script>
-<script src="src/scenes/WorldScene.js?v=1781665835"></script>
-<script src="src/scenes/CityScene.js?v=1781665835"></script>
-<script src="src/scenes/GroveScene.js?v=1781665835"></script>
-<script src="src/scenes/DungeonScene.js?v=1781665835"></script>
-<script src="src/scenes/VarenholmScene.js?v=1781665835"></script>
-<script src="src/scenes/MountainScene.js?v=1781665835"></script>
-<script src="src/scenes/AshenveilScene.js?v=1781665835"></script>
-<script src="src/scenes/AshLowerScene.js?v=1781665835"></script>
-<script src="src/main.js?v=1781665835"></script>
+<script src="lib/phaser.min.js?v=1781736462"></script>
+<script src="config.js?v=1781736462"></script>
+<script src="assets/embedded.js?v=1781736462"></script>
+<script src="src/core/money.js?v=1781736462"></script>
+<script src="src/core/dialog.js?v=1781736462"></script>
+<script src="src/core/worldmap.js?v=1781736462"></script>
+<script src="src/core/autopilot.js?v=1781736462"></script>
+<script src="src/core/questnav.js?v=1781736462"></script>
+<script src="src/core/touchstick.js?v=1781736462"></script>
+<script src="src/core/save.js?v=1781736462"></script>
+<script src="src/core/music.js?v=1781736462"></script>
+<script src="src/core/voice.js?v=1781736462"></script>
+<script src="src/core/settings.js?v=1781736462"></script>
+<script src="src/world/citymap.js?v=1781736462"></script>
+<script src="src/world/quests.js?v=1781736462"></script>
+<script src="src/world/companions.js?v=1781736462"></script>
+<script src="src/core/companionAI.js?v=1781736462"></script>
+<script src="src/combat/pit.js?v=1781736462"></script>
+<script src="src/scenes/ArenaScene.js?v=1781736462"></script>
+<script src="src/scenes/WorldScene.js?v=1781736462"></script>
+<script src="src/scenes/CityScene.js?v=1781736462"></script>
+<script src="src/scenes/GroveScene.js?v=1781736462"></script>
+<script src="src/scenes/DungeonScene.js?v=1781736462"></script>
+<script src="src/scenes/VarenholmScene.js?v=1781736462"></script>
+<script src="src/scenes/MountainScene.js?v=1781736462"></script>
+<script src="src/scenes/AshenveilScene.js?v=1781736462"></script>
+<script src="src/scenes/AshLowerScene.js?v=1781736462"></script>
+<script src="src/main.js?v=1781736462"></script>
 </body>
 </html>

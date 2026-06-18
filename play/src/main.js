@@ -68,3 +68,33 @@ window.game = new Phaser.Game(config);
   window.addEventListener('resize', apply);
   window.addEventListener('orientationchange', () => setTimeout(apply, 250));
 })();
+
+// Orientation prompt — show the "rotate to landscape" hint ONCE per session only.
+// (Previously a CSS media-query re-displayed it on every portrait<->landscape flip and it
+//  could overlap the auto-play toggle. Now JS owns it: one show, tap/auto/landscape dismiss,
+//  and it lives in its own reserved band so it never covers a control.)
+(function () {
+  const hint = document.getElementById('rotateHint');
+  if (!hint) return;
+  const touch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  let dismissed = false;
+  try { dismissed = sessionStorage.getItem('ss-rotate-seen') === '1'; } catch (e) {}
+  const isPortrait = () => window.innerHeight >= window.innerWidth;
+  const isSmall = () => Math.min(window.innerWidth, window.innerHeight) <= 560;
+  const seal = () => { dismissed = true; try { sessionStorage.setItem('ss-rotate-seen', '1'); } catch (e) {} hint.style.display = 'none'; if (timer) clearTimeout(timer); };
+  let timer = null;
+  const maybeShow = () => {
+    if (dismissed || !touch) return;
+    if (!isPortrait() || !isSmall()) { hint.style.display = 'none'; return; } // already landscape: nothing to nag
+    hint.style.display = 'block';
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(seal, 6000); // auto-dismiss; only ever shows this once per session
+  };
+  hint.addEventListener('pointerdown', seal);          // tap to dismiss for good
+  hint.addEventListener('click', seal);
+  // landscape achieved at any point -> consider the hint satisfied, never show again this session
+  const onOrient = () => { if (!isPortrait()) seal(); else maybeShow(); };
+  window.addEventListener('orientationchange', () => setTimeout(onOrient, 300));
+  window.addEventListener('resize', () => { if (!isPortrait()) seal(); });
+  maybeShow();
+})();

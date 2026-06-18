@@ -44,10 +44,16 @@ const TouchStick = {
       if (this.id === null || p.id !== this.id) return;
       const c = this._client(p);
       let dx = c.x - this.ox, dy = c.y - this.oy;
-      const m = Math.hypot(dx, dy), cap = 52;
-      if (m > cap) { dx *= cap / m; dy *= cap / m; }
-      this.dx = dx / cap; this.dy = dy / cap; this.mag = Math.min(1, m / cap);
-      sn.style.left = (this.ox + dx - 24) + 'px'; sn.style.top = (this.oy + dy - 24) + 'px';
+      const m = Math.hypot(dx, dy), cap = 52, dz = 7; // dz = dead zone: kills micro-jitter drift
+      // movement vector: a crisp unit direction scaled by a dead-zone-adjusted magnitude,
+      // so the champion moves the instant the finger leaves the dead zone (responsive) and
+      // never creeps from a stationary thumb.
+      if (m <= dz) { this.dx = 0; this.dy = 0; this.mag = 0; }
+      else { const mm = Math.min(1, (m - dz) / (cap - dz));
+        this.dx = dx / m * mm; this.dy = dy / m * mm; this.mag = mm; }
+      // nub follows the finger (capped to the ring) regardless of dead zone
+      let nx = dx, ny = dy; if (m > cap) { nx = dx * cap / m; ny = dy * cap / m; }
+      sn.style.left = (this.ox + nx - 24) + 'px'; sn.style.top = (this.oy + ny - 24) + 'px';
     });
     const end = p => {
       if (this.id === null || p.id !== this.id) return;
