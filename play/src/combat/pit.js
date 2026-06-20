@@ -48,7 +48,7 @@ const lvl=()=>Math.min(20,Math.floor(P.level||1));
 let buffs=[]; // {k,amt,until} from belt potions
 const buffAmt=k=>{let a=0;for(const b of buffs)if(b.k===k&&b.until>S.time)a+=b.amt;return a;};
 const RKIT=c=>c==='ronin';
-const stat=k=>(RKIT(P.char)?P.base[k]+P.kills*2:P.base[k]+3*(lvl()-1))+buffAmt(k)+lineStatBonus(k)+evoStatBonus(k);
+const stat=k=>(RKIT(P.char)?P.base[k]+P.kills*3:P.base[k]+3*(lvl()-1))+buffAmt(k)+lineStatBonus(k)+evoStatBonus(k);
 function usePotion(type){
   if(P.dead)return false;
   if(type==='potion-health'){const hl=Math.round(maxHP()*0.5);P.hp=Math.min(maxHP(),P.hp+hl);
@@ -366,7 +366,7 @@ function enterForm(f){
     P.wolfCD=10;
     for(let i=0;i<3;i++){const a=rnd(0,Math.PI*2);
       wolves.push({x:P.x+Math.cos(a)*40,y:P.y+Math.sin(a)*40,r:11,face:a,
-        hp:20+P.kills*4,maxhp:20+P.kills*4,life:14,cool:rnd(.4,1),lungeT:0,bit:false,walkP:0});}
+        hp:20+P.kills*4,maxhp:20+P.kills*4,life:14,cool:rnd(.4,1),lungeT:0,bit:false,walkP:0,dmgMul:1.5});} // Hiro: druid wolves +50% dmg
     popup(P.x,P.y-46,'THE PACK ANSWERS','#7fbf6a',15);}
   updateLabels();}
 function revertToHuman(){
@@ -379,7 +379,7 @@ function druidSlash(){
   if(P.form==='bear'){ // CLAW — heavy sweep
     autoFace();P.atkRecover=atkRec()*1.35;
     swings.push({x:P.x,y:P.y,a:P.face,arc:2.1,range:88,t:.17,heavy:true,col:'#c98a4a'});
-    strike(P.face,2.1,88,Math.round((rollDice(diceN(),8)+dmgBonus())*1.45),true);
+    strike(P.face,2.1,88,Math.round((rollDice(diceN(),8)+dmgBonus())*1.9),true); // Hiro: bear claw buffed 1.45->1.9
   }else if(P.form==='wolf'){ // BITE — lunge
     autoFace();P.atkRecover=atkRec()*.75;
     P.x+=Math.cos(P.face)*46;P.y+=Math.sin(P.face)*46;clampArena(P);
@@ -479,7 +479,7 @@ function druidHeavy(){
       popup(w.x,w.y-22,'+','#7fbf6a',12);}
     for(let i=0;i<5;i++){const a=rnd(0,Math.PI*2); // FIVE more answer the howl
       wolves.push({x:P.x+Math.cos(a)*44,y:P.y+Math.sin(a)*44,r:11,face:a,
-        hp:20+P.kills*4,maxhp:20+P.kills*4,life:14,cool:rnd(.4,1),lungeT:0,bit:false,walkP:0});}
+        hp:20+P.kills*4,maxhp:20+P.kills*4,life:14,cool:rnd(.4,1),lungeT:0,bit:false,walkP:0,dmgMul:1.5});} // Hiro: druid wolves +50% dmg
     popup(P.x,P.y-66,'THE PACK SWELLS — +5','#7fbf6a',14);
     swings.push({x:P.x,y:P.y,a:0,arc:7,range:120,t:.3,heavy:false,col:'#7fbf6a',ring:true});
     vib(35);}}
@@ -663,7 +663,7 @@ function updFireballs(dt){
           popup(e.x,e.y-28,b.dmg,'#cfc6b4',13);
           if(e.hp<=0)killEnemy(e,false);
         }else if(b.kind==='hex'){
-          e.hexT=10;e.flash=.14; // 30/s rot for 10 seconds, slowed the whole time
+          e.hexT=10;e.hexDmg=15;e.hexTick=.5;e.hexJumps=0;e.flash=.14; // base hex: 10s rot; hexDmg/timer carry for CONTAGION
           popup(e.x,e.y-28,'HEXED','#b070f0',13);
           S.shake=Math.max(S.shake,4);
         }else{
@@ -917,14 +917,14 @@ function seraphSlash(){ // the couched lance: one piercing POKE that lands like 
   strike(P.face,0.55,120,dmg,true);}
 function convertToMinion(x,y,maxhp,r){ // slain by the ray: it rises BOUND IN LIGHT
   wolves.push({x,y,r:Math.min(16,Math.max(10,r*.8)),face:0,hp:maxhp,maxhp,
-    life:7,cool:rnd(.1,.3),lungeT:0,bit:false,walkP:0,converted:true});
+    life:12,cool:rnd(.1,.3),lungeT:0,bit:false,walkP:0,converted:true,dmgMul:1.6}); // Hiro: +5s duration, +60% dmg
   leafBurst(x,y,14,'#ffe9a8');
   popup(x,y-40,'BOUND IN LIGHT','#ffe9a8',14);
-  showBanner('CONVERTED','full health · triple speed · seven seconds',1100,'#ffe9a8');}
+  showBanner('CONVERTED','full health · triple speed · twelve seconds',1100,'#ffe9a8');}
 function fireRay(){ // the halo unmakes in a line — moderate, relentless, and it RECRUITS
   autoFace();
   const judge=lvl()>=8, w=judge?70:44, len=900;
-  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*(judge?3.0:2.4)); // Hiro: 3x damage to match the 3s cooldown
+  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*(judge?9.0:7.2)); // Hiro: ray damage TRIPLED (was 3.0/2.4)
   rays.push({x:P.x,y:P.y-14,a:P.face,len,w,t:.45,judge});
   flashFx(judge?.22:.12);S.shake=Math.max(S.shake,judge?9:6);vib(judge?[40,30,70]:30);
   const ca=Math.cos(P.face),sa=Math.sin(P.face);
@@ -978,14 +978,14 @@ function updWolves(dt){
     if(w.lungeT>0){w.lungeT-=dt;
       w.x+=Math.cos(w.lungeA)*330*dt;w.y+=Math.sin(w.lungeA)*330*dt;
       if(!w.bit&&dist(w,tgt)<w.r+tgt.r+6){w.bit=true;
-        const d=rollDice(Math.max(1,Math.ceil(diceN()/2)),6)+Math.floor(dmgBonus()/2);
+        const d=Math.round((rollDice(Math.max(1,Math.ceil(diceN()/2)),6)+Math.floor(dmgBonus()/2))*(w.dmgMul||1));
         tgt.hp-=d;tgt.flash=.12;blood(tgt.x,tgt.y,5);
         popup(tgt.x,tgt.y-26,d,'#9ab8a0',13);
         if(tgt.hp<=0)killEnemy(tgt,false);}
       if(w.lungeT<=0)w.bit=false;}
     else{const d=dist(w,tgt);w.face=ang(w,tgt);
       if(d>w.r+tgt.r+12){w.x+=Math.cos(w.face)*210*dt;w.y+=Math.sin(w.face)*210*dt;}
-      if(w.cool<=0&&d<110){w.cool=w.converted?rnd(.37,.6):rnd(1.1,1.8);w.lungeT=.24;w.lungeA=w.face;}}
+      if(w.cool<=0&&d<110){w.cool=w.converted?rnd(.24,.4):rnd(1.1,1.8);w.lungeT=.24;w.lungeA=w.face;}}
     clampArena(w);
     const mv=Math.hypot(w.x-(w._lx??w.x),w.y-(w._ly??w.y));
     w.walkP+=mv*.2;w._mv=mv>0.2;w._lx=w.x;w._ly=w.y;}}
@@ -1119,6 +1119,21 @@ function dismember(e,full){
       kind:Math.random()<.5?'arm':'leg',col:e.col,skin:'#caa27a'});}
 }
 function killEnemy(e,heavy){
+  // WARLOCK CONTAGION (Hiro balance): a mark that kills its host before its timer
+  // expires leaps to the nearest living foe — damage DOUBLES and the remaining
+  // timer GROWS by +5s each jump, so a well-placed hex can chain through a pack.
+  if(e.hexT>0){
+    let tgt=null,td=1e9;
+    for(const o of enemies){if(o.dead||o===e)continue;const d=Math.hypot(o.x-e.x,o.y-e.y);if(d<td){td=d;tgt=o;}}
+    if(tgt){
+      tgt.hexDmg=(e.hexDmg||15)*2;            // x2 cumulative per jump
+      tgt.hexT=(e.hexT||0)+5;                 // ADD 5s of remaining time, never reset
+      tgt.hexTick=.5;tgt.hexJumps=(e.hexJumps||0)+1;tgt.flash=.16;
+      popup(tgt.x,tgt.y-30,'CONTAGION x'+tgt.hexJumps,'#b070f0',15);
+      S.shake=Math.max(S.shake,5);
+    }
+    e.hexT=0;e.hexDmg=0;
+  }
   e.dead=true;bloodPool(e.x,e.y,e.r*1.6);blood(e.x,e.y,26);gibs(e,heavy?13:6);
   if(e.infectT>0){ // the infection keeps what it kills: it rises as a zombie
     while(demons.length>=12){const old=demons.shift();leafBurst(old.x,old.y,8,'#9af0c0');}
@@ -1159,13 +1174,13 @@ function killEnemy(e,heavy){
   if(e.minion){P.hp=Math.min(maxHP(),P.hp+5);popup(e.x,e.y-34,'+5 HP','#7fbf6a',13);
     if(RKIT(P.char)){ // summons feed the ronin's blade too
       P.kills++;
-      popup(e.x,e.y-50,'+2 ALL STATS','#3df0c8',15);
+      popup(e.x,e.y-50,'+3 ALL STATS','#3df0c8',15);
       UI.stats(diceN()+'d8','KILLS '+P.kills);
       checkRoninForm();}
     else{P.kills++;popup(e.x,e.y-50,'+1.5 LVL','#3df0c8',13);gainLevel();}}
   else{P.kills++;const hpUp=maxHP();P.hp=Math.min(hpUp,P.hp+10);
     if(RKIT(P.char)){
-      popup(e.x,e.y-50,'+2 ALL STATS','#3df0c8',18);
+      popup(e.x,e.y-50,'+3 ALL STATS','#3df0c8',18);
       popup(e.x,e.y-28,'KATANA  '+diceN()+'d8','#3df0c8',14);
       UI.stats(diceN()+'d8','KILLS '+P.kills);
       checkRoninForm();}
@@ -1355,7 +1370,7 @@ function telegraphThenHit(e,dt,wind,fn){
 function updEnemy(e,dt){
   if(!e.dead){ // damage-over-time ticks (hex + poison) run at real speed
     if(e.hexT>0){e.hexT-=dt;e.hexTick=(e.hexTick||0)-dt;
-      if(e.hexTick<=0){e.hexTick=.5;dotDamage(e,15,'#b070f0');}}
+      if(e.hexTick<=0){e.hexTick=.5;dotDamage(e,e.hexDmg||15,'#b070f0');}}
     if(e.infectT>0)e.infectT-=dt; // the zombie plague waits for its moment
     if(e.poisonT>0){e.poisonT-=dt;e.poisonTick=(e.poisonTick||0)-dt;
       if(e.poisonTick<=0){e.poisonTick=.6;dotDamage(e,2+Math.floor(P.kills/2),'#7fd05a');}}
@@ -1663,7 +1678,7 @@ function statRows(prevK,nowK){
   if(RKIT(P.char)){
     const defs=[['STR (damage)','STR'],['DEX (speed / roll)','DEX'],['CON (health)','CON'],['ATK (attack speed)','ATK']];
     for(const[lbl,k]of defs){
-      const a=P.base[k]+prevK*2,b=P.base[k]+nowK*2;
+      const a=P.base[k]+prevK*3,b=P.base[k]+nowK*3;
       rows.push([lbl,''+b,b>a?'+'+(b-a)+' \u25b2':'']);}
     const da=1+prevK,db=1+nowK;
     rows.push(['KATANA',db+'d8',db>da?'+'+(db-da)+' die \u25b2':'']);
@@ -1834,7 +1849,7 @@ const DEMOS={
   {at:6.8,cap:'PARRY — deflect a blow: heal 20% and loose an AIR SLASH.',
    run:()=>{doParry();setTimeout(()=>{const e=enemies.find(x=>!x.dead);
      if(e&&S.mode==='demo')hurtPlayer(12,e);},300);}},
-  {at:10,cap:'Every kill — even summons — feeds him: +2 ALL STATS, +1 KATANA DIE.',
+  {at:10,cap:'Every kill — even summons — feeds him: +3 ALL STATS, +1 KATANA DIE.',
    run:()=>{const e=enemies.find(x=>!x.dead);if(e)e.hp=1;doSlash();}},
   {at:12.5,cap:'When his stats double, the blade EVOLVES — NODACHI.',
    run:()=>{P.kills=5;checkRoninForm();demoFoe(150,40,420);}},

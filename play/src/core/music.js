@@ -1,5 +1,5 @@
 // Zone music — plain HTMLAudio so it works from file:// and https alike.
-// ONE cached Audio per track (duplicates are impossible); switching force-fades
+// ONE cached Audio per track (duplicates are impossible); switching force-stops
 // every other track. Missing files = silence, no errors.
 
 const MusicMan = {
@@ -38,23 +38,38 @@ const MusicMan = {
         a.volume = 0; const p = a.play(); if (p && p.catch) p.catch(() => {});
         this._fadeIn(a);
       }
-      // failsafe: anything that isn't the current track gets silenced, no exceptions
+      // failsafe: anything that isn't the current track gets HARD-stopped, no exceptions
       for (const [n, t] of Object.entries(this.tracks))
-        if (t !== this.current && !t.paused && !t._fading) this._fadeOut(t);
+        if (t !== this.current && !t.paused) this._hardStop(t);
     };
     window.addEventListener('pointerdown', kick);
     window.addEventListener('keydown', kick);
   },
 
+  // Mobile-safe immediate stop. Phones routinely throttle/drop chained setTimeout
+  // fade loops (esp. across a scene/zone transition), leaving a detached <audio>
+  // looping forever. So we never rely on the async fade to actually stop a track:
+  // we synchronously pause it, rewind it, and zero its volume right now.
+  _hardStop(a) {
+    if (!a) return;
+    try { a.pause(); } catch (e) {}
+    try { a.currentTime = 0; } catch (e) {}
+    a.volume = 0;
+    a._fading = false;
+  },
+
   play(name) {
     this._ensureGestureRetry();
     this._bindBtn();
-    if (this.currentName === name) return;
-    this.currentName = name;
-    for (const [n, a] of Object.entries(this.tracks)) if (n !== name) {
-      this._fadeOut(a);
-      setTimeout(() => { if (this.tracks[n] !== this.current) { a.pause(); a.volume = 0; a._fading = false; } }, 1500);
+    if (this.currentName === name) {
+      // already the active track — but make sure nothing else is sneaking through
+      this._stopOthers(name);
+      return;
     }
+    this.currentName = name;
+    // CRITICAL (mobile): kill every other track immediately and synchronously,
+    // BEFORE starting the new one, so two tracks can never overlap.
+    this._stopOthers(name);
     if (this._missing[name]) { this.current = null; return; }
     let a = this.tracks[name];
     if (!a) {
@@ -69,25 +84,26 @@ const MusicMan = {
     this._fadeIn(a);
   },
 
+  // Hard-stop every cached track except `keep`. Synchronous — no timers, so it
+  // always completes even on a throttled mobile browser.
+  _stopOthers(keep) {
+    for (const [n, a] of Object.entries(this.tracks)) if (n !== keep) this._hardStop(a);
+  },
+
+  // Fully stop all music (e.g. on a scene that should be silent).
+  stop() {
+    this.currentName = null;
+    this.current = null;
+    for (const a of Object.values(this.tracks)) this._hardStop(a);
+  },
+
   _fadeIn(a) {
     const step = () => {
-      if (this.current !== a) return;          // superseded — its fadeOut owns it now
+      if (this.current !== a) return;          // superseded — something else owns playback now
       // a track that comes up while a voice line is playing stays ducked under it
       const ceil = this._duckedByVoice && window.VoiceMan ? VoiceMan.DUCK : this.vol;
       a.volume = Math.min(ceil, a.volume + 0.05);
       if (a.volume < ceil - 0.001) setTimeout(step, 80);
-    };
-    step();
-  },
-
-  _fadeOut(a) {
-    if (a._fading) return;
-    a._fading = true;
-    const step = () => {
-      if (this.current === a) { a._fading = false; return; } // re-promoted mid-fade
-      a.volume = Math.max(0, a.volume - 0.08);
-      if (a.volume > 0) setTimeout(step, 60);
-      else { a.pause(); a.currentTime = 0; a._fading = false; }
     };
     step();
   },

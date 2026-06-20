@@ -120,6 +120,27 @@ const CompanionEngine = {
       }});
     }
 
+    // --- THE END KEEPER's organic contract: the real problem, solved TOGETHER ---
+    // Failsafe: only shows once the hub set this companion's `ek-*` flag to 'active'.
+    // For the four scriptedOnly companions this is also their FIRST recruit path.
+    const eq = window.Quests && Quests.companionQuests && Quests.companionQuests.contracts[key];
+    if (eq && flags[eq.id] === 'active') {
+      opts.push({ label: eq.offerLabel, fn: () => {
+        CityUI.dialog(c.name, eq.meet, [
+          { label: eq.resolveLabel, fn: () => {
+            flags[eq.id] = 'done';
+            this.approve(key, eq.approval || 3, 'you closed "' + eq.title + '" together');
+            const newlyRecruited = eq.recruits && !st.recruited;
+            if (newlyRecruited) st.recruited = true;
+            CityUI.dialog(c.name, eq.after, [{ label: newlyRecruited ? 'Welcome aboard' : 'Well done', fn: () => {
+              if (newlyRecruited) scene.onRecruit(key);
+              close();
+            }}], scene.portraitFor(key));
+          }},
+          { label: 'Not yet', fn: close }], scene.portraitFor(key));
+      }});
+    }
+
     // free-text AI chat
     if (this.aiAvailable() && !c.scriptedOnly) opts.push({ label: '✦ Speak freely (AI)', fn: () => {
       CityUI.dialogInput(c.name, '(they\'re listening)', async text => {

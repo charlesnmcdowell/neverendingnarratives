@@ -173,6 +173,7 @@ class CityScene extends WorldScene {
     }
 
     this.placeCompanions('city');
+    this.addEndKeeper(); // organic companion side-quests hub (Hiro)
     if (P.char === 'ronin') this.addDojo(); // rq item 11: the sensei teaches a weapon line (katana/spear/rifle)
     this.initEncounterHost(null); // city uses default pit theme (no city fights yet, but host is uniform)
     this.cameras.main.setBounds(0, 0, WPX, HPX).startFollow(this.player, true, 0.12, 0.12);
@@ -549,6 +550,59 @@ class CityScene extends WorldScene {
     const step3 = () => CityUI.dialog(C.finale.title, C.finale.text3, [{ label: 'The story has barely begun', fn: done }]);
     const step2 = () => CityUI.dialog(C.finale.title, t2, Quests.opt('finale2').map(label => ({ label, fn: step3 })));
     CityUI.dialog(C.finale.title, C.finale.text1, Quests.opt('finale1').map(label => ({ label, fn: step2 })));
+  }
+
+  // ===== THE END KEEPER — hub for ORGANIC companion side-quests (Hiro) =====
+  // She posts the city's UNFILED problems — each solvable by exactly one specialist, so seeking
+  // that companion is necessitated by the work. Romance is the byproduct. Fully optional + failsafe:
+  // nothing here gates the main quest; each contract sets only its own ek-* flag.
+  addEndKeeper() {
+    if (this._endKeeperAdded) return;
+    this._endKeeperAdded = true;
+    const T = CityMap.TILE, ex = 29 * T, ey = 24 * T; // plaza, west of the well — lit, clear of buildings
+    const g = this.add.graphics().setDepth(ey - 1); // a folding desk of loose ends
+    g.fillStyle(0x241a12); g.fillRect(ex + 14, ey - 14, 26, 14);
+    g.lineStyle(1, 0xe7b450, 0.5); g.strokeRect(ex + 14, ey - 14, 26, 14);
+    this.add.sprite(ex, ey, 'fr-npc3', 0).setDepth(ey);
+    this.add.text(ex, ey - 34, 'THE END KEEPER', { fontFamily: 'Courier New', fontSize: '10px', color: '#e7b450', stroke: '#000', strokeThickness: 2 }).setOrigin(0.5).setDepth(ey);
+    this.addLight(ex, ey, 60, false);
+    this.interactables.push({ x: ex, y: ey, label: 'consult THE END KEEPER (unfiled matters)', fn: () => this.endKeeperBoard() });
+  }
+
+  endKeeperBoard() {
+    if (CityUI.dialogOpen() || this.encounterActive) return; // item 1.5: never open over a live scene
+    const Q = Quests.companionQuests, flags = window.GameState.world.flags;
+    flags[Q.hubFlag] = 'met';
+    const close = () => CityUI.closeDialog();
+    const contracts = Object.entries(Q.contracts);
+    const allDone = contracts.every(([k, c]) => flags[c.id] === 'done');
+    const opts = [];
+    for (const [key, c] of contracts) {
+      const fstate = flags[c.id];
+      if (fstate === 'done') {
+        opts.push({ label: '\u2713 ' + c.title + ' \u2014 closed', fn: () =>
+          CityUI.dialog(Q.keeper.name, '"' + c.title + '. Closed, and closed RIGHT \u2014 by the one pair of hands that could. It is filed now. My thanks, champion."',
+            [{ label: 'Back', fn: () => this.endKeeperBoard() }]) });
+      } else if (fstate === 'active') {
+        opts.push({ label: '\u2026 ' + c.title + ' \u2014 seek ' + c.specialist + ' in ' + c.where, fn: () =>
+          CityUI.dialog(Q.keeper.name, '"Still open. ' + c.seekHint + '"',
+            [{ label: 'Back', fn: () => this.endKeeperBoard() }]) });
+      } else {
+        opts.push({ label: 'OPEN: ' + c.title, fn: () =>
+          CityUI.dialog(Q.keeper.name, c.hubProblem, [
+            { label: 'Take it on \u2014 find the one who can end it', fn: () => {
+              flags[c.id] = 'active';
+              close();
+              this.floatText(this.player.x, this.player.y - 50, 'UNFILED MATTER TAKEN \u2014 ' + c.title + ' \u00b7 seek ' + c.specialist + ' in ' + c.where, '#3df0c8', 13);
+            } },
+            { label: 'Not yet', fn: () => this.endKeeperBoard() }]) });
+      }
+    }
+    opts.push({ label: 'Leave the ledger', fn: close });
+    const firstTime = !flags['ek-hub-seen'];
+    flags['ek-hub-seen'] = true;
+    const text = allDone ? Q.keeper.done : (firstTime ? Q.keeper.intro : Q.keeper.board);
+    CityUI.dialog(Q.keeper.name, text, opts);
   }
 
   update(time, dtMs) {

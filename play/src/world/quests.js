@@ -810,5 +810,96 @@ Quests.dojo = {
   },
 };
 
+// ===== COMPANION ORGANIC SIDE-QUESTS (hub: THE END KEEPER) =====
+// Hiro brief: NEVER "go talk to X" fetch quests. The End Keeper posts REAL problems with no
+// guild contract and no owner — the city's loose ends. Each problem can ONLY be solved by one
+// specialist, so seeking that companion is NECESSITATED by the work. Romance is the BYPRODUCT of
+// solving the problem TOGETHER (each contract grants approval; the four scriptedOnly companions
+// gain their FIRST recruit path here). Fully data-driven + failsafe: every contract is optional,
+// independent of the main quest, sets only its own `ek-*` flag, and can never softlock the game.
+//
+// Wiring: CityScene.addEndKeeper()/endKeeperBoard() (the hub) + a generic resolution branch in
+// companionAI.talk() that reads Quests.companionQuests.contracts[key] when flags[id]==='active'.
+Quests.companionQuests = {
+  hubFlag: 'ek-hub-met',
+  keeper: {
+    name: 'THE END KEEPER',
+    // She keeps the UNFILED: the problems the guild board won't post because no coin's attached
+    // and no one's left to pay. She does not send you to people. She sends you to PROBLEMS — and the
+    // problems, if you're honest about them, can only be ended by one particular pair of hands.
+    intro: 'A woman sits at a folding desk in the plaza with a ledger of things that did not end. No guild stamp, no contract number — just a tidy column of OPEN. "I keep the loose ends, champion," she says, not looking up. "The matters with no owner and no reward. The board won\'t touch them; there\'s no coin in an ending. But endings are the only thing I deal in." She turns the ledger toward you. "Some of these only ONE pair of hands in this kingdom can close. Read. If a name comes to mind as you read — that\'s the work telling you where to go."',
+    board: 'The unfiled column. Each is a real thing with a real wrong shape to it — and each, if you look honestly, has exactly one person who could put it right.',
+    done: '"All of them, closed." For the first time she sets the quill down. "You didn\'t do them for coin — there wasn\'t any. You did them because they were unfinished, and you found the one person who could finish each. That\'s rarer than a champion. The loose ends of Karridge will miss you." A thin smile. "So, I suspect, will the hands you put them in."',
+    reward: 5, // small token copper paid per closed contract when you report back (flavor, not the point)
+  },
+
+  // Each contract: hubProblem (the End Keeper's framing — a real wrong, and WHY only the specialist
+  // can end it), where (which scene the specialist stands in), seekHint (organic, never "go say hi"),
+  // meet (the companion when you bring the work), resolveLabel/after (the shared solving), approval,
+  // and recruits (true for the four with no prior recruit path).
+  contracts: {
+    brakka: {
+      id: 'ek-brakka', title: 'THE BONDED LEDGER', where: 'the city', specialist: 'BRAKKA',
+      recruits: false, approval: 3,
+      hubProblem: 'A caravan-master died on the south road owing a season\'s wages to the blades he hired — a bonded debt, sworn under kingdom mercenary law. I cannot close it. The bond names the GREYRUSH company as creditor, and bonded wages can only be signed shut by a licensed Greyrush blade who can name the dead and swear they were paid in full or paid in earth. The company dissolved years ago. I have one name left in this city who MIGHT still carry the license.',
+      seekHint: 'You\'ve seen one orc in Karridge who oils a company axe and pays the guild on time. If anyone still holds a Greyrush license, it is the one who never stopped acting like a soldier.',
+      offerLabel: 'Bring Brakka the bonded ledger (the End Keeper\'s unfiled wage-debt)',
+      meet: 'You lay the bonded ledger on the whetstone beside his axe. Brakka reads the Greyrush seal at the top and goes very still. "...This is a WAGE bond. Sworn law. You need a licensed Greyrush blade to close it." He looks up. "There is one. There is exactly one." He does not sound happy about being the last of anything.',
+      resolveLabel: '"You\'re the last Greyrush license in the kingdom, Brakka. Sign it shut."',
+      after: 'He reads each name on the bond aloud — the dead caravan guards, then, unbidden, under his breath, his own company\'s roll, Dorga among them. He signs the bond closed with the company mark one final time, and the license is spent the moment the ink dries. "That\'s the last thing the Greyrush will ever sign," he says. The axe looks lighter again. "You didn\'t bring me a job. You brought me the END of one. I\'ll remember that, pit-crowned."',
+    },
+    vexa: {
+      id: 'ek-vexa', title: 'THE FIZZING WELL', where: 'the city', specialist: 'VEXA',
+      recruits: false, approval: 3,
+      hubProblem: 'The plaza well has gone WRONG. The water fizzes; it burns the throat; a washerwoman fainted drawing a bucket. The guild\'s herbalists tested it, shrugged, and billed me. This is not a hedge-witch problem — something ALCHEMICAL leached into the cistern, deliberate or careless, and undoing it needs someone who treats volatile reagents as old friends and isn\'t afraid to taste what\'s killing people.',
+      seekHint: 'There is one alley in Karridge that smells of saltpeter and bad decisions, with a tiefling in it who has STRONG opinions about what makes well water fizz. The guild calls her a hazard. The guild is not wrong, and the guild cannot fix the well.',
+      offerLabel: 'Bring Vexa the matter of the poisoned well',
+      meet: '"The WELL?" Vexa is already on her feet, vial forgotten and smoking gently. "It FIZZES? I TOLD people the well fizzes — okay no, this is worse than my saltpeter, this is — " she sniffs the bucket you brought " — oh, that\'s spent rot-shaman residue, someone dumped a hunt\'s worth of it down the cistern. Rude. Reactive. Fixable. By me. Only by me, honestly."',
+      resolveLabel: '"Only by you. Neutralize it before someone dies for a drink of water."',
+      after: 'She works fast and gleeful, dropping counter-reagents that turn the bucket from acid-clear to muddy-safe, narrating every reaction like a sport. "There. Drinkable. Mostly. Give it a day." She wipes her hands, delighted and a little proud. "You came to ME with a city-sized problem instead of the guild\'s herb-shruggers. People don\'t usually trust the arson tiefling with the WATER SUPPLY." A grin, softer at the edges. "I won\'t make you regret it. Much."',
+    },
+    dorian: {
+      id: 'ek-dorian', title: 'THE ROADWARD NAMES', where: 'the city', specialist: 'DORIAN',
+      recruits: true, approval: 3,
+      hubProblem: 'The families of the travelers who vanished off the trade road have asked for one thing, and I cannot give it: the roadside cairn rite. Kingdom custom holds that the missing — not confirmed dead — must be STOOD FOR at the boundary cairn by a sworn knight, who keeps the vigil and speaks the names, so the road remembers them. It is unpaid, thankless, and takes a knight willing to stand for strangers with nothing to gain. The standing army won\'t spare a man for the missing. The missing need someone who believes redemption is earned in small, unwitnessed acts.',
+      seekHint: 'There is a man who drills alone at dawn behind the inn, in armor with the colors stripped off — a knight the army discarded, looking for a redemption no one assigned him. A thankless vigil for strangers is precisely the shape of the thing he is hunting for.',
+      offerLabel: 'Bring Dorian the roadward vigil (the missing have no one to stand for them)',
+      meet: 'Dorian sets down his drilling-sword when you describe the cairn rite, and something in his face goes very straight. "A vigil for the missing. Sworn, unpaid, for strangers who can give nothing back." He is quiet a moment. "That is the first thing anyone has asked of the knight instead of the disgrace. I will not do it for the redemption." A breath. "But I will not pretend I don\'t need it. Stand the vigil with me?"',
+      resolveLabel: '"I\'ll stand the night with you. Speak the names."',
+      after: 'You keep the cairn through the cold hours while Dorian speaks each missing name to the dark, formal and unhurried, a knight doing the one duty no one ordered. By the grey dawn the families have their rite and Dorian has something he had lost the shape of. "You stood a thankless watch beside a man with no banner," he says, "and asked for nothing. I have a sword and a conscience and very little else — both are yours, if you\'ll have a disgraced man at your back."',
+    },
+    faelar: {
+      id: 'ek-faelar', title: 'THE WRONG-SINGING GROVE', where: 'Thorn Grove', specialist: 'FAELAR',
+      recruits: true, approval: 3,
+      hubProblem: 'Travelers come back from the Thorn Grove saying the forest “sounds wrong” in a place that wasn\'t wrong last season — a new sour note in the ley-flow, somewhere off the mapped paths. The guild sent a surveyor who found nothing because you cannot SURVEY a forest\'s grief. Reading where a grove\'s flow has soured needs a keeper who speaks to the trees as colleagues and is GRIEVED by the corruption personally. There is exactly one of those, and he does not work for coin.',
+      seekHint: 'Deep in Thorn Grove stands a wood-elf keeper the trees gossip TO — serene, dry, and quietly heartbroken over what\'s been done to the ley-line. A sour note in the forest\'s song is a wound only he can hear well enough to find.',
+      offerLabel: 'Bring Faelar the grove\'s new sour note (the ley-flow soured off the paths)',
+      meet: 'Faelar listens to your description with the patience of deep water. "A new sour note. Off the paths." His dry humor thins to something that grieves. "The trees have been muttering about it; I took it for old sorrow. If it is NEW, then someone has hurt the flow again, and I have been too slow to listen." He rises. "I will not find it sitting here. Walk the node with me — the forest trusts you enough to be CURIOUS, and that is rare."',
+      resolveLabel: '"Walk the node with me. We find what\'s souring it together."',
+      after: 'You follow the wrong note with him to a stand of young thorn where the cult left a sap-snare — a slow-bleeding tap on the ley-line, small and patient and cruel. He unmakes it with his hands and a word, and the forest\'s song eases back into tune around you both. "The trees will not stop talking about you now," he says, dry wit returned, eyes still wet. "Neither, I find, will I. I keep this grove alone. I am... tired of the ALONE part. Keep walking, champion. I will keep pace."',
+    },
+    sylvara: {
+      id: 'ek-sylvara', title: 'THE COPPER-AND-LILAC LEDGER', where: 'Thorn Grove', specialist: 'SYLVARA',
+      recruits: true, approval: 3,
+      hubProblem: 'A page surfaced — dropped, I think, by whatever broke camp out east. It is written in a cipher no clerk in Karridge can read, and it smells, faintly and horribly, of copper and lilac. I believe it LISTS people. I cannot prove it, because I cannot read it, and the only people who could are the ones who wrote it: the Ashenveil Academy. I need someone who studied that cipher and then walked AWAY from what it was for.',
+      seekHint: 'In the Thorn Grove there is a dark-elf exile who was Academy — Ashenveil — before she crossed the one line she wouldn\'t. She knows what the lower levels smell like. Copper and lilac, she says, is a smell you never stop noticing. A page that reeks of it is hers to read or no one\'s.',
+      offerLabel: 'Bring Sylvara the ciphered page (it smells of copper and lilac)',
+      meet: 'Sylvara takes the page, and the moment it is close enough to smell she stops being sharp and becomes still. "Copper and lilac," she says quietly. "I told you that smell never leaves." Her eyes move over the cipher fast, fluent, sickened. "This is an Academy profiling cipher. I helped REFINE this notation. And they are using it to do the precise thing I left over." She looks at you. "No one has ever asked me to read this instead of asking whether I\'m lying about it."',
+      resolveLabel: '"Read it. I\'ll believe what it says — and what it cost you to know."',
+      after: 'She decodes it line by line: gifts observed, routes, a column for VALUE. A profiling ledger, exactly as she feared. "Now you know I was telling the truth about the lower levels," she says, and the cutting voice has nothing to cut with for once. "Do you know how long I\'ve carried this with no one to give it to? You didn\'t want my SWORD. You wanted my mind, and you trusted what it told you." A precise, careful pause. "That buys more loyalty from me than any blade ever has. I\'m with you, champion.',
+    },
+    pippa: {
+      id: 'ek-pippa', title: 'THE TWICE-LOST STRONGBOX', where: 'the city or the grove', specialist: 'PIPPA',
+      recruits: true, approval: 3,
+      hubProblem: 'A widow asked me to recover her late husband\'s strongbox — the only thing of his she has left. It went down into the Root-Hollow under the grove when his wagon was robbed, past the third step where the skeletons start. The guild calls it a trinket and won\'t risk a contract on it. Recovering one heirloom from a dungeon that bites needs someone who has already robbed that exact place and come back out grinning — who knows the way in, the way OUT, and how to leave the skeletons an argument.',
+      seekHint: 'There is a halfling who bets on your fights and tells anyone who\'ll listen about a chest in the grove "nobody\'s found twice." She has been down the Root-Hollow and back. A widow\'s strongbox lost past the skeletons is the one job in the kingdom she\'d take for the STORY alone.',
+      offerLabel: 'Bring Pippa the widow\'s strongbox job (lost in the Root-Hollow)',
+      meet: '"A strongbox. Past the THIRD step. For a widow who can\'t pay." Pippa is already lacing her boots. "Okay, one: I have ABSOLUTELY been down there, the skeletons and I have an understanding. Two: free job, sad story, certain skeletons — cousin, this is my favourite kind of terrible idea." She bounces once. "You\'re the front line, I\'m the way out. Nobody finds that hollow twice without ME."',
+      resolveLabel: '"You\'re the way out. Let\'s get the widow her husband back."',
+      after: 'She threads you both down to the third step and past it, reads the Root-Hollow like a familiar bad neighbourhood, and lifts the strongbox out from under a wight\'s nose with two fingers and a grin. The widow gets her husband\'s last thing back; Pippa won\'t take a copper of the nothing on offer. "Best kind of haul," she declares, beaming. "No pay, great story, and I got to show off. You came to ME for the dangerous one, not the guild. I LIKE you. I\'m sticking around — somebody has to know the way out."',
+    },
+  },
+};
+
 if (typeof module !== 'undefined' && module.exports) module.exports = { Quests };
 else window.Quests = Quests;
