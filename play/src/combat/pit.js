@@ -706,7 +706,7 @@ function archDevilOutro(){
   archCineFight=S.fight;
   P.devilT=0;P.r=16;updateLabels();              // the borrowed form falls away
   P.channel=null;P.heavyWind=0;P.rollT=0;P.parryT=0;P.silenceT=0;
-  P.paralyzeT=Math.max(P.paralyzeT,5);           // he cannot act while the scene plays
+  P.paralyzeT=Math.max(P.paralyzeT,10);          // he cannot act for the WHOLE cinematic (~10s) — each voice line plays to the end (Hiro: lines were getting cut)
   archCine={ph:1,seraphY:-270,fade:1};
   camFocus(P.x,P.y-20,1.7,3.0);S.slow=0.6;
   flashFx(.22);S.shake=Math.max(S.shake,8);leafBurst(P.x,P.y,16,'#d03a4a');
@@ -716,16 +716,16 @@ function archDevilOutro(){
   let ti=Math.floor(Math.random()*taunts.length);
   if(taunts.length>1&&ti===archLastTaunt)ti=(ti+1)%taunts.length;
   archLastTaunt=ti;const taunt=taunts[ti];
-  showBanner('THE ARCH DEVIL',taunt,2600,'#d03a4a');
+  showBanner('THE ARCH DEVIL',taunt,4200,'#d03a4a');
   archVoice('THE ARCH DEVIL',taunt);
   // PHASE 2 — the Seraphim descends from above
   setTimeout(()=>{ if(!archCine)return;
     archCine.ph=2;
     const seraph=bank?bank.seraph:'Vile demon - away with you. Back to hell you go.';
     camFocus(P.x,P.y-40,1.6,2.6);flashFx(.16);
-    showBanner('THE SERAPHIM',seraph,2400,'#ffe9a8');
+    showBanner('THE SERAPHIM',seraph,3300,'#ffe9a8');
     archVoice('THE SERAPHIM',seraph);
-  },2800);
+  },4500);
   // PHASE 3 — the angel casts the devil down; death signs the ledger -> the Lich rises
   setTimeout(()=>{ if(!archCine)return;
     archCine.ph=3;
@@ -737,12 +737,12 @@ function archDevilOutro(){
       P.hp=1;P.lichRiseT=3;P.paralyzeT=3;P.channel=null;P.heavyWind=0;P.rollT=0;P.parryT=0;
       summonDemons('dragon');                    // the phylactery rises with him; the frame loop calls enterLich() at lichRiseT<=0
       P.lichForceT=14;                           // GUARANTEED return: this gifted lich always resurrects (~12s natural, 14s hard cap) so it can't strand on a tanky swarm
-      showBanner('THE DEVIL IS CAST DOWN','death signs the ledger — three seconds',2400,'#9af0c0');
+      showBanner('THE DEVIL IS CAST DOWN','death signs the ledger — three seconds',2800,'#9af0c0');
     }else{
       exitDevil();                               // demo attract loop: banish + plain revert, never trap the demo in a forced death
     }
     archCine.ph=4;                               // the visitor withdraws
-  },5200);
+  },8000);
 }
 function drawArchCine(){ // world-space; only runs in the browser (draw() early-returns when ctx is null)
   if(!archCine||archCine.ph<2)return;

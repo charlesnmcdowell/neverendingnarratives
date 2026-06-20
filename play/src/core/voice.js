@@ -24,6 +24,8 @@ const VoiceMan = {
       'THE NIGHT SHIPMENT': 'NARRATOR', 'THE CRATES OPEN': 'NARRATOR', 'AN EMPTY ROAD': 'NARRATOR',
       'LEY-LINE NODE': 'NARRATOR', 'THE DRAGON EMPEROR': 'ANKUNYX',
       'THE DRAGON GOD QUEEN': 'VORATHIEL', // ronin ending: skyward/prompt titled this -> her voice
+      // arch-devil outro cinematic: the loosed devil speaks in the WARLOCK voice, the descending angel in the SERAPHIM voice (without these aliases both fell back to NARRATOR)
+      'THE ARCH DEVIL': 'WARLOCK', 'THE SERAPHIM': 'SERAPHIM',
       'A STRANGER IN THE TREELINE': 'SHEN SAMA',
       // the Seraphim's road
       'THE TREATY STONE': 'NARRATOR', 'THE SPINE TRAIL': 'NARRATOR', 'THE SKYREACH SHRINE': 'NARRATOR',
