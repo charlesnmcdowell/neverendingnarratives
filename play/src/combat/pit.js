@@ -199,7 +199,13 @@ function evoIsAuto(){
 function evoCardRects(){
   const br=P.evoPick;if(!br)return[];
   const n=Math.min(2,br.length||0);
-  const cx=W/2,cy=H/2,pw=Math.min(300,W*0.40),ph=160,gap=26,py=cy-54;
+  const cx=W/2,cy=H/2;
+  const gap=Math.max(16,Math.round(W*0.03));
+  // card width: fit n cards + gaps in the canvas (esp. narrow phones), capped on desktop.
+  const fit=n===1?Math.min(460,W-2*gap):Math.min(380,(W-gap*3)/2);
+  const pw=Math.max(150,Math.round(fit));
+  const ph=Math.min(H-90,Math.max(300,Math.round(H*0.52)));  // tall enough for name+focus+desc+GRANTS
+  const py=Math.round(cy-ph*0.42);
   const out=[];
   for(let i=0;i<n;i++){
     const px=n===1?cx-pw/2:cx+(i===0?-(pw+gap/2):gap/2);
@@ -637,7 +643,7 @@ function updDemons(dt){
           popup(P.x,P.y-46,'+'+amt,'#f06aa0',13);
         }else if(tgt){
           fireballs.push({x:d.x,y:d.y-10,vx:Math.cos(d.face)*360,vy:Math.sin(d.face)*360,
-            r:6,kind:'fire',dmg:Math.round((rollDice(diceN(),8)+dmgBonus())*1.3)});}}}
+            r:d.arch?10:6,kind:'fire',aoe:d.arch?70:45,            dmg:Math.round((rollDice(diceN(),8)+dmgBonus())*(d.arch?2.0:1.6))});}}}
     const mv=Math.hypot(d.x-(d._lx??d.x),d.y-(d._ly??d.y));
     d.walkP=(d.walkP||0)+mv*.16;d._mv=mv>0.2;d._lx=d.x;d._ly=d.y;
     clampArena(d);}}
@@ -670,8 +676,9 @@ function updFireballs(dt){
           e.hp-=b.dmg;e.flash=.16;blood(e.x,e.y,8);
           popup(e.x,e.y-30,b.dmg,'#f0883d',16);
           S.shake=Math.max(S.shake,4);
+          const aoe=b.aoe||45; // Hiro sec5: arch fireballs tag aoe:70; normal default 45
           for(const o of enemies){if(o.dead||o===e)continue; // splash
-            if(dist(e,o)<45){const sd=Math.round(b.dmg/2);o.hp-=sd;o.flash=.1;
+            if(dist(e,o)<aoe){const sd=Math.round(b.dmg/2);o.hp-=sd;o.flash=.1;
               popup(o.x,o.y-26,sd,'#f0883d',12);
               if(o.hp<=0)killEnemy(o,false);}}
           if(e.hp<=0)killEnemy(e,false);}
@@ -706,7 +713,7 @@ function archDevilOutro(){
   archCineFight=S.fight;
   P.devilT=0;P.r=16;updateLabels();              // the borrowed form falls away
   P.channel=null;P.heavyWind=0;P.rollT=0;P.parryT=0;P.silenceT=0;
-  P.paralyzeT=Math.max(P.paralyzeT,10);          // he cannot act for the WHOLE cinematic (~10s) — each voice line plays to the end (Hiro: lines were getting cut)
+  P.paralyzeT=Math.max(P.paralyzeT,17);          // he cannot act for the WHOLE cinematic (~10s) — each voice line plays to the end (Hiro: lines were getting cut)
   archCine={ph:1,seraphY:-270,fade:1};
   camFocus(P.x,P.y-20,1.7,3.0);S.slow=0.6;
   flashFx(.22);S.shake=Math.max(S.shake,8);leafBurst(P.x,P.y,16,'#d03a4a');
@@ -716,16 +723,16 @@ function archDevilOutro(){
   let ti=Math.floor(Math.random()*taunts.length);
   if(taunts.length>1&&ti===archLastTaunt)ti=(ti+1)%taunts.length;
   archLastTaunt=ti;const taunt=taunts[ti];
-  showBanner('THE ARCH DEVIL',taunt,4200,'#d03a4a');
+  showBanner('THE ARCH DEVIL',taunt,7000,'#d03a4a');
   archVoice('THE ARCH DEVIL',taunt);
   // PHASE 2 — the Seraphim descends from above
   setTimeout(()=>{ if(!archCine)return;
     archCine.ph=2;
     const seraph=bank?bank.seraph:'Vile demon - away with you. Back to hell you go.';
     camFocus(P.x,P.y-40,1.6,2.6);flashFx(.16);
-    showBanner('THE SERAPHIM',seraph,3300,'#ffe9a8');
+    showBanner('THE SERAPHIM',seraph,5500,'#ffe9a8');
     archVoice('THE SERAPHIM',seraph);
-  },4500);
+  },7500);
   // PHASE 3 — the angel casts the devil down; death signs the ledger -> the Lich rises
   setTimeout(()=>{ if(!archCine)return;
     archCine.ph=3;
@@ -742,7 +749,7 @@ function archDevilOutro(){
       exitDevil();                               // demo attract loop: banish + plain revert, never trap the demo in a forced death
     }
     archCine.ph=4;                               // the visitor withdraws
-  },8000);
+  },13000);
 }
 function drawArchCine(){ // world-space; only runs in the browser (draw() early-returns when ctx is null)
   if(!archCine||archCine.ph<2)return;
@@ -3015,27 +3022,51 @@ function draw(){
 // item-10 inc.3: on-canvas EVOLUTION choice panel (only while a pick is open; null-ctx safe via draw()'s guard).
 function drawEvoPanel(){
   const br=P.evoPick;if(!br)return;
-  ctx.save();ctx.textAlign='center';
-  ctx.fillStyle='rgba(6,4,10,.86)';ctx.fillRect(0,0,W,H);
-  const cx=W/2,cy=H/2;
+  ctx.save();ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.fillStyle='rgba(6,4,10,.90)';ctx.fillRect(0,0,W,H);            // darken the frozen scene
+  const cx=W/2;
   const n=Math.min(2,br.length||0);   // lv20 filtered picks can offer a single road
-  ctx.fillStyle='#e7b450';ctx.font='bold 20px "Courier New",monospace';
-  ctx.fillText('CHOOSE YOUR EVOLUTION',cx,cy-118);
-  ctx.fillStyle='#cfc6b4';ctx.font='12px "Courier New",monospace';
-  ctx.fillText((n>1?'press 1 / 2  or click a card':'press 1  or click the card')+(P.evoPickT>0?'    ('+Math.ceil(P.evoPickT)+'s)':''),cx,cy-92);
-  const rs=evoCardRects();          // item-14C: same rects used for click hit-testing
+  const rs=evoCardRects();            // item-14C: same rects used for click hit-testing
+  const topY=rs[0]?rs[0].y:H/2;
+  // ---- title + prompt (above the cards) ----
+  ctx.fillStyle='#f0c66a';ctx.font='bold 26px Georgia,serif';
+  ctx.fillText('CHOOSE YOUR EVOLUTION',cx,topY-48);
+  ctx.fillStyle='#efe6d2';ctx.font='15px Georgia,serif';
+  ctx.fillText((n>1?'press 1 / 2  or click a card':'press 1  or click the card')+(P.evoPickT>0?'    ('+Math.ceil(P.evoPickT)+'s)':''),cx,topY-22);
   for(let i=0;i<n;i++){
-    // center a lone card; place two side by side
-    const r=rs[i],px=r.x,py=r.y,pw=r.w,ph=r.h,col=i===0?'#7fbf6a':'#b070f0';
-    ctx.fillStyle='rgba(20,15,10,.96)';ctx.fillRect(px,py,pw,ph);
-    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.strokeRect(px,py,pw,ph);
-    const mx=px+pw/2;
-    ctx.fillStyle=col;ctx.font='bold 15px "Courier New",monospace';
-    ctx.fillText((i+1)+'.  '+br[i].name,mx,py+30);
-    ctx.fillStyle='#cfc6b4';ctx.font='11px "Courier New",monospace';
-    let yy=evoWrap(br[i].desc||'',mx,py+54,pw-26,15);
-    ctx.fillStyle='#9a8f7c';ctx.font='italic 10px "Courier New",monospace';
-    evoWrap(br[i].kit||'',mx,Math.max(yy+8,py+ph-44),pw-26,13);
+    const r=rs[i],px=r.x,py=r.y,pw=r.w,ph=r.h;
+    const col=i===0?'#8fd27a':'#c79bff';      // road accent (brighter than before)
+    // card body + gold/road double border (keeps the dark-fantasy frame)
+    ctx.fillStyle='rgba(18,13,9,.98)';ctx.fillRect(px,py,pw,ph);
+    ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.strokeRect(px+1.25,py+1.25,pw-2.5,ph-2.5);
+    ctx.strokeStyle='rgba(240,198,106,.35)';ctx.lineWidth=1;ctx.strokeRect(px+5,py+5,pw-10,ph-10);
+    const mx=px+pw/2,innerW=pw-30;
+    let yy=py+18;
+    // 1./2. + NAME (big, bold; shrink-to-fit so long names never overflow)
+    let ns=22;ctx.font='bold '+ns+'px Georgia,serif';
+    const name=(i+1)+'.  '+br[i].name;
+    while(ns>15&&ctx.measureText(name).width>innerW){ns--;ctx.font='bold '+ns+'px Georgia,serif';}
+    yy+=ns;ctx.fillStyle=col;ctx.fillText(name,mx,yy);
+    yy+=16;
+    // FOCUS stat badge (gold pill) — clarity: shows the stat the road favors
+    const foc=br[i].focus||'';
+    if(foc){
+      ctx.font='bold 13px Georgia,serif';
+      const lab='FOCUS: '+foc,bw=ctx.measureText(lab).width+22,bh=22,bx=mx-bw/2,by=yy;
+      ctx.fillStyle='rgba(240,198,106,.16)';ctx.fillRect(bx,by,bw,bh);
+      ctx.strokeStyle='#f0c66a';ctx.lineWidth=1.5;ctx.strokeRect(bx,by,bw,bh);
+      ctx.fillStyle='#f7d98a';ctx.textBaseline='middle';ctx.fillText(lab,mx,by+bh/2+1);ctx.textBaseline='alphabetic';
+      yy+=bh+18;
+    }
+    // desc (flavor) in readable bone body text
+    ctx.fillStyle='#e7ddc6';ctx.font='15px Georgia,serif';
+    yy=evoWrap(br[i].desc||'',mx,yy,innerW,20);
+    yy+=12;
+    // GRANTS label (gold) + the kit text rendered as the most legible line
+    ctx.fillStyle='#f0c66a';ctx.font='bold 14px Georgia,serif';
+    ctx.fillText('GRANTS',mx,yy);yy+=22;
+    ctx.fillStyle='#efe6d2';ctx.font='15px Georgia,serif';
+    evoWrap(br[i].kit||'',mx,yy,innerW,20);
   }
   ctx.restore();
 }
