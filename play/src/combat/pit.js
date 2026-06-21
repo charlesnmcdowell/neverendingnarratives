@@ -368,10 +368,10 @@ function cycleForm(){
     enterForm('wolf');return;} // timer resets on switch
   P.formCD=.5;revertToHuman();} // wolf → human by hand
 function enterForm(f){
-  P.form=f;P.r=f==='bear'?22:18;P.formT=6;
+  P.form=f;P.r=f==='bear'?22:18;P.formT=16;
   if(P.glaive){P.glaive=null;leafBurst(P.x,P.y,5);} // blade dissolves on shift
   leafBurst(P.x,P.y,18);S.shake=Math.max(S.shake,4);vib(25);flashFx(.1);
-  showBanner(f.toUpperCase()+' FORM','6 seconds',650,'#7fbf6a');
+  showBanner(f.toUpperCase()+' FORM','16 seconds',650,'#7fbf6a');
   if(f==='wolf'&&P.wolfCD<=0){
     P.wolfCD=10;
     for(let i=0;i<3;i++){const a=rnd(0,Math.PI*2);
@@ -513,9 +513,9 @@ function startChannel(){
   P.channel={t:0,b:false,d:false,any:false};P.ft.heavy++;
   popup(P.x,P.y-48,'CHANNELING...','#b070f0',12);}
 function releaseChannel(){
-  if(!P.channel)return;
-  if(!P.channel.any)popup(P.x,P.y-44,'FIZZLE','#8a93a8',12);
-  P.channel=null;}
+  // Hiro item 4: SUMMON is PRESS, not HOLD. The channel auto-completes on its own; releasing the
+  // button no longer cancels it. Only an INTERRUPTION (a hit / paralyze / silence) ends it early.
+  return;}
 function portal(){
   const fs=enemies.filter(e=>!e.dead);
   if(!fs.length)return;
@@ -539,31 +539,37 @@ function summonDemons(type){
   const _heraldSummon=P.evo10==='herald'?1.35:1; // HEX FIEND: claw fiend & bone dragon ~35% tougher
   // DREADBINDER (binder road): the horde SWELLS — double swarm counts, ~1.45x bigger, 3x outgoing damage (dmgMul:3)
   const _binder=P.evo10==='binder',_bMul=_binder?3:1,_bR=_binder?1.45:1;
+  // Hiro item 3/6: COUNT multiplier — herald DOUBLES each demon summoned; Demon Lord TRIPLES (supersedes the herald doubling).
+  const _cntMul=P.demonLord?3:((_binder||P.evo10==='herald')?2:1);
   if(type==='brute'){
     const a=P.face;
     const _bh=Math.round((30+P.kills*5)*_heraldSummon);
-    const _bn=_binder?2:1; // DREADBINDER: a PAIR of claw fiends
-    for(let bi=0;bi<_bn;bi++){const ba=a+(_bn>1?(bi?0.5:-0.5):0);
+    const _bn=_cntMul; // base 1 claw fiend -> x2 (binder/herald) / x3 (Demon Lord)
+    for(let bi=0;bi<_bn;bi++){const ba=a+(_bn>1?(bi-(_bn-1)/2)*0.5:0);
       demons.push({type:'brute',x:P.x+Math.cos(ba)*55,y:P.y+Math.sin(ba)*55,r:24*_bR,face:ba,
         hp:_bh,maxhp:_bh,life:18,cool:1,flash:0,walkP:0,dmgMul:_bMul});}
     showBanner('CLAW FIEND','it hungers — they fight IT now',1300,'#b070f0');
   }else if(type==='dragon'){
-    const dhp=Math.round((44+P.kills*6)*_heraldSummon); // Hiro: moderately tougher — it is the lich's phylactery (HEX FIEND: +35%)
-    demons.push({type:'dragon',x:P.x,y:P.y-60,r:18*_bR,face:P.face,
-      hp:dhp,maxhp:dhp,life:15,cool:1.2,flash:0,walkP:0,dmgMul:_bMul});
-    showBanner('BONE DRAGON','poison breath — the rot spreads',1300,'#7fd05a');
+    let dhp=Math.round((44+P.kills*6)*_heraldSummon); // Hiro: moderately tougher — it is the lich's phylactery (HEX FIEND: +35%)
+    if(_binder)dhp=Math.round(dhp*1.7); // DREADBINDER: the BLACK DRAGON is even tougher (Hiro item 2)
+    demons.push({type:'dragon',black:_binder,x:P.x,y:P.y-60,r:18*_bR,face:P.face,
+      hp:dhp,maxhp:dhp,life:15,cool:1.2,flash:0,walkP:0,dmgMul:_bMul,fbCD:2});
+    showBanner(_binder?'BLACK DRAGON':'BONE DRAGON',_binder?'acid breath — and hellfire from above':'poison breath — the rot spreads',1300,'#7fd05a');
   }else{
-    const _sn=_binder?6:3; // DREADBINDER: a SIX-strong coven
+    const _sn=3*_cntMul; // base 3 -> x2 (binder/herald) / x3 (Demon Lord)
+    const _dl=P.demonLord; // Demon Lord: every succubus arrives as an ARCH succubus that blows ONCE on appearing
     for(let i=0;i<_sn;i++){const a=i*(6.283/_sn);
-      demons.push({type:'succubus',x:P.x+Math.cos(a)*55,y:P.y+Math.sin(a)*55,r:10*_bR,face:a,slot:a,
-        hp:10+P.kills*2,maxhp:10+P.kills*2,life:14,cool:rnd(.5,2),flash:0,walkP:0,dmgMul:_bMul});}
-    showBanner('THE COVEN',_binder?'SIX answer — fire and mending':'three answer — fire and mending',1400,'#f06aa0');}}
+      const _s={type:'succubus',x:P.x+Math.cos(a)*55,y:P.y+Math.sin(a)*55,r:(_dl?15:10)*_bR,face:a,slot:a,
+        hp:10+P.kills*2,maxhp:10+P.kills*2,life:14,cool:rnd(.5,2),flash:0,walkP:0,dmgMul:_bMul};
+      if(_dl){_s.arch=true;_s.archT=rnd(0.6,1.4);_s.archWarn=0;_s.mineX=_s.x;_s.mineY=_s.y;} // Hiro item 6: auto-arch, short fuse -> one blast on appear (then survives, fireballs only)
+      demons.push(_s);}
+    showBanner('THE COVEN',_dl?(_sn+' ARCH SUCCUBI — they burst once, then burn'):(_binder?'SIX answer — fire and mending':'three answer — fire and mending'),1400,'#f06aa0');}}
 function hurtDemon(d,dmg,from){
   d.hp-=dmg;d.flash=.12;
   popup(d.x+rnd(-6,6),d.y-d.r-12,dmg,'#d0a8f0',12);}
 function updDemons(dt){
   for(let i=demons.length-1;i>=0;i--){const d=demons[i];
-    if(!(P.lich&&d.type==='dragon'))d.life-=dt; // the phylactery's hourglass freezes while he is risen
+    if(!(P.lich&&d.type==='dragon')&&!(P.evo10==='herald'&&d.type==='succubus'))d.life-=dt; // phylactery freezes while risen; Hiro item 3: herald succubi (incl. arch) NEVER time out
     d.flash=Math.max(0,d.flash-dt);
     if(d.life<=0||d.hp<=0){leafBurst(d.x,d.y,12,'#b070f0');
       popup(d.x,d.y-20,'UNSUMMONED','#b070f0',12);demons.splice(i,1);
@@ -618,30 +624,39 @@ function updDemons(dt){
           particles.push({x:d.x+Math.cos(d.face)*d.r,y:d.y+Math.sin(d.face)*d.r,
             vx:Math.cos(ba)*bs,vy:Math.sin(ba)*bs,t:rnd(.4,.8),col:'#7fd05a',r:rnd(2,4),noG:true});}
         vib(20);
-        // the breath lays a LINGERING gas cloud — paralytic, near-harmless, only inside it
+        // the breath lays a LINGERING gas cloud — paralytic, and now ACID (Hiro item 1), only inside it
         zones.push({x:d.x+Math.cos(d.face)*120,y:d.y+Math.sin(d.face)*120,r:110,tele:0,life:4,type:'gas'});}
+      if(d.black){d.fbCD=(d.fbCD||0)-dt; // BLACK DRAGON (binder): lob a MASSIVE exploding fireball at enemies (Hiro item 2)
+        if(d.fbCD<=0&&dd<380){d.fbCD=4;
+          const fa=ang(d,tgt);
+          fireballs.push({x:d.x,y:d.y-10,vx:Math.cos(fa)*430,vy:Math.sin(fa)*430,r:14,kind:'fire',aoe:100,col:'#9af0c0',
+            dmg:Math.round((rollDice(diceN(),8)+dmgBonus())*2.2)}); // raw blast (no fire DoT/feed): hurts enemies only, splashes in aoe
+          S.shake=Math.max(S.shake,5);vib(25);
+          for(let k=0;k<8&&particles.length<240;k++)particles.push({x:d.x,y:d.y-8,vx:Math.cos(fa)*rnd(40,120),vy:Math.sin(fa)*rnd(40,120),t:rnd(.2,.4),col:'#7fd05a',r:rnd(2,3.5)});}}
     }else{ // succubus: orbit the warlock, mend or hurl fire
-      if(d.arch){ // the gift has a fuse
+      const _survArch=(P.evo10==='herald'); // Hiro item 3/6: herald arch succubi SURVIVE the blast, deal NO friendly damage, never time out
+      if(d.arch&&!d.blewOnce){ // the gift has a fuse — until she has burst once
         d.archT-=dt;
         const sec=Math.ceil(d.archT);
         if(sec<=5&&sec!==d.archWarn){d.archWarn=sec;
           popup(d.x,d.y-d.r-30,'BURSTS IN '+sec,'#d03a4a',19);vib(25);}
-        if(d.archT<=0){ // EXPLOSION — kills her, damages everyone in range
+        if(d.archT<=0){ // EXPLOSION
           const EX=Math.round((rollDice(diceN(),8)+dmgBonus())*2.3),ER=175;
           flashFx(.35);S.shake=Math.max(S.shake,16);vib([60,50,110]);
           swings.push({x:d.x,y:d.y,a:0,arc:7,range:ER,t:.3,heavy:true,col:'#f06aa0',ring:true});
           for(let k=0;k<26&&particles.length<240;k++){const ea2=rnd(0,6.3),es=rnd(120,340);
             particles.push({x:d.x,y:d.y,vx:Math.cos(ea2)*es,vy:Math.sin(ea2)*es,t:rnd(.3,.7),
               col:k%2?'#f06aa0':'#d03a4a',r:rnd(2,4.5)});}
-          showBanner('SHE BURSTS','everything near her pays',1100,'#d03a4a');
-          if(dist(d,P)<ER)hurtPlayer(EX,null); // ward or distance saves you
+          showBanner('SHE BURSTS',_survArch?'enemies near her pay — she endures':'everything near her pays',1100,'#d03a4a');
+          if(!_survArch&&dist(d,P)<ER)hurtPlayer(EX,null); // herald: friendly fire OFF (the warlock is spared)
           for(const e of enemies){if(e.dead)continue;
             if(dist(d,e)<ER){e.hp-=EX;e.flash=.16;blood(e.x,e.y,8);
               popup(e.x,e.y-30,EX,'#f06aa0',15);
               if(e.hp<=0)killEnemy(e,false);}}
-          for(const o of demons){if(o===d||o.hp<=0)continue;
+          if(!_survArch)for(const o of demons){if(o===d||o.hp<=0)continue; // herald: no damage to allied summons
             if(dist(d,o)<ER)hurtDemon(o,EX,null);}
-          d.hp=0;d.life=0;continue;}}
+          if(_survArch){d.blewOnce=true;popup(d.x,d.y-d.r-26,'SHE ENDURES','#2ecc71',13);} // survives — from now she only fireballs
+          else{d.hp=0;d.life=0;continue;}}}
       if(d.arch){d.x=d.mineX;d.y=d.mineY;} // a ticking land mine — she holds her ground
       else{d.slot+=dt*.8;
       const ox=P.x+Math.cos(d.slot)*58,oy=P.y+Math.sin(d.slot)*58;
@@ -709,15 +724,26 @@ function updFireballs(dt){
 /* ---- ARCH DEVIL: the price of the full coven ---- */
 function enterDevil(){
   if(lvl()<8){popup(P.x,P.y-64,'ARCH DEVIL AT LEVEL 8','#8a93a8',12);return;}
-  P.devilT=15;P.channel=null;P.r=24; // Hiro: +5s longer
+  P.devilT=(P.evo10==='herald')?25:15;P.channel=null;P.r=24; // Hiro item 5: herald arch devil lasts 10s longer (15->25)
   flashFx(.35);S.shake=Math.max(S.shake,12);vib([60,60,120]);
   leafBurst(P.x,P.y,26,'#d03a4a');
-  showBanner('ARCH DEVIL','he was never summoning FOR himself — 15 seconds',1800,'#d03a4a');
+  showBanner('ARCH DEVIL','he was never summoning FOR himself — '+(P.evo10==='herald'?25:15)+' seconds',1800,'#d03a4a');
   updateLabels();}
 function exitDevil(){
   P.devilT=0;P.r=16;
   leafBurst(P.x,P.y,16,'#b070f0');
   showBanner('THE PACT ENDS','',800,'#b070f0');
+  updateLabels();}
+/* ---- DEMON LORD (Hiro item 6): the herald's arch devil keeps the borrowed form forever ---- */
+function enterDemonLord(){
+  // TERMINAL within a fight — never reverts to arch devil (the outro is guarded). Cleared between fights (item 6b).
+  P.demonLord=true;P.devilT=0;P.lich=false;
+  P.channel=null;P.heavyWind=0;P.rollT=0;P.parryT=0;P.paralyzeT=0;P.silenceT=0;P.wardT=0;
+  P.r=27;                                        // a BIGGER warlock (black & green)
+  flashFx(.4);S.shake=Math.max(S.shake,16);vib([70,60,140]);
+  leafBurst(P.x,P.y,28,'#2ecc71');
+  showBanner('THE DEMON LORD','the borrowed crown is his now — black fire and green',2400,'#2ecc71');
+  popup(P.x,P.y-64,'DEMON LORD','#2ecc71',16);
   updateLabels();}
 
 /* ---- ARCH DEVIL OUTRO CINEMATIC (Hiro item 5): devil-timer expiry -> taunt -> Seraph descends -> guaranteed Lich ----
@@ -733,6 +759,25 @@ function archDevilOutro(){
   if(P.char!=='warlock'||P.lich||P.dead||P.lichRiseT>0||archCine||(S.mode!=='fight'&&S.mode!=='demo')){exitDevil();return;}
   if(S.mode==='fight'&&S.fight===archCineFight){exitDevil();return;} // already cast down once this fight — plain revert (prevents a devil<->lich softlock)
   archCineFight=S.fight;
+  // Hiro item 5: HERALD road — NO seraphim, NO death, NO lich. The taunt plays, then he becomes the DEMON LORD.
+  if(P.evo10==='herald'){
+    P.devilT=0;P.r=16;P.channel=null;P.heavyWind=0;updateLabels();
+    P.wardT=Math.max(P.wardT,4);                  // untouchable through the flourish — NOT a helpless paralyze; he can still move
+    flashFx(.22);S.shake=Math.max(S.shake,8);leafBurst(P.x,P.y,16,'#d03a4a');
+    camFocus(P.x,P.y-20,1.6,2.6);
+    const bankH=archBank();                       // REUSE the already-generated arch-devil taunt clips as-is (no new dialogue, no voice-gen)
+    const tauntsH=bankH?bankH.taunts:['The mortal plane is mine to take.'];
+    let tiH=Math.floor(Math.random()*tauntsH.length);
+    if(tauntsH.length>1&&tiH===archLastTaunt)tiH=(tiH+1)%tauntsH.length;
+    archLastTaunt=tiH;const tauntH=tauntsH[tiH];
+    showBanner('THE ARCH DEVIL',tauntH,7000,'#d03a4a');
+    archVoice('THE ARCH DEVIL',tauntH);
+    setTimeout(()=>{ // at the end of the taunt he TRANSFORMS — runs under the headless tests' simulated clock too
+      if(P.char!=='warlock'||P.dead)return;
+      if(S.mode==='fight')enterDemonLord(); else exitDevil(); // demo attract loop: just revert
+    },3000);
+    return;
+  }
   P.devilT=0;P.r=16;updateLabels();              // the borrowed form falls away
   P.channel=null;P.heavyWind=0;P.rollT=0;P.parryT=0;P.silenceT=0;
   P.paralyzeT=Math.max(P.paralyzeT,17);          // he cannot act for the WHOLE cinematic (~10s) — each voice line plays to the end (Hiro: lines were getting cut)
@@ -855,7 +900,7 @@ function blink(){
 // (the infected rise as zombies when they die), 8s = two skeletal archers,
 // 12s = the resurrection — back to the living, a warlock again. Lich death is final.
 function enterLich(){
-  P.lich=true;P.hp=Math.round(maxHP()*0.5);P.r=22;
+  P.lich=true;P.hp=Math.round(maxHP()*0.5);P.r=P.evo10==='binder'?27:22; // DREADBINDER: a BIGGER reaper (Hiro item 2)
   P.channel=null;P.heavyWind=0;P.parryT=0;P.parryCD=0;P.rollT=0;P.hexCD=0;P.wardT=0;
   if(P.devilT>0){P.devilT=0;}
   P.fadeT=0;P.fadeCD=0;
@@ -884,7 +929,7 @@ function fade(){
 function lichSlash(){ // the scythe: light harm, heavy law — 5s stun, very long flight
   if(P.fadeT>0){popup(P.x,P.y-44,'FADED — only the dead answer','#8a93a8',11);return;}
   autoFace();P.atkRecover=atkRec()*1.3;P.ft.slash++;
-  const dmg=Math.round((rollDice(Math.max(1,Math.ceil(diceN()/2)),8)+Math.floor(dmgBonus()/2))*0.8);
+  const dmg=Math.round((rollDice(Math.max(1,Math.ceil(diceN()/2)),8)+Math.floor(dmgBonus()/2))*0.8*(P.evo10==='binder'?2:1)); // DREADBINDER: scythe hits 2x (Hiro item 2)
   swings.push({x:P.x,y:P.y,a:P.face,arc:2.2,range:96,t:.18,heavy:true,col:'#9af0c0'});
   S.shake=Math.max(S.shake,6);vib(30);
   for(const e of enemies){if(e.dead)continue;
@@ -1341,6 +1386,7 @@ function spawnFight(){
   zones=[];swings=[];particles=[];popups=[];bullets=[];limbs=[];wolves=[];P.wolfCD=0;P.glaive=null;
   demons=[];fireballs=[];tracers=[];P.channel=null;P.slowT=0;P.paralyzeT=0;P.paraImmuneT=0;P.wardT=0;P.silenceT=0;P.hexedT=0;P.hexedDmg=0;
   if(P.devilT>0){P.devilT=0;P.r=16;updateLabels();}
+  if(P.demonLord){P.demonLord=false;P.r=16;updateLabels();} // Hiro item 6b: Demon Lord never carries between fights
   if(P.char==='druid'){P.form='human';P.r=16;P.formT=0;P.humanCD=0;updateLabels();}
   cam.x=cam.tx=W/2;cam.y=cam.ty=H/2;cam.z=cam.tz=1;cam.hold=0;S.fatal=false;
   P.x=arena.x;P.y=arena.y+arena.r*0.55;P.hp=maxHP();P.dead=false;P.rollT=0;P.rollCD=0;P.heavyCD=0;P.heavyWind=0;
@@ -1427,6 +1473,8 @@ function updEnemy(e,dt){
       if(e.fireTick<=0){e.fireTick=.5;dotDamage(e,e.fireDmg||15,'#f0883d');}}
     if(e.sheolT>0){e.sheolT-=dt;e.sheolTick=(e.sheolTick||0)-dt; // HEX FIEND: arch-succubus Sheol fire
       if(e.sheolTick<=0){e.sheolTick=.5;dotDamage(e,e.sheolDmg||45,'#2ecc71');}}
+    if(e.acidT>0){e.acidT-=dt;e.acidTick=(e.acidTick||0)-dt; // BONE DRAGON acid breath DoT (~hex strength) — Hiro item 1
+      if(e.acidTick<=0){e.acidTick=.5;dotDamage(e,e.acidDmg||15,'#7fd05a');}}
     if(e.infectT>0)e.infectT-=dt; // the zombie plague waits for its moment
     if(e.poisonT>0){e.poisonT-=dt;e.poisonTick=(e.poisonTick||0)-dt;
       if(e.poisonTick<=0){e.poisonTick=.6;dotDamage(e,2+Math.floor(P.kills/2),'#7fd05a');}}
@@ -1730,6 +1778,7 @@ function updEnemyVs(e,dt,P){
        if(Math.random()<.4&&particles.length<240)particles.push({x:e.x+rnd(-12,12),y:e.y+rnd(-12,12),vx:0,vy:-18,t:.3,col:'#b070f0',r:2,noG:true});
        if(e.castT<=0){e.cool=3.0;
          if(dToP<300&&P.rollT<=0&&!(P.wardT>0)){P.silenceT=3.2;P.slowT=Math.max(P.slowT,2);
+           if(P.channel){P.channel=null;} // Hiro item 4: silence interrupts the summon channel
            popup(P.x,P.y-46,'SILENCED','#b070f0',14);vib(40);}}
        break;}
      if(dToP<e.r+P.r+30&&e.meleeCD<=0){e.meleeCD=1.4;if(P.rollT<=0)hurtPlayer(rnd(6,9)*e.dmgScale,e);}
@@ -1901,6 +1950,7 @@ function startEncounter(list,cb){
   zones=[];swings=[];particles=[];popups=[];bullets=[];limbs=[];wolves=[];P.wolfCD=0;P.glaive=null;
   demons=[];fireballs=[];tracers=[];P.channel=null;P.slowT=0;P.paralyzeT=0;P.paraImmuneT=0;P.wardT=0;P.silenceT=0;P.hexedT=0;P.hexedDmg=0;
   if(P.devilT>0){P.devilT=0;P.r=16;updateLabels();}
+  if(P.demonLord){P.demonLord=false;P.r=16;updateLabels();} // Hiro item 6b: Demon Lord never carries between fights
   if(P.char==='druid'){P.form='human';P.r=16;P.formT=0;P.humanCD=0;updateLabels();}
   cam.x=cam.tx=W/2;cam.y=cam.ty=H/2;cam.z=cam.tz=1;cam.hold=0;S.fatal=false;
   P.x=arena.x;P.y=arena.y+arena.r*0.55;P.hp=maxHP();P.dead=false;P.rollT=0;P.rollCD=0;P.heavyCD=0;P.heavyWind=0;
@@ -2030,7 +2080,7 @@ const DEMOS={
 function demoReset(){
   const ch=demo.char;
   P.char=ch;P.kills=0;P.level=RKIT(ch)?1:10;P.bladeTier=0;P.weaponLine=P.weaponLine||'katana';P.form='human';P.r=16;
-  P.dead=false;P.channel=null;P.glaive=null;P.devilT=0;P.wardT=0;P.slowT=0;P.paralyzeT=0;
+  P.dead=false;P.channel=null;P.glaive=null;P.devilT=0;P.demonLord=false;P.wardT=0;P.slowT=0;P.paralyzeT=0;
   P.formT=0;P.humanCD=0;P.wolfCD=0;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;
   P.parryCD=0;P.parryT=0;P.heavyCD=0;P.heavyWind=0;P.rollCD=0;P.rollT=0;P.atkRecover=0;P.flash=0;P.hexCD=0;
   P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;P.lich=false;P.fadeT=0;P.fadeCD=0;P.lichRiseT=0;
@@ -2060,7 +2110,7 @@ function endIntro(){
 function fullReset(ch){
   S.fight=0;P.kills=0;prevKills=0;nickname='NOBODY';S.declinedPot=false;S.canLeave=false;
   if(ch)P.char=ch;
-  P.form='human';P.r=16;P.wolfCD=0;P.formT=0;P.humanCD=0;P.bladeTier=0;P.weaponLine='katana';P.slowT=0;P.paralyzeT=0;P.wardT=0;P.silenceT=0;P.hexedT=0;P.hexedDmg=0;P.devilT=0;P.hexCD=0;P.level=1;P.unlockMsg=null;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;wolves=[];demons=[];fireballs=[];P.channel=null;P.glaive=null;P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;P.lich=false;P.fadeT=0;P.fadeCD=0;P.lichRiseT=0;P.lichForceT=0;archCine=null;archCineFight=-1;P.evo10=null;P.evo20=null;P.evoPick=null;P.evoPickT=0;P.evoTier=0;
+  P.form='human';P.r=16;P.wolfCD=0;P.formT=0;P.humanCD=0;P.bladeTier=0;P.weaponLine='katana';P.slowT=0;P.paralyzeT=0;P.wardT=0;P.silenceT=0;P.hexedT=0;P.hexedDmg=0;P.devilT=0;P.demonLord=false;P.hexCD=0;P.level=1;P.unlockMsg=null;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;wolves=[];demons=[];fireballs=[];P.channel=null;P.glaive=null;P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false;P.lich=false;P.fadeT=0;P.fadeCD=0;P.lichRiseT=0;P.lichForceT=0;archCine=null;archCineFight=-1;P.evo10=null;P.evo20=null;P.evoPick=null;P.evoPickT=0;P.evoTier=0;
   try{if(typeof window!=='undefined'&&window.GameState&&window.GameState.player){window.GameState.player.evo10=null;window.GameState.player.evo20=null;}}catch(e){}
   styleScore={untouched:0,headsman:0,quicksand:0,breath:0,corpse:0,mirror:0};
   updateLabels();
@@ -2152,19 +2202,20 @@ function tick(now){
       if(c.t>=6&&!c.b){c.b=true;c.any=true;summonZombies();}
       if(c.t>=8&&!c.d){c.d=true;c.any=true;summonArchers();}
       if(c.t>=12){P.channel=null;resurrectWarlock();}}
-    else if(P.channel){const c=P.channel;c.t+=dt;
-      if(c.t>=3&&!c.b){c.b=true;
+    else if(P.channel){const c=P.channel;c.t+=dt; // Hiro item 4: PRESS-to-summon auto-channel — advances on its own, completes at the coven
+      const _dl=P.demonLord; const t1=_dl?0.5:3,t2=_dl?1:4,t3=_dl?3:6; // Hiro item 6: DEMON LORD summons 3s shorter (floored)
+      if(c.t>=t1&&!c.b){c.b=true;
         if(!demons.some(d=>d.type==='brute'&&d.hp>0)){c.any=true;summonDemons('brute');}
         else popup(P.x,P.y-58,'FIEND LIVES','#8a93a8',11);}
-      if(c.t>=4&&!c.d){c.d=true;
+      if(c.t>=t2&&!c.d){c.d=true;
         if(lvl()<3)popup(P.x,P.y-58,'DRAGON AT LEVEL 3','#8a93a8',11);
         else if(!demons.some(d=>d.type==='dragon'&&d.hp>0)){c.any=true;summonDemons('dragon');}
         else popup(P.x,P.y-58,'DRAGON LIVES','#8a93a8',11);}
-      if(c.t>=6){
+      if(c.t>=t3){
         if(lvl()<5)popup(P.x,P.y-58,'COVEN AT LEVEL 5','#8a93a8',11);
-        else if(!demons.some(d=>d.type==='succubus'&&d.hp>0)){c.any=true;summonDemons('succubus');enterDevil();}
+        else if(!demons.some(d=>d.type==='succubus'&&d.hp>0)){c.any=true;summonDemons('succubus');if(!_dl)enterDevil();} // Demon Lord never reverts to arch devil
         else popup(P.x,P.y-58,'COVEN LIVES','#8a93a8',11);
-        P.channel=P.devilT>0?null:{t:0,b:false,d:false,any:true};}} // ladder restarts unless he transformed
+        P.channel=null;}} // auto-channel completes here (no FIZZLE, no ladder restart)
     if(P.rollT>0){P.rollT-=dt;
       P.x+=P.rollDX*430*dt;P.y+=P.rollDY*430*dt;}
     else if(!P.channel&&!(P.paralyzeT>0)){
@@ -2220,8 +2271,8 @@ function tick(now){
       z.tick=(z.tick||0)-dt;
       if(z.tick<=0){z.tick=.5;
         for(const e of enemies){if(e.dead)continue;
-          if(dist(z,e)<z.r){e.stunT=Math.max(e.stunT||0,2);
-            dotDamage(e,1,'#7fd05a');}}}
+          if(dist(z,e)<z.r){e.stunT=Math.max(e.stunT||0,2); // keep the light paralytic flavor
+            e.acidT=Math.max(e.acidT||0,3);e.acidDmg=15;e.acidTick=e.acidTick||.5;}}} // Hiro item 1: refresh a hex-strength ACID DoT (ticks in updEnemy)
       if(z.life<=0)zones.splice(i,1);}
     else if(z.type==='venom'){z.life-=dt; // lingering poison pool: DoT, and ROOTS you if you linger (Hiro boss)
       if(dist(z,P)<z.r&&P.rollT<=0){z.tick=(z.tick||0)-dt;
@@ -2849,18 +2900,22 @@ function draw(){
           phase:d.walkP,moving:d._mv,headCol:'#3a1018'});
       }else if(d.type==='dragon'){
         const bob=Math.sin(S.time*3)*3;
+        const _drcol=d.black?'#0a0a0a':'#cfc6b4'; // BLACK DRAGON (binder) — Hiro item 2
         ctx.save();ctx.translate(d.x,d.y+bob);
         ctx.fillStyle='rgba(0,0,0,.4)';
         ctx.beginPath();ctx.ellipse(0,16-bob,d.r,d.r*.3,0,0,7);ctx.fill();
+        if(d.black){ // sickly-green underglow beneath the black hide
+          ctx.fillStyle='rgba(127,208,90,'+(0.18+0.1*Math.sin(S.time*4))+')';
+          ctx.beginPath();ctx.ellipse(0,2,d.r+8,d.r*.6,0,0,7);ctx.fill();}
         // wings — bone struts flapping
         const fl=Math.sin(S.time*8)*.5;
-        ctx.strokeStyle=d.flash>0?'#fff':'#cfc6b4';ctx.lineWidth=2.5;ctx.lineCap='round';
+        ctx.strokeStyle=d.flash>0?'#fff':_drcol;ctx.lineWidth=2.5;ctx.lineCap='round';
         for(const s of[-1,1]){
           ctx.beginPath();ctx.moveTo(0,-6);
           ctx.lineTo(s*16,-14-fl*8);ctx.lineTo(s*26,-6-fl*12);ctx.stroke();
           ctx.beginPath();ctx.moveTo(s*16,-14-fl*8);ctx.lineTo(s*14,-2);ctx.stroke();}
         // spine segments
-        ctx.fillStyle=d.flash>0?'#fff':'#cfc6b4';ctx.strokeStyle='#000';ctx.lineWidth=1.5;
+        ctx.fillStyle=d.flash>0?'#fff':_drcol;ctx.strokeStyle=d.black?'#173a17':'#000';ctx.lineWidth=1.5;
         for(let k=0;k<4;k++){const sx=-Math.cos(d.face)*k*7,sy=-Math.sin(d.face)*k*7;
           ctx.beginPath();ctx.arc(sx,sy,6-k,0,7);ctx.fill();ctx.stroke();}
         // skull
@@ -2880,7 +2935,7 @@ function draw(){
         for(const s of[-1,1]){
           ctx.beginPath();ctx.moveTo(d.x+s*6*wsc,d.y-18*wsc);
           ctx.quadraticCurveTo(d.x+s*16*wsc,d.y-(26+wf)*wsc,d.x+s*13*wsc,d.y-14*wsc);ctx.stroke();}
-        if(d.arch){ // pulsing fuse ring — faster as she nears the burst
+        if(d.arch&&!d.blewOnce){ // pulsing fuse ring — faster as she nears the burst (gone once she has endured a blast)
           const urg=Math.max(0,1-d.archT/7);
           ctx.strokeStyle='rgba(208,58,74,'+(0.4+0.45*Math.abs(Math.sin(S.time*(4+urg*14))))+')';
           ctx.lineWidth=3.5+urg*2;
@@ -3029,7 +3084,7 @@ function draw(){
       // form timer
       {const bw3=48,bx3=P.x-bw3/2,by3=P.y-P.r-30;
        ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(bx3,by3,bw3,5);
-       ctx.fillStyle='#d03a4a';ctx.fillRect(bx3+1,by3+1,(bw3-2)*Math.max(0,P.devilT/15),3);}
+       ctx.fillStyle='#d03a4a';ctx.fillRect(bx3+1,by3+1,(bw3-2)*Math.max(0,P.devilT/(P.evo10==='herald'?25:15)),3);}
       if(P.wardT>0){
         ctx.strokeStyle='rgba(90,210,255,'+(0.5+0.25*Math.sin(S.time*9))+')';ctx.lineWidth=2.5;
         ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+16,0,7);ctx.stroke();}
@@ -3048,15 +3103,23 @@ function draw(){
         ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+16,0,7);ctx.fill();}
       // item-10 inc.5: WARLOCK lv10 branch tint — DREADBINDER (binder) a paler bone/violet caster
       // cast; INFERNAL HERALD (herald) a redder hellfire cast. Default (no evo10) = original colors.
-      const _wkCol =P.evo10==='binder'?'#2a2238':(P.evo10==='herald'?'#3a1a26':'#241a30');
-      const _wkHead=P.evo10==='binder'?'#b0a8d0':(P.evo10==='herald'?'#b08a8a':'#9a9ab0');
-      const _wkTip =P.evo10==='binder'?'#c080ff':(P.evo10==='herald'?'#ff6a4a':'#b070f0');
-      const _wkWpn =P.evo10==='herald'?'#4a2630':'#3a3046';
+      // Hiro item 6: DEMON LORD — a bigger warlock silhouette tinted BLACK with GREEN accents.
+      const _dlord=P.demonLord;
+      const _wkCol =_dlord?'#0a0a0a':(P.evo10==='binder'?'#2a2238':(P.evo10==='herald'?'#3a1a26':'#241a30'));
+      const _wkHead=_dlord?'#2ecc71':(P.evo10==='binder'?'#b0a8d0':(P.evo10==='herald'?'#b08a8a':'#9a9ab0'));
+      const _wkTip =_dlord?'#2ecc71':(P.evo10==='binder'?'#c080ff':(P.evo10==='herald'?'#ff6a4a':'#b070f0'));
+      const _wkWpn =_dlord?'#103018':(P.evo10==='herald'?'#4a2630':'#3a3046');
+      if(_dlord){ // a low green hellfire glow under the Demon Lord
+        ctx.fillStyle='rgba(46,204,113,'+(0.16+0.08*Math.sin(S.time*4))+')';
+        ctx.beginPath();ctx.ellipse(P.x,P.y+P.r*.5,P.r+10,P.r*.5,0,0,7);ctx.fill();}
       drawFighter(P.x,P.y,P.r,P.face,_wkCol,{warlock:true,robe:true,flash:P.flash,
         dead:P.dead,deathT:P.dead?1:0,phase:P.walkP,moving:P._mv,
         wpnLen:30,wpnCol:_wkWpn,staffTip:true,tipCol:_wkTip,twoHand:false,
         headCol:_wkHead,
         wpnSwing:P.channel?-1.0:(P.atkRecover>0?0.6:0)});
+      if(P.demonLord){ // Hiro item 6: green crown-halo marks the Demon Lord
+        ctx.strokeStyle='rgba(46,204,113,'+(0.5+0.25*Math.sin(S.time*6))+')';ctx.lineWidth=3;
+        ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+14,0,7);ctx.stroke();}
       if(P.evo20==='lichlord'){ // item-10 inc.6 capstone: cold grave-light halo (binder->lich road)
         ctx.strokeStyle='rgba(150,240,200,'+(0.4+0.2*Math.sin(S.time*6))+')';ctx.lineWidth=2;
         ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+13,0,7);ctx.stroke();}
@@ -3085,7 +3148,7 @@ function draw(){
       if(P.form!=='human'){ // beast-form timer
         const bw2=44,bx2=P.x-bw2/2,by2=P.y-P.r-26;
         ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(bx2,by2,bw2,5);
-        ctx.fillStyle='#7fbf6a';ctx.fillRect(bx2+1,by2+1,(bw2-2)*Math.max(0,P.formT/6),3);}
+        ctx.fillStyle='#7fbf6a';ctx.fillRect(bx2+1,by2+1,(bw2-2)*Math.max(0,P.formT/16),3);}
       if(P.form==='bear'){
         // item-10 inc.4: PRIMAL WARDEN (bear-road) tints the bear bark/stone; default = original colors.
         const _bCol=P.evo10==='warden'?'#5a4326':'#6a4a2c', _bHead=P.evo10==='warden'?'#3a2a18':'#4a3420';
