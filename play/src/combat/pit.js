@@ -63,7 +63,8 @@ function usePotion(type){
 // per-form / per-character health modifiers (Hiro balance pass):
 //   ronin slightly frailer; druid human frail / bear tanky; warlock human & lich frail / devil tanky; seraph tankier.
 const formHP=()=>{
-  if(P.char==='druid')return P.form==='bear'?1.1:(P.form==='wolf'?1.0:0.78);
+  // PRIMAL WARDEN (lv10 'warden' bear-road): bear form ~+35% max HP. Other road / un-evolved unchanged.
+  if(P.char==='druid')return P.form==='bear'?(P.evo10==='warden'?1.485:1.1):(P.form==='wolf'?1.0:0.78);
   if(P.char==='warlock'){if(P.devilT>0)return 1.1; if(P.lich)return 0.8; return 0.8;}
   if(P.char==='seraph')return 1.2;
   return 1;
@@ -83,16 +84,16 @@ const EVOLUTIONS={
   druid:{
     10:[
       {key:'warden', name:'PRIMAL WARDEN', focus:'CON', look:'bear',
-       desc:'The bear-road — bark-skinned and immovable; thorns answer every blow.',
-       kit:'bear form hardier with a thorn aura on hit; roar taunts and roots'},
+       desc:'The bear-road — bark-skinned and immovable; the wild mends every wound.',
+       kit:'Bear form +35% max HP and regenerates ~2.5% HP/sec.'},
       {key:'alpha',  name:'FERAL ALPHA',  focus:'DEX', look:'wolf',
        desc:'The wolf-road — a faster, bleeding hunter who never runs alone.',
        kit:'wolf form swifter; howl summons an extra wolf; claws cause bleed'}
     ],
     20:[
       {from:'warden', key:'colossus',  name:'WORLDROOT COLOSSUS', focus:'CON', look:'bear',
-       desc:'A walking treant of the deep grove; the ground quakes where it steps.',
-       kit:'bear slam quakes for AoE stun; thorn aura intensified'},
+       desc:'A walking treant of the deep grove; its bulk and mending deepen.',
+       kit:'Deepens the PRIMAL WARDEN road: +CON on top of the bear\'s +35% HP and regen.'},
       {from:'alpha',  key:'sovereign', name:'DIRE MOON SOVEREIGN', focus:'DEX', look:'wolf',
        desc:'Lord of the moon-pack; a full dire pack answers the lunar howl.',
        kit:'howl summons a 3-wolf pack; bleed deepened'}
@@ -103,17 +104,17 @@ const EVOLUTIONS={
       {key:'binder', name:'DREADBINDER',     focus:'DEX', look:'caster',
        desc:'The summoner-road — the bone dragon and succubi swarm at his word.',
        kit:'more and stronger summons (bone dragon, succubi); cheaper conjures'},
-      {key:'herald', name:'INFERNAL HERALD', focus:'ATK', look:'devil',
-       desc:'The devil-road — hellfire pours through him toward the Arch Devil.',
-       kit:'arch-devil form hits harder; hexes burn'}
+      {key:'herald', name:'HEX FIEND', focus:'ATK', look:'devil',
+       desc:'The devil-road — his hexes burn and his coven hurls hellfire toward the Arch Devil.',
+       kit:'Hex CD 10s->3s & hexes STACK. Bone dragon & claw fiend +35%. Succubi hurl burning fire; the arch succubus throws GREEN Sheol-fire that burns 3x hex and spreads on kill (+5s/jump). Succubi are HEALED by fire.'}
     ],
     20:[
       {from:'binder', key:'lichlord',  name:'LICH SOVEREIGN',       focus:'DEX', look:'lich',
        desc:'Death made permanent; an undead legion marches at the cold king.',
        kit:'lich uptime extended; raises extra undead'},
       {from:'herald', key:'archfiend', name:'ARCHFIEND ASCENDANT',  focus:'ATK', look:'devil',
-       desc:'The Sheol-escapee unbound; the Arch Devil lingers far longer.',
-       kit:'arch-devil duration extended; hellfire wider'}
+       desc:'The Sheol-escapee unbound; the hex-fiend\'s hellfire deepens.',
+       kit:'Deepens the HEX FIEND road: +ATK, and the burning coven rages on.'}
     ]
   },
   seraph:{
@@ -278,7 +279,9 @@ function checkRoninForm(){
   leafBurst(P.x,P.y,22,'#e7b450');
   const _wl=WPN_LINE_NAMES[P.weaponLine||'katana']||WPN_LINE_NAMES.katana, _nm=_wl[t]||_wl[0];
   showBanner(_nm[0],_nm[1],1600,'#e7b450');}
-const dmgBonus=()=>6+Math.floor((stat('STR')-10)/2)+P.kills;
+// WARLORD ronin: the NODACHI transformation (roninTier>=1, STR>=20) bumps base damage 6->9 (+50% base).
+// Base-katana ronin (tier 0) and every non-ronin are byte-identical (base stays 6).
+const dmgBonus=()=>(RKIT(P.char)&&roninTier()>=1?9:6)+Math.floor((stat('STR')-10)/2)+P.kills;
 const moveSpd=()=>185+(stat('DEX')-10)*4;
 const rollCDmax=()=>Math.max(.55,1.15-(stat('DEX')-10)*.035);
 const atkRec=()=>Math.max(.17,.34-(stat('ATK')-10)*.009);
@@ -498,7 +501,7 @@ function strikeOne(e,dmg){ // direct damage helper (vines/roar) — no shield/pa
 function demonTaunt(){return demons.find(d=>(d.type==='brute'||d.type==='zombie')&&d.hp>0);}
 function hexBolt(){
   if(P.hexCD>0){popup(P.x,P.y-44,'HEX — '+Math.ceil(P.hexCD)+'s','#8a93a8',12);return;}
-  P.hexCD=10;
+  P.hexCD=(P.evo10==='herald')?3:10; // HEX FIEND (herald): cooldown 10s -> 3s. Other road / un-evolved = 10s.
   P.ft.slash++;P.atkRecover=atkRec()*1.1;
   const f=nearestFoe();if(f)P.face=ang(P,f);
   fireballs.push({x:P.x+Math.cos(P.face)*14,y:P.y+Math.sin(P.face)*14-18,
@@ -532,13 +535,15 @@ function summonDemons(type){
   // demons STACK — keep summoning; oldest dissolves past the cap of 12
   while(demons.length>=12){const old=demons.shift();leafBurst(old.x,old.y,8,'#b070f0');}
   flashFx(.1);S.shake=Math.max(S.shake,6);vib([30,50]);
+  const _heraldSummon=P.evo10==='herald'?1.35:1; // HEX FIEND: claw fiend & bone dragon ~35% tougher
   if(type==='brute'){
     const a=P.face;
+    const _bh=Math.round((30+P.kills*5)*_heraldSummon);
     demons.push({type:'brute',x:P.x+Math.cos(a)*55,y:P.y+Math.sin(a)*55,r:24,face:a,
-      hp:30+P.kills*5,maxhp:30+P.kills*5,life:18,cool:1,flash:0,walkP:0});
+      hp:_bh,maxhp:_bh,life:18,cool:1,flash:0,walkP:0});
     showBanner('CLAW FIEND','it hungers — they fight IT now',1300,'#b070f0');
   }else if(type==='dragon'){
-    const dhp=44+P.kills*6; // Hiro: moderately tougher — it is the lich's phylactery
+    const dhp=Math.round((44+P.kills*6)*_heraldSummon); // Hiro: moderately tougher — it is the lich's phylactery (HEX FIEND: +35%)
     demons.push({type:'dragon',x:P.x,y:P.y-60,r:18,face:P.face,
       hp:dhp,maxhp:dhp,life:15,cool:1.2,flash:0,walkP:0});
     showBanner('BONE DRAGON','poison breath — the rot spreads',1300,'#7fd05a');
@@ -592,7 +597,7 @@ function updDemons(dt){
         for(const e of enemies){if(e.dead)continue;
           if(dist(d,e)<d.r+e.r+30){ // pure aggro tank: token damage, big shove
             const pa=ang(d,e);e.x+=Math.cos(pa)*70;e.y+=Math.sin(pa)*70;clampArena(e);
-            e.hp-=1;e.flash=.1;
+            e.hp-=(P.evo10==='herald'?2:1);e.flash=.1; // HEX FIEND: claw fiend hits a bit harder
             popup(e.x,e.y-26,'SHOVED','#d05a6a',11);
             if(e.hp<=0)killEnemy(e,false);}}}
     }else if(d.type==='dragon'){
@@ -642,8 +647,12 @@ function updDemons(dt){
           tracers.push({x1:d.x,y1:d.y-12,x2:P.x,y2:P.y-16,t:.3,col:'#f06aa0'});
           popup(P.x,P.y-46,'+'+amt,'#f06aa0',13);
         }else if(tgt){
+          const _herald=P.evo10==='herald';      // HEX FIEND: succubi hurl burning fire
+          const _sheol=_herald&&d.arch;          // arch succubus -> GREEN Sheol fire (bigger, spreads on kill)
           fireballs.push({x:d.x,y:d.y-10,vx:Math.cos(d.face)*360,vy:Math.sin(d.face)*360,
-            r:d.arch?10:6,kind:'fire',aoe:d.arch?70:45,            dmg:Math.round((rollDice(diceN(),8)+dmgBonus())*(d.arch?2.0:1.6))});}}}
+            r:d.arch?(_herald?11:10):6,kind:'fire',aoe:d.arch?70:45,
+            fire:_herald,sheol:_sheol,sheolDmg:45,col:_sheol?'#2ecc71':undefined,
+            dmg:Math.round((rollDice(diceN(),8)+dmgBonus())*(d.arch?2.0:1.6))});}}}
     const mv=Math.hypot(d.x-(d._lx??d.x),d.y-(d._ly??d.y));
     d.walkP=(d.walkP||0)+mv*.16;d._mv=mv>0.2;d._lx=d.x;d._ly=d.y;
     clampArena(d);}}
@@ -651,7 +660,7 @@ function updFireballs(dt){
   for(let i=fireballs.length-1;i>=0;i--){const b=fireballs[i];
     b.x+=b.vx*dt;b.y+=b.vy*dt;
     if(particles.length<240)particles.push({x:b.x,y:b.y,vx:0,vy:0,t:.14,
-      col:b.kind==='hex'?'#b070f0':'#f0883d',r:b.kind==='hex'?2.5:3.5});
+      col:b.col||(b.kind==='hex'?'#b070f0':'#f0883d'),r:b.kind==='hex'?2.5:3.5});
     let hit=false;
     if(b.kind==='slash'){ // piercing air slash: cuts everything in the line, once each
       enemies.forEach((e,ei)=>{if(e.dead||b.hit[ei])return;
@@ -669,17 +678,24 @@ function updFireballs(dt){
           popup(e.x,e.y-28,b.dmg,'#cfc6b4',13);
           if(e.hp<=0)killEnemy(e,false);
         }else if(b.kind==='hex'){
-          e.hexT=10;e.hexDmg=15;e.hexTick=.5;e.hexJumps=0;e.flash=.14; // base hex: 10s rot; hexDmg/timer carry for CONTAGION
-          popup(e.x,e.y-28,'HEXED','#b070f0',13);
+          if(P.evo10==='herald'&&e.hexT>0){ // HEX FIEND: hex STACKS on an already-hexed target
+            e.hexDmg=(e.hexDmg||15)+15;e.hexT=Math.max(e.hexT,10);e.hexTick=e.hexTick||.5;e.flash=.14;
+            popup(e.x,e.y-28,'HEX STACK','#b070f0',13);
+          }else{
+            e.hexT=10;e.hexDmg=15;e.hexTick=.5;e.hexJumps=0;e.flash=.14; // base hex: 10s rot; hexDmg/timer carry for CONTAGION
+            popup(e.x,e.y-28,'HEXED','#b070f0',13);}
           S.shake=Math.max(S.shake,4);
         }else{
           e.hp-=b.dmg;e.flash=.16;blood(e.x,e.y,8);
-          popup(e.x,e.y-30,b.dmg,'#f0883d',16);
+          popup(e.x,e.y-30,b.dmg,b.col||'#f0883d',16);
           S.shake=Math.max(S.shake,4);
+          if(b.sheol)applySheol(e,b.sheolDmg,0); else if(b.fire)applyFire(e); // HEX FIEND: succubus fire DoTs (enemies only)
           const aoe=b.aoe||45; // Hiro sec5: arch fireballs tag aoe:70; normal default 45
+          if(b.fire||b.sheol)feedSuccubi(e.x,e.y,aoe,b.sheol?12:6); // succubi are HEALED by the fire, never hurt
           for(const o of enemies){if(o.dead||o===e)continue; // splash
             if(dist(e,o)<aoe){const sd=Math.round(b.dmg/2);o.hp-=sd;o.flash=.1;
-              popup(o.x,o.y-26,sd,'#f0883d',12);
+              popup(o.x,o.y-26,sd,b.col||'#f0883d',12);
+              if(b.sheol)applySheol(o,b.sheolDmg,0); // Sheol fire hits every enemy in the blast
               if(o.hp<=0)killEnemy(o,false);}}
           if(e.hp<=0)killEnemy(e,false);}
         break;}}
@@ -1057,7 +1073,7 @@ function pierceLine(a,len,w,dmg,heavy,kb){
     hitEnemy(e,dmg,heavy,a);
     if(kb&&!e.dead){e.x+=ca*kb;e.y+=sa*kb;clampArena(e);}}}
 function roninSpear(){ // DEX reach line: two quick thrusts, then a long lunge that pierces the rank
-  P.atkRecover=atkRec()*1.12;P.ft.slash++; // a hair slower than the katana flurry (longer haft)
+  P.atkRecover=atkRec()*0.8;P.ft.slash++; // SPEAR LINE passive: attacks FASTER (was *1.12) — the reach line whirls
   if(P.comboT<=0)P.combo=0;
   const st=P.combo;P.atkPose=st;P.combo=(P.combo+1)%3;P.comboT=1.1;
   const f=nearestRealFoe(), tier=roninTier();
@@ -1078,10 +1094,10 @@ function roninSpear(){ // DEX reach line: two quick thrusts, then a long lunge t
   swings.push({x:P.x,y:P.y,a:P.face,arc:0.35,range:len,t:.14,heavy:false,col:'#c3ccd6',style:2});
   pierceLine(P.face,len,w,dmg,false,0);}
 function roninRifle(){ // item-11 RIFLE: ATK matchlock — slow, heavy ranged shot (reuses the bullets system, friendly flag)
-  P.atkRecover=atkRec()*2.0;P.ft.slash++; // long reload between shots
+  P.atkRecover=atkRec()*1.7;P.ft.slash++; // RIFLE LINE passive: reloads a little faster (was *2.0)
   const f=nearestRealFoe(), tier=roninTier();
   const a=f?ang(P,f):P.face;P.face=a;P.atkPose=0;
-  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*(1.6+tier*0.35)); // ATK focus; scales with tier
+  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*(2.6+tier*0.35)); // RIFLE LINE passive: hits a LOT harder (base 1.6->2.6); keeps tier scaling
   const muzX=P.x+Math.cos(a)*(P.r+12),muzY=P.y-6+Math.sin(a)*(P.r+12);
   bullets.push({x:muzX,y:muzY,vx:Math.cos(a)*640,vy:Math.sin(a)*640,r:5,dmg,friendly:true});
   for(let k=0;k<10;k++)particles.push({x:muzX,y:muzY,vx:Math.cos(a+rnd(-.4,.4))*rnd(80,230),vy:Math.sin(a+rnd(-.4,.4))*rnd(80,230)-20,t:rnd(.15,.4),col:k%2?'#ffe9a8':'#e7b450',r:rnd(1.5,3)});
@@ -1126,6 +1142,8 @@ function dismember(e,full){
       kind:Math.random()<.5?'arm':'leg',col:e.col,skin:'#caa27a'});}
 }
 function killEnemy(e,heavy){
+  // WARLORD ronin (NODACHI+): heal 20% of max HP on EACH kill. Base-katana ronin (tier 0) unaffected.
+  if(RKIT(P.char)&&roninTier()>=1&&!P.dead){const mh=maxHP();P.hp=Math.min(mh,P.hp+0.2*mh);}
   // WARLOCK CONTAGION (Hiro balance): a mark that kills its host before its timer
   // expires leaps to the nearest living foe — damage DOUBLES and the remaining
   // timer GROWS by +5s each jump, so a well-placed hex can chain through a pack.
@@ -1140,6 +1158,20 @@ function killEnemy(e,heavy){
       S.shake=Math.max(S.shake,5);
     }
     e.hexT=0;e.hexDmg=0;
+  }
+  // HEX FIEND SHEOL CONTAGION: like the hex, Sheol fire leaps to the nearest living foe on death —
+  // damage DOUBLES and the remaining timer GROWS by +5s each jump (enemies only).
+  if(e.sheolT>0){
+    let tgt=null,td=1e9;
+    for(const o of enemies){if(o.dead||o===e)continue;const d=Math.hypot(o.x-e.x,o.y-e.y);if(d<td){td=d;tgt=o;}}
+    if(tgt){
+      tgt.sheolDmg=(e.sheolDmg||45)*2;           // x2 cumulative per jump
+      tgt.sheolT=(e.sheolT||0)+5;                // ADD 5s of remaining time, never reset
+      tgt.sheolTick=.5;tgt.sheolJumps=(e.sheolJumps||0)+1;tgt.flash=.16;
+      popup(tgt.x,tgt.y-30,'SHEOL SPREAD x'+tgt.sheolJumps,'#2ecc71',15);
+      S.shake=Math.max(S.shake,5);
+    }
+    e.sheolT=0;e.sheolDmg=0;
   }
   e.dead=true;bloodPool(e.x,e.y,e.r*1.6);blood(e.x,e.y,26);gibs(e,heavy?13:6);
   if(e.infectT>0){ // the infection keeps what it kills: it rises as a zombie
@@ -1378,6 +1410,10 @@ function updEnemy(e,dt){
   if(!e.dead){ // damage-over-time ticks (hex + poison) run at real speed
     if(e.hexT>0){e.hexT-=dt;e.hexTick=(e.hexTick||0)-dt;
       if(e.hexTick<=0){e.hexTick=.5;dotDamage(e,e.hexDmg||15,'#b070f0');}}
+    if(e.fireT>0){e.fireT-=dt;e.fireTick=(e.fireTick||0)-dt; // HEX FIEND: succubus burn
+      if(e.fireTick<=0){e.fireTick=.5;dotDamage(e,e.fireDmg||15,'#f0883d');}}
+    if(e.sheolT>0){e.sheolT-=dt;e.sheolTick=(e.sheolTick||0)-dt; // HEX FIEND: arch-succubus Sheol fire
+      if(e.sheolTick<=0){e.sheolTick=.5;dotDamage(e,e.sheolDmg||45,'#2ecc71');}}
     if(e.infectT>0)e.infectT-=dt; // the zombie plague waits for its moment
     if(e.poisonT>0){e.poisonT-=dt;e.poisonTick=(e.poisonTick||0)-dt;
       if(e.poisonTick<=0){e.poisonTick=.6;dotDamage(e,2+Math.floor(P.kills/2),'#7fd05a');}}
@@ -1389,6 +1425,21 @@ function dotDamage(e,d,col){if(e.dead)return;
   e.hp-=d;e.flash=Math.max(e.flash,.05);
   popup(e.x+rnd(-7,7),e.y-22,d,col,11);
   if(e.hp<=0)killEnemy(e,false);}
+// HEX FIEND (herald) fire DoTs — applied to ENEMIES ONLY (never allies/summons).
+function applyFire(e){ // normal succubus burn
+  if(e.dead)return;
+  e.fireT=Math.max(e.fireT||0,10);e.fireDmg=15;e.fireTick=e.fireTick||.5;e.flash=Math.max(e.flash,.1);
+  popup(e.x,e.y-40,'BURNING','#f0883d',11);}
+function applySheol(e,dmg,jumps){ // arch succubus Sheol fire — 3x hex base; spreads on enemy death
+  if(e.dead)return;const nd=dmg||45;
+  if((e.sheolT||0)>0){e.sheolDmg=Math.max(e.sheolDmg||0,nd);e.sheolT=Math.max(e.sheolT,10);}
+  else{e.sheolT=10;e.sheolDmg=nd;e.sheolTick=.5;e.sheolJumps=jumps||0;}
+  e.flash=Math.max(e.flash,.1);
+  popup(e.x,e.y-40,'SHEOL FIRE','#2ecc71',11);}
+function feedSuccubi(x,y,rad,amt){ // succubi are IMMUNE to fire/Sheol — it HEALS them and raises their max HP
+  for(const d of demons){if(d.type!=='succubus'||d.hp<=0)continue;
+    if(Math.hypot(d.x-x,d.y-y)<rad){d.maxhp+=Math.max(1,Math.round(amt*0.5));d.hp=Math.min(d.maxhp,d.hp+amt);
+      d.flash=.12;popup(d.x,d.y-d.r-14,'+'+amt,'#2ecc71',12);}}}
 function updEnemyVs(e,dt,P){
   if(e.dead){e.deathT+=dt;return;}
   if(e.stunT>0){e.stunT-=dt;e.flash=Math.max(e.flash,.04);
@@ -2009,6 +2060,8 @@ function tick(now){
         vx:rnd(-40,40),vy:rnd(-40,40),t:.15,col:'#f0e05a',r:2});}
     if(P.char==='druid'){
       P.humanCD=Math.max(0,P.humanCD-dt);
+      // PRIMAL WARDEN (lv10 'warden' bear-road): regenerate ~2.5% max HP/sec while in bear form.
+      if(P.evo10==='warden'&&P.form==='bear'&&P.hp>0)P.hp=Math.min(maxHP(),P.hp+maxHP()*0.025*dt);
       if(P.form!=='human'){P.formT-=dt;if(P.formT<=0)revertToHuman();}}
     P.ripoT=Math.max(0,P.ripoT-dt);P.comboT=Math.max(0,P.comboT-dt);
     P.atkRecover=Math.max(0,P.atkRecover-dt);P.flash=Math.max(0,P.flash-dt);
@@ -2713,11 +2766,12 @@ function draw(){
         ctx.fillRect(hx-3,hy-2,2.5,2.5);ctx.fillRect(hx+1,hy-2,2.5,2.5); // green eye sockets
         ctx.restore();
       }else{ // succubus
-        drawFighter(d.x,d.y,d.r,d.face,'#502438',{robe:true,flash:d.flash,
-          phase:d.walkP,moving:true,headCol:'#caa27a'});
+        const _hexfiend=(d.arch&&P.evo10==='herald'); // HEX FIEND arch succubus: black body, green accents
+        drawFighter(d.x,d.y,d.r,d.face,_hexfiend?'#0a0a0a':'#502438',{robe:true,flash:d.flash,
+          phase:d.walkP,moving:true,headCol:_hexfiend?'#2ecc71':'#caa27a'});
         // little wings (the arch succubus has grown into hers)
         const wsc=d.arch?1.6:1;
-        ctx.strokeStyle='rgba(240,106,160,.8)';ctx.lineWidth=d.arch?3:2;
+        ctx.strokeStyle=_hexfiend?'rgba(46,204,113,.9)':'rgba(240,106,160,.8)';ctx.lineWidth=d.arch?3:2;
         const wf=Math.sin(S.time*9+d.slot)*3;
         for(const s of[-1,1]){
           ctx.beginPath();ctx.moveTo(d.x+s*6*wsc,d.y-18*wsc);
@@ -2757,7 +2811,7 @@ function draw(){
         ctx.beginPath();ctx.moveTo(b.x-Math.cos(va)*11,b.y-Math.sin(va)*11);ctx.lineTo(b.x,b.y);ctx.stroke();
         ctx.fillStyle='#fff';ctx.fillRect(b.x-1,b.y-1,2,2);
         continue;}
-      const col=b.kind==='hex'?'#b070f0':'#f0883d';
+      const col=b.col||(b.kind==='hex'?'#b070f0':'#f0883d');
       const g2=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r*2.6);
       g2.addColorStop(0,col);g2.addColorStop(1,'transparent');
       ctx.fillStyle=g2;ctx.beginPath();ctx.arc(b.x,b.y,b.r*2.6,0,7);ctx.fill();
@@ -3019,65 +3073,57 @@ function draw(){
   ctx.fillStyle=v;ctx.fillRect(0,0,W,H);
   if(P.evoPick)drawEvoPanel();
 }
-// item-10 inc.3: on-canvas EVOLUTION choice panel (only while a pick is open; null-ctx safe via draw()'s guard).
 function drawEvoPanel(){
   const br=P.evoPick;if(!br)return;
   ctx.save();ctx.textAlign='center';ctx.textBaseline='alphabetic';
-  ctx.fillStyle='rgba(6,4,10,.90)';ctx.fillRect(0,0,W,H);            // darken the frozen scene
-  const cx=W/2;
-  const n=Math.min(2,br.length||0);   // lv20 filtered picks can offer a single road
-  const rs=evoCardRects();            // item-14C: same rects used for click hit-testing
-  const topY=rs[0]?rs[0].y:H/2;
-  // ---- title + prompt (above the cards) ----
-  ctx.fillStyle='#f0c66a';ctx.font='bold 26px Georgia,serif';
-  ctx.fillText('CHOOSE YOUR EVOLUTION',cx,topY-48);
-  ctx.fillStyle='#efe6d2';ctx.font='15px Georgia,serif';
+  ctx.fillStyle='rgba(6,4,10,.90)';ctx.fillRect(0,0,W,H);
+  const cx=Math.round(W/2);
+  const n=Math.min(2,br.length||0);
+  const rs=evoCardRects();
+  const topY=Math.round(rs[0]?rs[0].y:H/2);
+  ctx.fillStyle='#f0c66a';ctx.font='bold 30px Georgia,serif';
+  ctx.fillText('CHOOSE YOUR EVOLUTION',cx,topY-50);
+  ctx.fillStyle='#efe6d2';ctx.font='bold 17px Georgia,serif';
   ctx.fillText((n>1?'press 1 / 2  or click a card':'press 1  or click the card')+(P.evoPickT>0?'    ('+Math.ceil(P.evoPickT)+'s)':''),cx,topY-22);
   for(let i=0;i<n;i++){
-    const r=rs[i],px=r.x,py=r.y,pw=r.w,ph=r.h;
-    const col=i===0?'#8fd27a':'#c79bff';      // road accent (brighter than before)
-    // card body + gold/road double border (keeps the dark-fantasy frame)
+    const r=rs[i],px=Math.round(r.x),py=Math.round(r.y),pw=Math.round(r.w),ph=Math.round(r.h);
+    const col=i===0?'#8fd27a':'#c79bff';
     ctx.fillStyle='rgba(18,13,9,.98)';ctx.fillRect(px,py,pw,ph);
-    ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.strokeRect(px+1.25,py+1.25,pw-2.5,ph-2.5);
+    ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.strokeRect(px+1.5,py+1.5,pw-3,ph-3);
     ctx.strokeStyle='rgba(240,198,106,.35)';ctx.lineWidth=1;ctx.strokeRect(px+5,py+5,pw-10,ph-10);
-    const mx=px+pw/2,innerW=pw-30;
-    let yy=py+18;
-    // 1./2. + NAME (big, bold; shrink-to-fit so long names never overflow)
-    let ns=22;ctx.font='bold '+ns+'px Georgia,serif';
+    const mx=Math.round(px+pw/2),innerW=pw-30;
+    let yy=py+20;
+    let ns=24;ctx.font='bold '+ns+'px Georgia,serif';
     const name=(i+1)+'.  '+br[i].name;
-    while(ns>15&&ctx.measureText(name).width>innerW){ns--;ctx.font='bold '+ns+'px Georgia,serif';}
-    yy+=ns;ctx.fillStyle=col;ctx.fillText(name,mx,yy);
-    yy+=16;
-    // FOCUS stat badge (gold pill) — clarity: shows the stat the road favors
+    while(ns>16&&ctx.measureText(name).width>innerW){ns--;ctx.font='bold '+ns+'px Georgia,serif';}
+    yy=Math.round(yy+ns);ctx.fillStyle=col;ctx.fillText(name,mx,yy);
+    yy+=18;
     const foc=br[i].focus||'';
     if(foc){
-      ctx.font='bold 13px Georgia,serif';
-      const lab='FOCUS: '+foc,bw=ctx.measureText(lab).width+22,bh=22,bx=mx-bw/2,by=yy;
+      ctx.font='bold 14px Georgia,serif';
+      const lab='FOCUS: '+foc,bw=Math.round(ctx.measureText(lab).width+22),bh=22,bx=Math.round(mx-bw/2),by=Math.round(yy);
       ctx.fillStyle='rgba(240,198,106,.16)';ctx.fillRect(bx,by,bw,bh);
       ctx.strokeStyle='#f0c66a';ctx.lineWidth=1.5;ctx.strokeRect(bx,by,bw,bh);
-      ctx.fillStyle='#f7d98a';ctx.textBaseline='middle';ctx.fillText(lab,mx,by+bh/2+1);ctx.textBaseline='alphabetic';
+      ctx.fillStyle='#f7d98a';ctx.textBaseline='middle';ctx.fillText(lab,mx,by+Math.round(bh/2)+1);ctx.textBaseline='alphabetic';
       yy+=bh+18;
     }
-    // desc (flavor) in readable bone body text
-    ctx.fillStyle='#e7ddc6';ctx.font='15px Georgia,serif';
-    yy=evoWrap(br[i].desc||'',mx,yy,innerW,20);
+    ctx.fillStyle='#e7ddc6';ctx.font='17px Georgia,serif';
+    yy=evoWrap(br[i].desc||'',mx,Math.round(yy),innerW,21);
     yy+=12;
-    // GRANTS label (gold) + the kit text rendered as the most legible line
-    ctx.fillStyle='#f0c66a';ctx.font='bold 14px Georgia,serif';
-    ctx.fillText('GRANTS',mx,yy);yy+=22;
-    ctx.fillStyle='#efe6d2';ctx.font='15px Georgia,serif';
-    evoWrap(br[i].kit||'',mx,yy,innerW,20);
+    ctx.fillStyle='#f0c66a';ctx.font='bold 16px Georgia,serif';
+    ctx.fillText('GRANTS',mx,Math.round(yy));yy+=24;
+    ctx.fillStyle='#efe6d2';ctx.font='17px Georgia,serif';
+    evoWrap(br[i].kit||'',mx,Math.round(yy),innerW,21);
   }
   ctx.restore();
 }
-function evoWrap(txt,cx,y,maxw,lh){ // tiny centered word-wrap; returns the y after the last line
-  const words=(''+txt).split(' ');let line='',yy=y;
+function evoWrap(txt,cx,y,maxw,lh){
+  const words=(''+txt).split(' ');let line='',yy=Math.round(y);
   for(const w of words){const t=line?line+' '+w:w;
-    if(ctx.measureText(t).width>maxw&&line){ctx.fillText(line,cx,yy);yy+=lh;line=w;}else line=t;}
-  if(line){ctx.fillText(line,cx,yy);yy+=lh;}
+    if(ctx.measureText(t).width>maxw&&line){ctx.fillText(line,cx,yy);yy=Math.round(yy+lh);line=w;}else line=t;}
+  if(line){ctx.fillText(line,cx,yy);yy=Math.round(yy+lh);}
   return yy;
 }
-/* ============ HOST API ============ */
 const api={
   frame:tick,resize,keys,mouse,stick,
   doSlash,doParry,doHeavy,doRoll,heavyRelease,
@@ -3089,9 +3135,8 @@ const api={
   get demons(){return demons;},get wolves(){return wolves;},
   get nickname(){return nickname;},get FIGHTS(){return FIGHTS;},
   maxHP,lvl,diceN,stat,
-  // item-10 inc.6: evolution internals exposed for the qa_questlines headless evo-beat checks
   get EVOLUTIONS(){return EVOLUTIONS;},maybeOfferEvo,pickEvo,evoTick,evoClick,get evoRects(){return evoCardRects();},
-  drawFighter, // render-only reuse: city NPCs/player share the arena art style
+  drawFighter,
   startEncounter,setMods,usePotion,mkEnemy,addAlly,
   setPlayerSnapshot:(snap)=>{P.char=snap.char;P.kills=snap.kills;P.level=snap.level;
     P.bladeTier=snap.bladeTier||0;P.weaponLine=snap.weaponLine||'katana';Object.assign(P.base,snap.base);nickname=snap.nickname;
