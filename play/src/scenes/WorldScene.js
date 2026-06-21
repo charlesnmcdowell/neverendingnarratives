@@ -233,7 +233,7 @@ class WorldScene extends Phaser.Scene {
   updatePlayer(dt) {
     if (CityUI.dialogOpen() || this.encounterActive || this.cinematic) return 0;
     const P = window.GameState.player;
-    const DEX = P.char === 'ronin' ? P.base.DEX + P.kills * 2 : P.base.DEX + 3 * (Math.min(10, P.level) - 1);
+    const DEX = P.char === 'ronin' ? P.base.DEX + P.kills * 2 : P.base.DEX + 3 * (Math.min(20, P.level) - 1);
     const spd = 185 + (DEX - 10) * 4;
     let mx = (this.keys.A.isDown ? -1 : 0) + (this.keys.D.isDown ? 1 : 0);
     let my = (this.keys.W.isDown ? -1 : 0) + (this.keys.S.isDown ? 1 : 0);
@@ -603,7 +603,8 @@ class WorldScene extends Phaser.Scene {
     this.encCombat.startEncounter(pack, win => {
       // sync the run back into the world snapshot (ronin snowball persists)
       P.kills = this.encCombat.P.kills;
-      P.level = Math.min(10, Math.floor(this.encCombat.P.level || P.level));
+      // cap 20 (the raised level cap), keep fractional progress, and NEVER move backwards (Hiro: level-going-backwards fix)
+      P.level = Math.max(P.level || 1, Math.min(20, this.encCombat.P.level || P.level));
       P.bladeTier = this.encCombat.P.bladeTier || P.bladeTier;
       P.weaponLine = this.encCombat.P.weaponLine || P.weaponLine || 'katana';
       P.nickname = this.encCombat.nickname;
