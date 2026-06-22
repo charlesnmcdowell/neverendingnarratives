@@ -14,8 +14,13 @@ const CityUI = {
       const jb = document.getElementById('journalBtn'), ab = document.getElementById('autoBtn');
       if (jb) jb.addEventListener('pointerdown', () => { if (this._onJournal) this._onJournal(); });
       if (ab) ab.addEventListener('pointerdown', () => QuestNav.cycleMode());
+      // ZOOM control (Hiro item 1): step-out cycles 100->75->50->25->100; reset jumps back to 100%
+      const zo = document.getElementById('zoomOutBtn'), zr = document.getElementById('zoomResetBtn');
+      if (zo) zo.addEventListener('pointerdown', () => { if (this._onZoomCycle) this._onZoomCycle(); });
+      if (zr) zr.addEventListener('pointerdown', () => { if (this._onZoomReset) this._onZoomReset(); });
     }
   },
+  setZoomLabel(pct) { const el = document.getElementById('zoomResetBtn'); if (el) el.textContent = (pct | 0) + '%'; },
   hud(show) { this.els.hud.style.display = show ? 'block' : 'none'; },
   setIdentity(nickname) { this.els.name.textContent = nickname; },
   setPurse(copper) { this.els.purse.textContent = Money.fmt(copper); },

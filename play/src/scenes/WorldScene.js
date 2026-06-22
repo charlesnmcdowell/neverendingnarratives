@@ -186,8 +186,11 @@ class WorldScene extends Phaser.Scene {
     CityUI._onTrackQuest = () => { this.qlogOpen = false; CityUI.questlog(false);
       QuestNav.startTracking(this); };
     CityUI.syncAutoBtn();
-    // phones: lean the camera in a touch so the world reads at arm's length
-    if (window.IS_PHONE) this.cameras.main.setZoom(1.18);
+    // ZOOM control (Hiro item 1): HUD zoom buttons drive the overworld camera, persisted in GameState.meta
+    CityUI._onZoomCycle = () => this.cycleZoom();
+    CityUI._onZoomReset = () => this.setWorldZoom(100);
+    // apply the player's chosen zoom — DEFAULT 100% (was a hardcoded 1.18 that zoomed phones in too far)
+    this.applyWorldZoom();
     // a tracked walk continues across zone loads
     if (QuestNav.tracking) this.time.delayedCall(150, () => QuestNav.replan(this));
     // zone music + autosave heartbeat
@@ -207,7 +210,7 @@ class WorldScene extends Phaser.Scene {
     const zone = GS.world.zone;
     if (GS.world.seenZones[zone]) return;     // only the FIRST time you set foot here
     GS.world.seenZones[zone] = true;
-    const baseZoom = window.IS_PHONE ? 1.18 : 1;
+    const baseZoom = this.worldZoomFactor();
     // where to look: the active quest objective if it lives in THIS zone, else an overview of the map center
     let tx = this.worldW / 2, ty = this.worldH / 2, hasObj = false;
     const obj = window.QuestNav && QuestNav.objective && QuestNav.objective();
@@ -228,6 +231,36 @@ class WorldScene extends Phaser.Scene {
       cam.setZoom(baseZoom);
       cam.startFollow(this.player, true, 0.12, 0.12);
     });
+  }
+
+  // ---------- OVERWORLD ZOOM (Hiro item 1) ----------
+  // Player-chosen camera zoom, 25%..100% (100% = default full view). Persisted in GameState.meta
+  // (saved with the game) and mirrored to localStorage. Re-applied on zone load, after the intro
+  // pan, and after combat so the choice always sticks.
+  worldZoomPct() {
+    let p = 0;
+    try { const m = window.GameState && window.GameState.meta; if (m && m.worldZoom) p = m.worldZoom | 0; } catch (e) {}
+    if (!p) { try { p = parseInt(localStorage.getItem('ssw_worldZoom') || '', 10) || 0; } catch (e) {} }
+    if (!p || p < 25 || p > 100) p = 100;
+    return p;
+  }
+  worldZoomFactor() { return this.worldZoomPct() / 100; }
+  applyWorldZoom() {
+    const cam = this.cameras && this.cameras.main;
+    if (cam && typeof cam.setZoom === 'function') cam.setZoom(this.worldZoomFactor());
+    try { if (window.CityUI && CityUI.setZoomLabel) CityUI.setZoomLabel(this.worldZoomPct()); } catch (e) {}
+  }
+  setWorldZoom(pct) {
+    pct = Math.max(25, Math.min(100, pct | 0));
+    try { window.GameState.meta = window.GameState.meta || {}; window.GameState.meta.worldZoom = pct; } catch (e) {}
+    try { localStorage.setItem('ssw_worldZoom', String(pct)); } catch (e) {}
+    this.applyWorldZoom();
+  }
+  cycleZoom() { // step OUT: 100 -> 75 -> 50 -> 25 -> wrap to 100
+    const steps = [100, 75, 50, 25];
+    let idx = steps.indexOf(this.worldZoomPct());
+    idx = idx < 0 ? 0 : (idx + 1) % steps.length;
+    this.setWorldZoom(steps[idx]);
   }
 
   updatePlayer(dt) {
@@ -607,13 +640,15 @@ class WorldScene extends Phaser.Scene {
       P.level = Math.max(P.level || 1, Math.min(20, this.encCombat.P.level || P.level));
       P.bladeTier = this.encCombat.P.bladeTier || P.bladeTier;
       P.weaponLine = this.encCombat.P.weaponLine || P.weaponLine || 'katana';
+      P.evo10 = this.encCombat.P.evo10 || P.evo10 || null; // persist an evolution picked mid-fight back to the world snapshot
+      P.evo20 = this.encCombat.P.evo20 || P.evo20 || null;
       P.nickname = this.encCombat.nickname;
       CityUI.setIdentity(P.nickname); CityUI.belt(P.belt);
       this.encounterActive = false;
       this.encImg.setVisible(false);
       // restore the field sprites we hid when the encounter began
       if (this._hiddenForEnc) { this._hiddenForEnc.forEach(o => o.setVisible(true)); this._hiddenForEnc = null; }
-      if (window.IS_PHONE) this.cameras.main.setZoom(1.18); // lean back in for the road
+      this.applyWorldZoom(); // restore the player's chosen overworld zoom after combat
       document.getElementById('hud').style.display = 'none';
       document.getElementById('controls').style.display = 'none';
       try { CityUI.hud(true); } catch (e) {} // bring the city HUD back now the fight HUD is gone

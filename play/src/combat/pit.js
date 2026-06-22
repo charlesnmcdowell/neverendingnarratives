@@ -42,7 +42,7 @@ const P={x:0,y:0,r:16,face:0,hp:45,kills:0,
   char:'ronin',form:'human',formCD:0,heavyCDmax:2.2,wolfCD:0,
   rollT:0,rollCD:0,heavyCD:0,atkT:0,atkRecover:0,heavyWind:0,flash:0,dead:false,
   hexedT:0,hexedDmg:0,hexedTick:0, // cult-warlock boss HEX DoT on the player (enemy-side hex)
-  parryT:0,parryCD:0,ripoT:0,combo:0,comboT:0,atkPose:0,
+  parryT:0,parryCD:0,comboParryT:0,ripoT:0,combo:0,comboT:0,atkPose:0,
   ft:{dmgTaken:0,heavy:0,slash:0,rolls:0,parries:0,t0:0,low:false}};
 let wolves=[],demons=[],fireballs=[],tracers=[];
 const lvl=()=>Math.min(20,Math.floor(P.level||1));
@@ -313,30 +313,81 @@ function doSlash(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.atkRecover>0|
   if(P.char==='seraph'){autoFace();seraphSlash();return;}
   if(RKIT(P.char)&&P.weaponLine==='spear'){autoFace();roninSpear();return;}
   if(RKIT(P.char)&&P.weaponLine==='rifle'){autoFace();roninRifle();return;} // item-11: rifle LINE — slow ranged matchlock shot // item-11: spear LINE — reach/thrust, pierces a line
-  autoFace();P.atkRecover=atkRec();P.ft.slash++;
+  // RONIN base melee — 4-ATTACK SEQUENCE (Hiro 2026-06-21, item 2):
+  //  combo 0,1,2 = DASHING lunges that close a big gap to the nearest foe, then cut;
+  //  combo 3     = a back-step + counter stance that GRANTS an INDEPENDENT parry window
+  //               (P.comboParryT — does NOT share the button-parry cooldown gate).
+  autoFace();P.ft.slash++;
   if(P.comboT<=0)P.combo=0;
-  const st=P.combo;P.atkPose=st;P.combo=(P.combo+1)%3;P.comboT=1.1;
-  // Hiro: the ronin STEPS INTO each strike (pressing the advance)
+  const st=P.combo;P.atkPose=st;P.combo=(P.combo+1)%4;P.comboT=1.1;
   const f=nearestRealFoe();
-  if(f&&st!==2){const a=ang(P,f);P.x+=Math.cos(a)*22;P.y+=Math.sin(a)*22;clampArena(P);}
-  // kendo rhythm: kesa-giri right, kesa-giri left, men overhead finisher
-  const arc=st===2?1.15:1.7, range=(st===2?88:74)+roninTier()*12, mult=st===2?1.25:1;
-  // light-attack damage trimmed slightly (Hiro): 0.88 -> 0.78 on the two kesa cuts
-  let dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*mult*(st===2?0.88:0.78));
-  swings.push({x:P.x,y:P.y,a:P.face,arc,range,t:st===2?.16:.14,heavy:st===2,col:st===2?'#e7d9a8':'#d8cdb8',style:st});
-  strike(P.face,arc,range,dmg,false);
-  if(st===2){ // the MEN finisher: recover, give ground, and snap into an auto-parry (Hiro)
-    P.atkRecover=Math.max(P.atkRecover,3.0);          // 3s before he can attack again
-    const ba=f?ang(f,P):P.face+Math.PI;                // step BACK from the foe (3 steps)
-    P.x+=Math.cos(ba)*66;P.y+=Math.sin(ba)*66;clampArena(P);
-    P.parryT=2.3*MODS.parryWin;P.parryCD=0;            // auto-parry stance on the retreat
-    popup(P.x,P.y-46,'ZANSHIN — guard up','#e7b450',12);}}
+  if(st<3){ // 1-3: LUNGE forward a long way INTO the strike (close the gap), then cut — responsive recovery
+    P.atkRecover=atkRec()*0.85;                         // snappier base recovery so taps register quickly
+    if(f){const a=ang(P,f);
+      const gap=Math.max(0,dist(P,f)-(P.r+f.r+10));     // distance needed to land beside the foe
+      const step=Math.min(gap,220);                     // cover a LOT of ground (capped so he doesn't clip past)
+      if(step>0){P.x+=Math.cos(a)*step;P.y+=Math.sin(a)*step;clampArena(P);}
+      P.face=a;
+      for(let k=0;k<7&&particles.length<240;k++)         // dash trail behind the lunge
+        particles.push({x:P.x-Math.cos(a)*step*k/7,y:P.y-Math.sin(a)*step*k/7,
+          vx:rnd(-20,20),vy:rnd(-20,20),t:rnd(.12,.26),col:'#d8cdb8',r:rnd(1.5,3)});
+      S.shake=Math.max(S.shake,3);
+    }else{P.x+=Math.cos(P.face)*40;P.y+=Math.sin(P.face)*40;clampArena(P);} // no foe: a short forward step
+    const arc=1.7, range=78+roninTier()*12;
+    const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*0.82);
+    swings.push({x:P.x,y:P.y,a:P.face,arc,range,t:.14,heavy:false,col:'#d8cdb8',style:st});
+    strike(P.face,arc,range,dmg,false);
+  }else{ // 4: the MEN finisher — give ground, cut wide, and snap into a counter/parry stance
+    const arc=1.2, range=92+roninTier()*12;
+    const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*1.15);
+    swings.push({x:P.x,y:P.y,a:P.face,arc,range,t:.16,heavy:true,col:'#e7d9a8',style:st});
+    strike(P.face,arc,range,dmg,true);
+    const ba=f?ang(f,P):P.face+Math.PI;                 // step BACK from the foe
+    P.x+=Math.cos(ba)*70;P.y+=Math.sin(ba)*70;clampArena(P);
+    P.atkRecover=Math.max(atkRec()*1.1,0.45);           // a real beat — but NOT the old 3s lock
+    P.comboParryT=2.3*MODS.parryWin;                    // GRANTED parry (item 3): independent of the button parry
+    popup(P.x,P.y-46,'ZANSHIN — guard up','#e7b450',12);
+  }}
 function doParry(){if(S.mode!=='fight'&&S.mode!=='demo'||P.dead||P.rollT>0||P.heavyWind>0||P.channel||P.paralyzeT>0||P.silenceT>0)return;
+  // NOTE (item 3): guards are intentionally relaxed — there is NO atkRecover/combo check here, so the
+  // parry button fires DURING an in-progress attack (and doSlash has no parryT guard, so you can attack
+  // while a parry window is up). Attack + parry work together.
   if(P.char==='druid'){cycleForm();return;}
-  if(P.parryCD>0)return;
+  if(P.parryCD>0)return;                                // button parry has its OWN gate only (comboParryT is separate)
   if(P.char==='warlock'){if(P.lich){fade();return;}portal();return;}
   if(P.char==='seraph'){ascend();return;}
   autoFace();P.parryT=2.3*MODS.parryWin;P.parryCD=1.4;}
+// ---- PARRY RESOLUTION (item 3) — two independent windows: P.parryT (button) + P.comboParryT (4-combo finisher).
+// A successful parry works on melee, ranged bullets, AND spells/zones; parrying a spell NEGATES it entirely
+// (no damage, no debuff) while STILL playing the blade counter/riposte and granting the on-parry heal.
+function parryAvail(){return P.parryT>0||P.comboParryT>0;}
+function consumeParry(){if(P.parryT>0)P.parryT=0;else if(P.comboParryT>0)P.comboParryT=0;} // spend ONE window (button first), so two windows can guard two hits
+function parrySuccess(from){
+  consumeParry();P.ft.parries++;
+  popup(P.x,P.y-36,'PARRY','#e7b450',17);
+  S.hitPause=Math.max(S.hitPause,.1);flashFx(.12);vib(35);
+  const hl=Math.round(maxHP()*0.20);                    // on-parry heal (unchanged)
+  P.hp=Math.min(maxHP(),P.hp+hl);
+  popup(P.x,P.y-52,'+'+hl,'#7fbf6a',14);
+  const af=(from&&!from.dead)?ang(P,from):P.face;P.face=af; // riposte: ranged air slash, 1.5x, pierces its line
+  fireballs.push({x:P.x+Math.cos(af)*16,y:P.y-16+Math.sin(af)*16,
+    vx:Math.cos(af)*520,vy:Math.sin(af)*520,r:15,kind:'slash',
+    dmg:Math.round((rollDice(diceN(),8)+dmgBonus())*1.5),hit:{}});
+  popup(P.x,P.y-66,'AIR SLASH','#e7d9a8',13);
+  for(let i=0;i<8;i++)particles.push({x:P.x+Math.cos(P.face)*20,y:P.y+Math.sin(P.face)*20,
+    vx:rnd(-160,160),vy:rnd(-160,-40),t:rnd(.2,.4),col:'#e7b450',r:rnd(1,2.5)});
+  if(from&&!from.dead&&dist(from,P)<140){from.stunT=from.type==='beast'?0.6:1.2;
+    from.attacking=false;from.tele=0;
+    popup(from.x,from.y-30,'STAGGERED','#9aa0a8',12);}
+}
+// Parry a SPELL/ZONE: negate it, remove the zone, still riposte + heal. Returns true if it was parried.
+function zoneParry(z,i){
+  if(!parryAvail())return false;
+  parrySuccess(z&&z.owner?z.owner:null);
+  popup(P.x,P.y-66,'SPELL PARRIED','#e7d9a8',13);
+  if(typeof i==='number')zones.splice(i,1);             // remove the zone entirely (negated)
+  return true;
+}
 
 /* ============ DRUID ============ */
 function setBtnLabel(id,txt){UI.btnLabel(id,txt);}
@@ -1390,7 +1441,7 @@ function spawnFight(){
   if(P.char==='druid'){P.form='human';P.r=16;P.formT=0;P.humanCD=0;updateLabels();}
   cam.x=cam.tx=W/2;cam.y=cam.ty=H/2;cam.z=cam.tz=1;cam.hold=0;S.fatal=false;
   P.x=arena.x;P.y=arena.y+arena.r*0.55;P.hp=maxHP();P.dead=false;P.rollT=0;P.rollCD=0;P.heavyCD=0;P.heavyWind=0;
-  P.parryT=0;P.parryCD=0;P.ripoT=0;P.combo=0;P.comboT=0;
+  P.parryT=0;P.parryCD=0;P.comboParryT=0;P.ripoT=0;P.combo=0;P.comboT=0;
   P.hexCD=0;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;P.humanCD=0;P.wolfCD=0;P.formCD=0; // all skills fresh each fight (Hiro)
   P.ft={dmgTaken:0,heavy:0,slash:0,rolls:0,parries:0,t0:NOW(),low:false};
   UI.boss(S.fight>=18,FIGHTS[S.fight].name);
@@ -1408,26 +1459,9 @@ function hurtPlayer(dmg,from){
   const tb=demonTaunt(); // the claw fiend soaks hits aimed near it
   if(tb&&from&&dist(from,tb)<dist(from,P)){hurtDemon(tb,Math.round(dmg),from);return;}
   if(P.channel){P.channel=null;popup(P.x,P.y-46,'INTERRUPTED','#b070f0',14);vib(40);}
-  if(P.parryT>0&&from){
-    P.parryT=0;P.ft.parries++;
-    popup(P.x,P.y-36,'PARRY','#e7b450',17);
-    S.hitPause=Math.max(S.hitPause,.1);flashFx(.12);vib(35);
-    // heal 15% of max health
-    const hl=Math.round(maxHP()*0.20);
-    P.hp=Math.min(maxHP(),P.hp+hl);
-    popup(P.x,P.y-52,'+'+hl,'#7fbf6a',14);
-    // ranged air slash — 1.5x damage, pierces everything in its line
-    const af=from&&!from.dead?ang(P,from):P.face;P.face=af;
-    fireballs.push({x:P.x+Math.cos(af)*16,y:P.y-16+Math.sin(af)*16,
-      vx:Math.cos(af)*520,vy:Math.sin(af)*520,r:15,kind:'slash',
-      dmg:Math.round((rollDice(diceN(),8)+dmgBonus())*1.5),hit:{}});
-    popup(P.x,P.y-66,'AIR SLASH','#e7d9a8',13);
-    for(let i=0;i<8;i++)particles.push({x:P.x+Math.cos(P.face)*20,y:P.y+Math.sin(P.face)*20,
-      vx:rnd(-160,160),vy:rnd(-160,-40),t:rnd(.2,.4),col:'#e7b450',r:rnd(1,2.5)});
-    if(!from.dead&&dist(from,P)<140){from.stunT=from.type==='beast'?0.6:1.2;
-      from.attacking=false;from.tele=0;
-      popup(from.x,from.y-30,'STAGGERED','#9aa0a8',12);}
-    return;}
+  // PARRY (item 3): fires for melee, ranged bullets AND spells. `from` may be null (a spell/zone) — a
+  // parried hit is fully negated (no damage) and still ripostes + heals via parrySuccess.
+  if(parryAvail()){parrySuccess(from);return;}
   if(P.char==='druid'&&P.form==='bear')dmg=Math.round(dmg*0.65);
   if(S.mode==='demo'&&P.hp-dmg<=8){P.hp=Math.round(maxHP()*.8);return;}
   dmg=Math.round(dmg);P.hp-=dmg;P.flash=.15;P.ft.dmgTaken+=dmg;
@@ -1777,9 +1811,11 @@ function updEnemyVs(e,dt,P){
      if(e.castT>0){e.castT-=dt;
        if(Math.random()<.4&&particles.length<240)particles.push({x:e.x+rnd(-12,12),y:e.y+rnd(-12,12),vx:0,vy:-18,t:.3,col:'#b070f0',r:2,noG:true});
        if(e.castT<=0){e.cool=3.0;
-         if(dToP<300&&P.rollT<=0&&!(P.wardT>0)){P.silenceT=3.2;P.slowT=Math.max(P.slowT,2);
-           if(P.channel){P.channel=null;} // Hiro item 4: silence interrupts the summon channel
-           popup(P.x,P.y-46,'SILENCED','#b070f0',14);vib(40);}}
+         if(dToP<300&&P.rollT<=0&&!(P.wardT>0)){
+           if(parryAvail()){parrySuccess(e);popup(P.x,P.y-66,'SPELL PARRIED','#e7d9a8',13);} // parry NEGATES the silence
+           else{P.silenceT=3.2;P.slowT=Math.max(P.slowT,2);
+             if(P.channel){P.channel=null;} // Hiro item 4: silence interrupts the summon channel
+             popup(P.x,P.y-46,'SILENCED','#b070f0',14);vib(40);}}}
        break;}
      if(dToP<e.r+P.r+30&&e.meleeCD<=0){e.meleeCD=1.4;if(P.rollT<=0)hurtPlayer(rnd(6,9)*e.dmgScale,e);}
      if(e.cool<=0){e.castT=.9;popup(e.x,e.y-e.r-8,'HEXING','#b070f0',11);}}
@@ -1954,7 +1990,7 @@ function startEncounter(list,cb){
   if(P.char==='druid'){P.form='human';P.r=16;P.formT=0;P.humanCD=0;updateLabels();}
   cam.x=cam.tx=W/2;cam.y=cam.ty=H/2;cam.z=cam.tz=1;cam.hold=0;S.fatal=false;
   P.x=arena.x;P.y=arena.y+arena.r*0.55;P.hp=maxHP();P.dead=false;P.rollT=0;P.rollCD=0;P.heavyCD=0;P.heavyWind=0;
-  P.parryT=0;P.parryCD=0;P.ripoT=0;P.combo=0;P.comboT=0;
+  P.parryT=0;P.parryCD=0;P.comboParryT=0;P.ripoT=0;P.combo=0;P.comboT=0;
   P.hexCD=0;P.cdVines=0;P.cdRoar=0;P.cdHowl=0;P.humanCD=0;P.wolfCD=0;P.formCD=0; // all skills fresh each fight (Hiro)
   P.ascendT=0;rays=[];P.kneelT=0;P.graceUsed=false; // the angel lands; grace is whole again
   if(P.lich){P.lich=false;P.r=16;updateLabels();}P.fadeT=0;P.fadeCD=0;P.lichRiseT=0; // each fight begins among the living
@@ -2149,7 +2185,7 @@ function tick(now){
   if(!P.dead){
     if(P.hp>maxHP())P.hp=maxHP(); // form-HP changes (Hiro) shrink the cap mid-fight — keep the bar honest
     P.rollCD=Math.max(0,P.rollCD-dt);P.heavyCD=Math.max(0,P.heavyCD-dt);
-    P.parryT=Math.max(0,P.parryT-dt);P.parryCD=Math.max(0,P.parryCD-dt);
+    P.parryT=Math.max(0,P.parryT-dt);P.parryCD=Math.max(0,P.parryCD-dt);P.comboParryT=Math.max(0,(P.comboParryT||0)-dt);
     P.formCD=Math.max(0,P.formCD-dt);P.wolfCD=Math.max(0,P.wolfCD-dt);
     P.slowT=Math.max(0,(P.slowT||0)-dt);P.wardT=Math.max(0,(P.wardT||0)-dt);P.hexCD=Math.max(0,(P.hexCD||0)-dt);
     P.silenceT=Math.max(0,(P.silenceT||0)-dt); // Collector's hex: abilities locked (Hiro boss)
@@ -2252,19 +2288,24 @@ function tick(now){
         swings.push({x:z.x,y:z.y,a:0,arc:7,range:z.r,t:.15,heavy:false,col:'#c8923a',ring:true});
         zones.splice(i,1);}
       else if(z.tele<=0&&z.type==='ice'){
-        if(dist(z,P)<z.r&&P.rollT<=0&&!(P.wardT>0)){hurtPlayer(z.dmg,null);P.slowT=3;
-          popup(P.x,P.y-44,'CHILLED','#5ad2ff',13);}
+        if(dist(z,P)<z.r&&P.rollT<=0&&!(P.wardT>0)){
+          if(parryAvail()){parrySuccess(z.owner||null);popup(P.x,P.y-66,'SPELL PARRIED','#e7d9a8',13);} // parry NEGATES the chill (no dmg, no slow)
+          else{hurtPlayer(z.dmg,null);P.slowT=3;popup(P.x,P.y-44,'CHILLED','#5ad2ff',13);}}
         swings.push({x:z.x,y:z.y,a:0,arc:7,range:z.r,t:.18,heavy:false,col:'#5ad2ff',ring:true});
         zones.splice(i,1);}
       else if(z.tele<=0&&z.type==='bolt'){
-        if(dist(z,P)<z.r&&P.rollT<=0&&!(P.wardT>0)&&(P.paraImmuneT||0)<=0&&(!z.owner||(z.owner.paraCD||0)<=0)){P.paralyzeT=3;if(z.owner)z.owner.paraCD=10;
-          if(P.channel){P.channel=null;}
-          popup(P.x,P.y-44,'PARALYZED','#f0e05a',15);vib(60);}
+        if(dist(z,P)<z.r&&P.rollT<=0&&!(P.wardT>0)&&(P.paraImmuneT||0)<=0&&(!z.owner||(z.owner.paraCD||0)<=0)){
+          if(parryAvail()){parrySuccess(z.owner||null);popup(P.x,P.y-66,'SPELL PARRIED','#e7d9a8',13);} // parry NEGATES the paralyze
+          else{P.paralyzeT=3;if(z.owner)z.owner.paraCD=10;
+            if(P.channel){P.channel=null;}
+            popup(P.x,P.y-44,'PARALYZED','#f0e05a',15);vib(60);}}
         swings.push({x:z.x,y:z.y,a:0,arc:7,range:z.r,t:.18,heavy:false,col:'#f0e05a',ring:true});
         flashFx(.12);
         zones.splice(i,1);} continue;}
     if(z.type==='fire'){z.life-=dt;
-      if(dist(z,P)<z.r&&P.rollT<=0){z.tick=(z.tick||0)-dt;
+      if(dist(z,P)<z.r&&P.rollT<=0){
+        if(zoneParry(z,i))continue;                     // parry negates + clears the fire pool
+        z.tick=(z.tick||0)-dt;
         if(z.tick<=0){z.tick=.45;hurtPlayer(4*(1+S.fight*.2),null);}}
       if(z.life<=0)zones.splice(i,1);}
     else if(z.type==='gas'){z.life-=dt;
@@ -2275,7 +2316,9 @@ function tick(now){
             e.acidT=Math.max(e.acidT||0,3);e.acidDmg=15;e.acidTick=e.acidTick||.5;}}} // Hiro item 1: refresh a hex-strength ACID DoT (ticks in updEnemy)
       if(z.life<=0)zones.splice(i,1);}
     else if(z.type==='venom'){z.life-=dt; // lingering poison pool: DoT, and ROOTS you if you linger (Hiro boss)
-      if(dist(z,P)<z.r&&P.rollT<=0){z.tick=(z.tick||0)-dt;
+      if(dist(z,P)<z.r&&P.rollT<=0){
+        if(zoneParry(z,i))continue;                     // parry negates the DoT+root and clears the pool
+        z.tick=(z.tick||0)-dt;
         if(z.tick<=0){z.tick=.5;hurtPlayer(3*(z.dmgScale||1),null);popup(P.x,P.y-40,'POISONED','#7fd05a',11);}
         z.dwell=(z.dwell||0)+dt;
         if(z.dwell>=1.2&&P.paralyzeT<=0&&!(P.wardT>0)&&(P.paraImmuneT||0)<=0&&(!z.owner||(z.owner.paraCD||0)<=0)){P.paralyzeT=1.1;if(z.owner)z.owner.paraCD=10;if(P.channel)P.channel=null;
@@ -2283,7 +2326,9 @@ function tick(now){
       else z.dwell=0;
       if(z.life<=0)zones.splice(i,1);}
     else if(z.type==='frost'){z.life-=dt; // lingering rime field: slows, then FREEZES if you camp it (Hiro boss)
-      if(dist(z,P)<z.r&&P.rollT<=0){P.slowT=Math.max(P.slowT,1.2);
+      if(dist(z,P)<z.r&&P.rollT<=0){
+        if(zoneParry(z,i))continue;                     // parry negates the slow/freeze and clears the field
+        P.slowT=Math.max(P.slowT,1.2);
         z.dwell=(z.dwell||0)+dt;
         if(z.dwell>=1.4&&P.paralyzeT<=0&&!(P.wardT>0)&&(P.paraImmuneT||0)<=0&&(!z.owner||(z.owner.paraCD||0)<=0)){P.paralyzeT=1.0;if(z.owner)z.owner.paraCD=10;if(P.channel)P.channel=null;
           popup(P.x,P.y-46,'FROZEN','#5ad2ff',14);vib(50);z.dwell=0;}}
@@ -3317,6 +3362,8 @@ const api={
   pointerMove:(x,y)=>{mouse.x=x;mouse.y=y;},
   clearDecals:()=>{},
   get S(){return S;},get P(){return P;},get enemies(){return enemies;},
+  hurtPlayer, // test hook (item 3): the SINGLE resolution point for melee/ranged/spell hits — parry negation lives here
+  get zones(){return zones;},get bullets(){return bullets;},get fireballs(){return fireballs;},
   get demons(){return demons;},get wolves(){return wolves;},
   get nickname(){return nickname;},get FIGHTS(){return FIGHTS;},
   maxHP,lvl,diceN,stat,
@@ -3325,6 +3372,7 @@ const api={
   startEncounter,setMods,usePotion,mkEnemy,addAlly,
   setPlayerSnapshot:(snap)=>{P.char=snap.char;P.kills=snap.kills;P.level=snap.level;
     P.bladeTier=snap.bladeTier||0;P.weaponLine=snap.weaponLine||'katana';Object.assign(P.base,snap.base);nickname=snap.nickname;
+    P.evo10=snap.evo10||null;P.evo20=snap.evo20||null; // Hiro fix: persist the chosen evolution into combat so the panel never RE-OFFERS (was locking input mid-fight)
     P.form='human';P.r=[16,19,23][P.bladeTier||0]||16;updateLabels();},
 };
 return api;
