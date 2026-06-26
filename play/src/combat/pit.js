@@ -446,6 +446,14 @@ function druidSlash(){
     P.x+=Math.cos(P.face)*46;P.y+=Math.sin(P.face)*46;clampArena(P);
     swings.push({x:P.x,y:P.y,a:P.face,arc:1.3,range:62,t:.12,heavy:false,col:'#9ab8a0'});
     strike(P.face,1.3,62,Math.round((rollDice(diceN(),8)+dmgBonus())*.7),false);
+    if(P.evo10==='alpha'){ // FERAL ALPHA: the bite causes BLEED (SOVEREIGN deepens). Gated — warden/un-evolved bite unchanged.
+      const deep=P.evo20==='sovereign';
+      for(const e of enemies){if(e.dead)continue;
+        if(dist(P,e)>62+e.r)continue;
+        let da=Math.atan2(e.y-P.y,e.x-P.x)-P.face;
+        while(da>Math.PI)da-=2*Math.PI;while(da<-Math.PI)da+=2*Math.PI;
+        if(Math.abs(da)>1.3/2)continue;
+        applyBleed(e,deep);}}
   }else{ // human — throw the twin-blade glaive
     throwGlaive();}}
 function throwGlaive(){
@@ -538,10 +546,13 @@ function druidHeavy(){
     popup(P.x,P.y-48,'HOWL  +'+amt,'#7fbf6a',17);
     for(const w of wolves){w.hp=w.maxhp;w.life=Math.min(16,w.life+6);
       popup(w.x,w.y-22,'+','#7fbf6a',12);}
-    for(let i=0;i<5;i++){const a=rnd(0,Math.PI*2); // FIVE more answer the howl
+    // WOLF-ROAD pack scaling (gated): warden/un-evolved = 5 (UNCHANGED, byte-identical); FERAL ALPHA = +1 extra
+    // wolf (6); DIRE MOON SOVEREIGN = a full dire pack (8). Other road / un-evolved never change.
+    const _howlN=P.evo20==='sovereign'?8:(P.evo10==='alpha'?6:5);
+    for(let i=0;i<_howlN;i++){const a=rnd(0,Math.PI*2); // the pack answers the howl
       wolves.push({x:P.x+Math.cos(a)*44,y:P.y+Math.sin(a)*44,r:11,face:a,
         hp:20+P.kills*4,maxhp:20+P.kills*4,life:14,cool:rnd(.4,1),lungeT:0,bit:false,walkP:0,dmgMul:1.5});} // Hiro: druid wolves +50% dmg
-    popup(P.x,P.y-66,'THE PACK SWELLS — +5','#7fbf6a',14);
+    popup(P.x,P.y-66,'THE PACK SWELLS — +'+_howlN,'#7fbf6a',14);
     swings.push({x:P.x,y:P.y,a:0,arc:7,range:120,t:.3,heavy:false,col:'#7fbf6a',ring:true});
     vib(35);}}
 function strikeOne(e,dmg){ // direct damage helper (vines/roar) — no shield/parry rules
@@ -578,7 +589,7 @@ function portal(){
   P.x=e.x;P.y=e.y;e.x=px2;e.y=py2;
   clampArena(P);clampArena(e);
   e.stunT=Math.max(e.stunT||0,0.6); // disoriented by the swap
-  P.wardT=3; // magic shield: untouchable and uninterruptible
+  P.wardT=(P.evo10==='herald')?7:3; // magic shield (Hiro 2026-06-22): HEX FIEND/devil road PORTAL ward lasts 4s longer (7); other roads = 3
   popup(P.x,P.y-58,'WARDED','#5ad2ff',13);
   popup(P.x,P.y-44,'PORTAL','#b070f0',14);
   popup(e.x,e.y-30,'SWAPPED','#b070f0',11);
@@ -692,7 +703,7 @@ function updDemons(dt){
         if(sec<=5&&sec!==d.archWarn){d.archWarn=sec;
           popup(d.x,d.y-d.r-30,'BURSTS IN '+sec,'#d03a4a',19);vib(25);}
         if(d.archT<=0){ // EXPLOSION
-          const EX=Math.round((rollDice(diceN(),8)+dmgBonus())*2.3),ER=175;
+          const EX=Math.round((rollDice(diceN(),8)+dmgBonus())*2.3),ER=175*(P.evo20==='archfiend'?1.4:1); // ARCHFIEND: the burst's hellfire radius widens
           flashFx(.35);S.shake=Math.max(S.shake,16);vib([60,50,110]);
           swings.push({x:d.x,y:d.y,a:0,arc:7,range:ER,t:.3,heavy:true,col:'#f06aa0',ring:true});
           for(let k=0;k<26&&particles.length<240;k++){const ea2=rnd(0,6.3),es=rnd(120,340);
@@ -722,7 +733,8 @@ function updDemons(dt){
           const _herald=P.evo10==='herald';      // HEX FIEND: succubi hurl burning fire
           const _sheol=_herald&&d.arch;          // arch succubus -> GREEN Sheol fire (bigger, spreads on kill)
           fireballs.push({x:d.x,y:d.y-10,vx:Math.cos(d.face)*360,vy:Math.sin(d.face)*360,
-            r:d.arch?(_herald?11:10):6,kind:'fire',aoe:d.arch?70:45,
+            r:d.arch?(_herald?11:10):6,kind:'fire',aoe:(d.arch?70:45)*(P.evo20==='archfiend'?1.5:1), // ARCHFIEND: hellfire/Sheol AoE wider
+
             fire:_herald,sheol:_sheol,sheolDmg:45,col:_sheol?'#2ecc71':undefined,
             dmg:Math.round((rollDice(diceN(),8)+dmgBonus())*(d.arch?2.0:1.6)*(d.dmgMul||1))});}}} // DREADBINDER: normal fireball x3
     const mv=Math.hypot(d.x-(d._lx??d.x),d.y-(d._ly??d.y));
@@ -773,12 +785,16 @@ function updFireballs(dt){
         break;}}
     if(hit||Math.hypot(b.x-arena.x,b.y-arena.y)>arena.r+40)fireballs.splice(i,1);}}
 /* ---- ARCH DEVIL: the price of the full coven ---- */
+function devilDur(){ // ARCH DEVIL duration (Hiro 2026-06-22): herald road 21 (4s SHORTER than the old 25);
+  // ARCHFIEND ASCENDANT (evo20) extends it further (31); plain/un-evolved base 15.
+  return P.evo20==='archfiend'?31:((P.evo10==='herald')?21:15);}
 function enterDevil(){
   if(lvl()<8){popup(P.x,P.y-64,'ARCH DEVIL AT LEVEL 8','#8a93a8',12);return;}
-  P.devilT=(P.evo10==='herald')?25:15;P.channel=null;P.r=24; // Hiro item 5: herald arch devil lasts 10s longer (15->25)
+  const _dur=devilDur();
+  P.devilT=_dur;P.channel=null;P.r=24; // Hiro item 5: herald arch devil 25; ARCHFIEND (evo20) extends to 35
   flashFx(.35);S.shake=Math.max(S.shake,12);vib([60,60,120]);
   leafBurst(P.x,P.y,26,'#d03a4a');
-  showBanner('ARCH DEVIL','he was never summoning FOR himself — '+(P.evo10==='herald'?25:15)+' seconds',1800,'#d03a4a');
+  showBanner('ARCH DEVIL','he was never summoning FOR himself — '+_dur+' seconds',1800,'#d03a4a');
   updateLabels();}
 function exitDevil(){
   P.devilT=0;P.r=16;
@@ -972,7 +988,8 @@ function lichPerish(why){
   P.hp=0;P.dead=true;bloodPool(P.x,P.y,30);flashFx(.3);
   setTimeout(()=>{if(S.mode==='fight')lose();},900);}
 function fade(){
-  P.fadeT=5;P.parryCD=9;P.ft.rolls++;
+  P.fadeT=(P.evo10==='binder')?10:5;P.parryCD=9;P.ft.rolls++; // DREADBINDER/lich road (Hiro 2026-06-22): FADE lasts 5s longer (10); other roads = 5
+
   leafBurst(P.x,P.y,14,'#9af0c0');
   popup(P.x,P.y-52,'FADED','#9af0c0',14);
   showBanner('FADE','five seconds beyond reach — raise the dead',1100,'#9af0c0');
@@ -996,7 +1013,7 @@ function lichSlash(){ // the scythe: light harm, heavy law — 5s stun, very lon
 function summonZombies(){
   while(demons.length>=12){const old=demons.shift();leafBurst(old.x,old.y,8,'#9af0c0');}
   flashFx(.12);S.shake=Math.max(S.shake,6);vib([30,40]);
-  const _b=P.evo10==='binder',_bM=_b?3:1,_bR=_b?1.45:1,_zn=_b?6:3; // DREADBINDER: double the shambler count, bigger, x3 bite
+  const _b=P.evo10==='binder',_ll=P.evo20==='lichlord',_bM=_b?3:1,_bR=_b?1.45:1,_zn=_ll?9:(_b?6:3); // DREADBINDER: double; LICH SOVEREIGN: raises EXTRA undead
   for(let i=0;i<_zn;i++){const a=i*(6.283/_zn)+0.5;
     demons.push({type:'zombie',x:P.x+Math.cos(a)*50,y:P.y+Math.sin(a)*50,r:13*_bR,face:a,
       hp:25+P.kills*4,maxhp:25+P.kills*4,life:24,cool:rnd(.6,1.4),flash:0,walkP:0,dmgMul:_bM});}
@@ -1004,8 +1021,8 @@ function summonZombies(){
 function summonArchers(){
   while(demons.length>=12){const old=demons.shift();leafBurst(old.x,old.y,8,'#9af0c0');}
   flashFx(.12);S.shake=Math.max(S.shake,5);vib([25,35]);
-  const _b=P.evo10==='binder',_bM=_b?3:1,_bR=_b?1.45:1; // DREADBINDER: double the quivers, bigger, x3 arrows
-  const _slots=_b?[-1,1,-0.5,0.5]:[-1,1];
+  const _b=P.evo10==='binder',_ll=P.evo20==='lichlord',_bM=_b?3:1,_bR=_b?1.45:1; // DREADBINDER: double the quivers; LICH SOVEREIGN: extra quivers
+  const _slots=_ll?[-1,1,-0.5,0.5,-1.4,1.4]:(_b?[-1,1,-0.5,0.5]:[-1,1]);
   for(const s of _slots){
     demons.push({type:'archer',x:P.x+Math.cos(P.face+Math.PI)*40+Math.cos(P.face+Math.PI/2)*36*s,
       y:P.y+Math.sin(P.face+Math.PI)*40+Math.sin(P.face+Math.PI/2)*36*s,r:10*_bR,face:P.face,
@@ -1051,8 +1068,14 @@ function convertToMinion(x,y,maxhp,r){ // slain by the ray: it rises BOUND IN LI
   showBanner('CONVERTED','full health · triple speed · twelve seconds',1100,'#ffe9a8');}
 function fireRay(){ // the halo unmakes in a line — moderate, relentless, and it RECRUITS
   autoFace();
-  const judge=lvl()>=8, w=judge?70:44, len=900;
-  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*(judge?9.0:7.2)); // Hiro: ray damage TRIPLED (was 3.0/2.4)
+  // EVO KITS (gated — other road / un-evolved / other champions stay byte-identical):
+  //  wrath     (evo10): halo ray hits HARDER + smite/judgement intensified (wider).
+  //  judgement (evo20, from wrath): the smite ray REACHES FURTHER + halo judgement widened.
+  const _wrath=P.evo10==='wrath', _judgeEvo=P.evo20==='judgement';
+  const _wMul=_judgeEvo?1.4:(_wrath?1.15:1);   // ray WIDTH: wrath widens the halo, judgement widens it more
+  const _lMul=_judgeEvo?1.4:1;                  // ray LENGTH: judgement makes the smite reach further
+  const judge=lvl()>=8, w=(judge?70:44)*_wMul, len=900*_lMul;
+  const dmg=Math.round((rollDice(diceN(),8)+dmgBonus())*(judge?9.0:7.2)*(_wrath?1.35:1)); // Hiro: ray damage TRIPLED (was 3.0/2.4); wrath: +35% harder
   rays.push({x:P.x,y:P.y-14,a:P.face,len,w,t:.45,judge});
   flashFx(judge?.22:.12);S.shake=Math.max(S.shake,judge?9:6);vib(judge?[40,30,70]:30);
   const ca=Math.cos(P.face),sa=Math.sin(P.face);
@@ -1062,15 +1085,25 @@ function fireRay(){ // the halo unmakes in a line — moderate, relentless, and 
     if(proj<-e.r||proj>len||perp>w/2+e.r)continue;
     e.hp-=dmg;e.flash=.18;blood(e.x,e.y,8);
     popup(e.x,e.y-30,dmg,'#ffe9a8',17);
-    if(lvl()>=3&&e.hp>0){e.stunT=Math.max(e.stunT||0,1.6); // CHAINS OF DECREE
-      popup(e.x,e.y-46,'CHAINED','#ffd870',12);}
+    if(lvl()>=3&&e.hp>0){ // CHAINS OF DECREE
+      // AEGIS (evo10): the decree's chains truly BIND (root, much longer). BULWARK (evo20): they seize ALL nearby.
+      const _aegis=P.evo10==='aegis', _bulwark=P.evo20==='bulwark', _bind=_aegis||_bulwark;
+      const _hold=_bulwark?5.0:(_aegis?3.2:1.6);
+      e.stunT=Math.max(e.stunT||0,_hold);
+      if(_bind)e.vined=Math.max(e.vined||0,_hold); // BIND: rooted in place (other road = stun only, byte-identical)
+      popup(e.x,e.y-46,_bind?'BOUND':'CHAINED','#ffd870',12);
+      if(_bulwark){ // BULWARK OF THE DECREE: the chains hold the whole field — bind every foe near the struck one
+        for(const o of enemies){if(o.dead||o===e)continue;
+          if(dist(e,o)<150){o.stunT=Math.max(o.stunT||0,3.2);o.vined=Math.max(o.vined||0,3.2);
+            popup(o.x,o.y-40,'BOUND','#ffd870',11);}}}}
     if(e.hp<=0){const cx2=e.x,cy2=e.y,mh=e.maxhp,cr=e.r;
       killEnemy(e,true);convertToMinion(cx2,cy2,mh,cr);}}
   for(let k=0;k<22&&particles.length<240;k++){const pd=rnd(20,len*0.6);
     particles.push({x:P.x+ca*pd+rnd(-w/2,w/2)*-sa,y:P.y-14+sa*pd+rnd(-w/2,w/2)*ca,
       vx:rnd(-30,30),vy:rnd(-60,-10),t:rnd(.3,.6),col:k%2?'#ffe9a8':'#fff6dc',r:rnd(1.5,3),noG:true});}}
 function ascend(){ // Hiro: fly UP, then CRASH DOWN on the nearest foe — radiating light AOE, 3s cooldown
-  autoFace();P.parryCD=3;P.ascendT=1.1;P.wardT=1.5;P.ft.rolls++;
+  // AEGIS (evo10): grace ward LINGERS longer; BULWARK (evo20): grace deepened further. Gated — other road = 1.5s.
+  autoFace();P.parryCD=3;P.ascendT=1.1;P.wardT=P.evo20==='bulwark'?4:(P.evo10==='aegis'?3:1.5);P.ft.rolls++;
   const foe=nearestRealFoe();
   P.slamX=foe?foe.x:P.x;P.slamY=foe?foe.y:P.y; // where the crash will land
   leafBurst(P.x,P.y,16,'#fff6dc');
@@ -1503,6 +1536,8 @@ function updEnemy(e,dt){
   if(!e.dead){ // damage-over-time ticks (hex + poison) run at real speed
     if(e.hexT>0){e.hexT-=dt;e.hexTick=(e.hexTick||0)-dt;
       if(e.hexTick<=0){e.hexTick=.5;dotDamage(e,e.hexDmg||15,'#b070f0');}}
+    if(e.bleedT>0){e.bleedT-=dt;e.bleedTick=(e.bleedTick||0)-dt; // DRUID FERAL ALPHA/SOVEREIGN: wolf claw/bite BLEED (red DoT)
+      if(e.bleedTick<=0){e.bleedTick=.5;dotDamage(e,e.bleedDmg||6,'#c0392b');}}
     if(e.fireT>0){e.fireT-=dt;e.fireTick=(e.fireTick||0)-dt; // HEX FIEND: succubus burn
       if(e.fireTick<=0){e.fireTick=.5;dotDamage(e,e.fireDmg||15,'#f0883d');}}
     if(e.sheolT>0){e.sheolT-=dt;e.sheolTick=(e.sheolTick||0)-dt; // HEX FIEND: arch-succubus Sheol fire
@@ -1520,6 +1555,12 @@ function dotDamage(e,d,col){if(e.dead)return;
   e.hp-=d;e.flash=Math.max(e.flash,.05);
   popup(e.x+rnd(-7,7),e.y-22,d,col,11);
   if(e.hp<=0)killEnemy(e,false);}
+// DRUID wolf-road BLEED — applied to ENEMIES ONLY by the wolf-form bite (gated on evo10==='alpha';
+// DIRE MOON SOVEREIGN deepens it). Mirrors the hex DoT tick; red (#c0392b). Other road/un-evolved never call this.
+function applyBleed(e,deep){if(e.dead)return;
+  const dmg=deep?12:6;
+  e.bleedT=Math.max(e.bleedT||0,deep?8:5);e.bleedDmg=Math.max(e.bleedDmg||0,dmg);e.bleedTick=e.bleedTick||.5;
+  e.flash=Math.max(e.flash,.08);popup(e.x,e.y-34,'BLEED','#c0392b',11);}
 // HEX FIEND (herald) fire DoTs — applied to ENEMIES ONLY (never allies/summons).
 function applyFire(e){ // normal succubus burn
   if(e.dead)return;
@@ -2235,9 +2276,11 @@ function tick(now){
         showBanner('THE SERAPHIM RISES','the glory is spent. the duel resumes.',1800,'#ffe9a8');
         flashFx(.22);S.shake=Math.max(S.shake,8);vib([40,40,80]);}}
     if(P.channel&&P.lich){const c=P.channel;c.t+=dt; // the lich clock runs at half speed
+      const _ll=P.evo20==='lichlord'; // LICH SOVEREIGN: uptime EXTENDED (12->18s) + raises EXTRA undead mid-channel
       if(c.t>=6&&!c.b){c.b=true;c.any=true;summonZombies();}
       if(c.t>=8&&!c.d){c.d=true;c.any=true;summonArchers();}
-      if(c.t>=12){P.channel=null;resurrectWarlock();}}
+      if(_ll&&c.t>=13&&!c.b2){c.b2=true;c.any=true;summonZombies();} // extra grave-wave (gated; binder->lichlord only)
+      if(c.t>=(_ll?18:12)){P.channel=null;resurrectWarlock();}}
     else if(P.channel){const c=P.channel;c.t+=dt; // Hiro item 4: PRESS-to-summon auto-channel — advances on its own, completes at the coven
       const _dl=P.demonLord; const t1=_dl?0.5:3,t2=_dl?1:4,t3=_dl?3:6; // Hiro item 6: DEMON LORD summons 3s shorter (floored)
       if(c.t>=t1&&!c.b){c.b=true;
@@ -2273,6 +2316,15 @@ function tick(now){
   }
   // enemies
   for(const e of enemies)updEnemy(e,dt);
+  // CORPSE CULL (perf — resolves the OPEN LEAD 2026-06-21 "unbounded entity growth under sustained combat").
+  // Dead MINIONS (thralls/skels/hounds/esuccubi/etc.) are NEVER resurrected — only the stitcher raises
+  // fallen NAMED foes (`!o.minion`), and those are few and spawn-bounded. But nothing ever removed dead
+  // minions from `enemies`, so a long fight vs a raiser/feeder (e.g. THE FORMER CHAMPION's endless thralls,
+  // a necro/warden's risen dead) piled corpses into the array forever — every frame's enemy loop and the
+  // dozens of `enemies.filter(e=>!e.dead)` scans grew O(n) (observed 200+ entries / climbing frame time).
+  // Drop a dead minion once its death-fade is spent (draw already stops it at deathT>2). Named corpses stay
+  // (resurrection-eligible + bounded). Mirrors the existing demons[] cap. Reverse loop = safe splice.
+  for(let i=enemies.length-1;i>=0;i--){const e=enemies[i];if(e.dead&&e.minion&&(e.deathT||0)>2)enemies.splice(i,1);}
   // spirit wolves
   updWolves(dt);
   // demons & their projectiles
@@ -3129,7 +3181,7 @@ function draw(){
       // form timer
       {const bw3=48,bx3=P.x-bw3/2,by3=P.y-P.r-30;
        ctx.fillStyle='rgba(0,0,0,.75)';ctx.fillRect(bx3,by3,bw3,5);
-       ctx.fillStyle='#d03a4a';ctx.fillRect(bx3+1,by3+1,(bw3-2)*Math.max(0,P.devilT/(P.evo10==='herald'?25:15)),3);}
+       ctx.fillStyle='#d03a4a';ctx.fillRect(bx3+1,by3+1,(bw3-2)*Math.max(0,P.devilT/devilDur()),3);}
       if(P.wardT>0){
         ctx.strokeStyle='rgba(90,210,255,'+(0.5+0.25*Math.sin(S.time*9))+')';ctx.lineWidth=2.5;
         ctx.beginPath();ctx.arc(P.x,P.y-8,P.r+16,0,7);ctx.stroke();}
@@ -3364,7 +3416,8 @@ const api={
   get S(){return S;},get P(){return P;},get enemies(){return enemies;},
   hurtPlayer, // test hook (item 3): the SINGLE resolution point for melee/ranged/spell hits — parry negation lives here
   get zones(){return zones;},get bullets(){return bullets;},get fireballs(){return fireballs;},
-  get demons(){return demons;},get wolves(){return wolves;},
+  get demons(){return demons;},get wolves(){return wolves;},get rays(){return rays;},
+  fireRay,ascend,enterDevil,summonZombies,summonArchers, // EVO-KIT test hooks (gated buffs; calling changes no live behavior vs. the in-game triggers)
   get nickname(){return nickname;},get FIGHTS(){return FIGHTS;},
   maxHP,lvl,diceN,stat,
   get EVOLUTIONS(){return EVOLUTIONS;},maybeOfferEvo,pickEvo,evoTick,evoClick,get evoRects(){return evoCardRects();},
