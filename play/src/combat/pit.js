@@ -631,6 +631,7 @@ function hurtDemon(d,dmg,from){
   popup(d.x+rnd(-6,6),d.y-d.r-12,dmg,'#d0a8f0',12);}
 function updDemons(dt){
   for(let i=demons.length-1;i>=0;i--){const d=demons[i];
+    if(!d)continue; // REENTRANCY GUARD (playtest 2026-06-26): killEnemy()'s infection-rise caps the horde via demons.shift(), and killEnemy fires from inside this loop (a zombie/brute/arch-burst killing an infected foe). The front-shift slides every index down, so the cached i can point past the shrunken array -> demons[i] undefined -> crash. Skip the empty slot instead of dereferencing it.
     if(!(P.lich&&d.type==='dragon')&&!(P.evo10==='herald'&&d.type==='succubus'))d.life-=dt; // phylactery freezes while risen; Hiro item 3: herald succubi (incl. arch) NEVER time out
     d.flash=Math.max(0,d.flash-dt);
     if(d.life<=0||d.hp<=0){leafBurst(d.x,d.y,12,'#b070f0');
