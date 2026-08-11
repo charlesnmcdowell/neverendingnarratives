@@ -117,6 +117,10 @@ Spire.VO = {
   e_k2_death: { who: "KAGEHIME", text: "\"Enough. I will tell her the Blade is still the Blade. Finish the errand, sister… and watch your back. I was only the second they sent.\"" },
   e_mb_intro: { who: "THE MATRON'S BLADE", text: "\"You burned a pipeline, arsonist, and pipelines have owners. My Lady would like her ledger balanced — your name, your gift, and your ashes will settle the page. Sing for me.\"" },
   e_mb_death: { who: "THE MATRON'S BLADE", text: "\"Filed, then… under costly. The Matron will read every word of you, arsonist. Pray the next blade she sends is slower.\"" },
+  w_duel: { who: "VESSIA", text: "\"The road is ash behind me — and still somebody is standing in it. Ashenveil robes. Faculty seal. So the academy finally sends its answer. Good. I still have questions.\"" },
+  e_ow_meet: { who: "THE ARCH-PROCTOR", text: "\"Vessia of the lower halls. You burned a season's work and three of the Matron's crews. The faculty has voted — and I am the verdict. Class is in session.\"" },
+  e_ow_intro: { who: "THE ARCH-PROCTOR", text: "\"Your file says 'expelled'. The Ashenveil does not accept 'expelled' as an ending — every student comes home, as an asset or as ash. Show me which you are.\"" },
+  e_ow_death: { who: "THE ARCH-PROCTOR", text: "\"Assessment… complete… marked… 'beyond us'… run far, Vessia… the next examiner… will not be a man…\"" },
   e_pr_intro: { who: "THE ASHENVEIL PROCTOR", text: "\"Vessia of the lower halls. You left the academy with a question — the faculty has sent me with the answer. Hold still for your assessment.\"" },
   e_pr_death: { who: "THE ASHENVEIL PROCTOR", text: "\"Marked… incomplete… the Ashenveil… will re-examine…\"" },
   m_greet: { who: "MARLOW", text: "\"Evening, girl. Bath's hot, stew's thick, beds are clean. Stay the night — the alleys will keep till morning.\"" },
@@ -192,6 +196,9 @@ Spire.say = function (scene, id, opts) {
     const uri = window.SPIRE_VOICE && SPIRE_VOICE[id];
     if (uri) {
       try {
+        /* one voice at a time (2026-08-11, Hiro: cinematics were talking over each
+           other) — a new line always silences whatever was still speaking */
+        if (Spire._voiceNow) { try { Spire._voiceNow.pause(); } catch (e) {} }
         const a = new Audio(uri);
         Spire._voiceNow = a;
         if (Spire._audio && Spire.musicOn) Spire._audio.volume = 0.1;   // duck music under the line

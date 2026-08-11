@@ -50,7 +50,7 @@ Spire.ENEMIES = {
     vo: { intro: "e_bs_intro" },   // the narrator speaks for what has no voice
     script: [
       { kind: "attack", label: "Gore",   dmg: 12, hits: 1 },
-      { kind: "attack", label: "Frenzy", dmg: 4,  hits: 3 },
+      { kind: "attack", label: "Frenzy", dmg: 4,  hits: 3, ex: { anim: "bs_attack", label: "F R E N Z Y", tint: 0xff5533 } },
       { kind: "buff",   label: "Bellow", str: 3 },
       { kind: "block",  label: "Thick Hide", block: 9 },
       { kind: "attack", label: "Gore",   dmg: 12, hits: 1 }
@@ -64,7 +64,7 @@ Spire.ENEMIES = {
     vo: { intro: "e_ms_intro", special: "e_ms_horn", death: "e_ms_death" },
     script: [
       { kind: "attack",  label: "Whip Crack", dmg: 10, hits: 1 },
-      { kind: "special", label: "Horn Call",  id: "horncall", dmg: 6, hits: 2 },
+      { kind: "special", label: "Horn Call",  id: "horncall", dmg: 6, hits: 2, ex: { anim: "ms_attack", label: "H O R N   C A L L", tint: 0xff9944 } },
       { kind: "attack",  label: "Lash",       dmg: 5,  hits: 2 },
       { kind: "block",   label: "Beast Ward", block: 10 },
       { kind: "special", label: "Horn Call",  id: "horncall", dmg: 6, hits: 2 }
@@ -118,7 +118,7 @@ Spire.ENEMIES = {
     script: [
       { kind: "attack", label: "Shovel Break", dmg: 13, hits: 1 },
       { kind: "block",  label: "Guard Stance", block: 13 },
-      { kind: "attack", label: "Riposte",      dmg: 8,  hits: 2 },
+      { kind: "attack", label: "Riposte",      dmg: 8,  hits: 2, ex: { anim: "gv_attack", label: "R I P O S T E", tint: 0x88ff99 } },
       { kind: "buff",   label: "Grave Cold",   str: 2 },
       { kind: "attack", label: "Shovel Break", dmg: 13, hits: 1 }
     ],
@@ -129,7 +129,7 @@ Spire.ENEMIES = {
     vo: { intro: "e_nc_intro", special: "e_nc_raise", death: "e_nc_death" },
     script: [
       { kind: "attack",  label: "Grave Bolt",  dmg: 9, hits: 1 },
-      { kind: "special", label: "Raise Dead",  id: "raisedead", dmg: 7, hits: 2 },
+      { kind: "special", label: "Raise Dead",  id: "raisedead", dmg: 7, hits: 2, ex: { anim: "nc_attack", label: "R A I S E   D E A D", tint: 0x88ff99 } },
       { kind: "block",   label: "Bone Ward",   block: 11 },
       { kind: "attack",  label: "Grave Bolt",  dmg: 9, hits: 1 },
       { kind: "special", label: "Raise Dead",  id: "raisedead", dmg: 7, hits: 2 }
@@ -182,7 +182,7 @@ Spire.ENEMIES = {
     vo: { intro: "e_dr_intro" },
     script: [
       { kind: "block",  label: "Shut Fast",   block: 16 },
-      { kind: "attack", label: "Slam",        dmg: 15, hits: 1 },
+      { kind: "attack", label: "Slam",        dmg: 15, hits: 1, ex: { anim: "dr2_attack", label: "S L A M", tint: 0xe0b34a } },
       { kind: "attack", label: "Hinge Crush", dmg: 9,  hits: 2 },
       { kind: "block",  label: "Shut Fast",   block: 16 },
       { kind: "buff",   label: "Groan",       str: 3 }
@@ -209,7 +209,7 @@ Spire.ENEMIES = {
     script: [
       { kind: "attack", label: "Measured Shot", dmg: 12, hits: 1 },
       { kind: "block",  label: "Give Ground",   block: 9 },
-      { kind: "attack", label: "Storm Volley",  dmg: 5,  hits: 3 },
+      { kind: "attack", label: "Storm Volley",  dmg: 5,  hits: 3, ex: { anim: "ar_attack", label: "S T O R M   V O L L E Y", tint: 0x9fd4ff } },
       { kind: "buff",   label: "Read the Wind", str: 2 },
       { kind: "attack", label: "Measured Shot", dmg: 12, hits: 1 }
     ],
@@ -222,7 +222,7 @@ Spire.ENEMIES = {
     script: [
       { kind: "block",  label: "Rooted Stance", block: 14 },
       { kind: "attack", label: "Iron Palm",     dmg: 13, hits: 1 },
-      { kind: "attack", label: "Hundred Hands", dmg: 5,  hits: 3 },
+      { kind: "attack", label: "Hundred Hands", dmg: 5,  hits: 3, ex: { anim: "mk_attack", label: "H U N D R E D   H A N D S", tint: 0xffd97a } },
       { kind: "buff",   label: "Breath of Stone", str: 3 },
       { kind: "attack", label: "Iron Palm",     dmg: 13, hits: 1 }
     ],
@@ -236,7 +236,7 @@ Spire.ENEMIES = {
     script: [
       { kind: "attack", label: "Forked Bolt",   dmg: 7,  hits: 2 },
       { kind: "block",  label: "Static Veil",   block: 12 },
-      { kind: "attack", label: "Heaven's Spear", dmg: 16, hits: 1 },
+      { kind: "attack", label: "Heaven's Spear", dmg: 16, hits: 1, ex: { anim: "ss_attack", label: "H E A V E N ' S   S P E A R", tint: 0xbb88ff } },
       { kind: "buff",   label: "Gathering Storm", str: 3 },
       { kind: "attack", label: "Forked Bolt",   dmg: 7,  hits: 2 }
     ],
@@ -258,11 +258,13 @@ Spire.ENEMIES = {
        Arresting Thrust is the Rapier of Arrest's clean-hit freeze (B2 ch15);
        the Breach Shard fires devastating rays, three per fight (B2 ch15-16). */
     script: [
-      { kind: "attack", label: "Twin Fang",         dmg: 7,  hits: 2 },
+      { kind: "attack", label: "Twin Fang",         dmg: 7,  hits: 2,
+        ex: { anim: "sr_attack", label: "T W I N   F A N G", tint: 0x9fd4ff } },
       { kind: "block",  label: "Sera's Cage",       block: 13 },
       { kind: "attack", label: "Arresting Thrust",  dmg: 13, hits: 1 },
       { kind: "buff",   label: "The Cage Predicts", str: 3 },
-      { kind: "attack", label: "Breach Ray",        dmg: 6,  hits: 3 }
+      { kind: "attack", label: "Breach Ray",        dmg: 6,  hits: 3,
+        ex: { anim: "sr_attack", label: "B R E A C H   R A Y", tint: 0xbb88ff } }
     ],
     reactions: {}
   },
@@ -279,7 +281,26 @@ Spire.ENEMIES = {
       { kind: "buff",   label: "Cite Precedent",   str: 2 },
       { kind: "attack", label: "Twin Citation",    dmg: 5,  hits: 2 },
       { kind: "block",  label: "Faculty Wards",    block: 11 },
-      { kind: "attack", label: "Final Assessment", dmg: 12, hits: 1 }
+      { kind: "attack", label: "Final Assessment", dmg: 12, hits: 1, ex: { anim: "owl_attack", label: "F I N A L   A S S E S S M E N T", tint: 0xbb88ff } }
+    ],
+    reactions: {}
+  },
+
+  archproctor: {
+    /* THE ARCH-PROCTOR (2026-08-11): the faculty's VERDICT — Vessia's endgame duel,
+       mirror of the Kagehime fight. He fights with HER kit: hex bolts, wards, and
+       Exsanguinate that drinks what it deals (her Thirst, turned around). */
+    id: "archproctor", name: "THE ARCH-PROCTOR OF THE ASHENVEIL", prefix: "owl", hp: 200, height: 285,
+    boss: true, flip: true, ranged: true,
+    vo: { intro: "e_ow_intro", death: "e_ow_death" }, voChar: "warlock",
+    script: [
+      { kind: "attack", label: "Corrective Bolt",  dmg: 9,  hits: 1 },
+      { kind: "attack", label: "Exsanguinate",     dmg: 5,  hits: 2, drain: 1,
+        ex: { anim: "owl_attack", label: "E X S A N G U I N A T E", tint: 0xdd2244 } },
+      { kind: "block",  label: "Faculty Wards",    block: 14 },
+      { kind: "buff",   label: "Cite Precedent",   str: 3 },
+      { kind: "attack", label: "Final Assessment", dmg: 17, hits: 1,
+        ex: { anim: "owl_attack", label: "F I N A L   A S S E S S M E N T", tint: 0xbb88ff } }
     ],
     reactions: {}
   },
@@ -290,28 +311,35 @@ Spire.ENEMIES = {
        kagehime   — Tsubaki's endgame duel (the Matron sends her own test)
        matronblade— the hunter who finally catches up with Vessia (act-3 ambush) */
   kagehime: {
-    id: "kagehime", name: "KAGEHIME, THE SECOND BLADE", prefix: "kd2", hp: 190, height: 300,
+    id: "kagehime", name: "KAGEHIME, THE SECOND BLADE", prefix: "kd2", hp: 225, height: 300,
     boss: true, flip: true,
     vo: { intro: "e_k2_intro", death: "e_k2_death" }, voChar: "samurai",
+    /* 2026-08-11 (Hiro: "too easy"): she fights with TSUBAKI'S OWN KIT now —
+       bleed that ticks through block, and an Ichigeki that earns its name. */
     script: [
-      { kind: "attack", label: "First Cut",       dmg: 9,  hits: 1 },
-      { kind: "block",  label: "Patient Defense", block: 12 },
-      { kind: "attack", label: "Crossveil",       dmg: 6,  hits: 2, anim: "kd2_attack2" },
+      { kind: "attack", label: "First Cut",       dmg: 9,  hits: 1, bleed: 2 },
+      { kind: "block",  label: "Patient Defense", block: 14 },
+      { kind: "attack", label: "Crossveil",       dmg: 7,  hits: 2, anim: "kd2_attack2",
+        ex: { anim: "kd2_attack2", label: "C R O S S V E I L", tint: 0xdd3355 } },
       { kind: "buff",   label: "Observant Draw",  str: 3 },
-      { kind: "attack", label: "Odd-Hour Stroke", dmg: 16, hits: 1 }
+      { kind: "attack", label: "Artery Cut",      dmg: 6,  hits: 1, bleed: 3 },
+      { kind: "attack", label: "Ichigeki",        dmg: 22, hits: 1,
+        ex: { anim: "kd2_attack", label: "I C H I G E K I", tint: 0xff3344 } }
     ],
     reactions: {}
   },
   matronblade: {
-    id: "matronblade", name: "THE MATRON'S BLADE", prefix: "kd2", hp: 120, height: 300,
+    id: "matronblade", name: "THE MATRON'S BLADE", prefix: "kd2", hp: 155, height: 300,
     elite: true, flip: true,
     vo: { intro: "e_mb_intro", death: "e_mb_death" }, voChar: "warlock",
     script: [
-      { kind: "attack", label: "First Cut",       dmg: 8,  hits: 1 },
-      { kind: "block",  label: "Patient Defense", block: 10 },
-      { kind: "attack", label: "Crossveil",       dmg: 5,  hits: 2, anim: "kd2_attack2" },
+      { kind: "attack", label: "First Cut",       dmg: 8,  hits: 1, bleed: 2 },
+      { kind: "block",  label: "Patient Defense", block: 12 },
+      { kind: "attack", label: "Crossveil",       dmg: 6,  hits: 2, anim: "kd2_attack2",
+        ex: { anim: "kd2_attack2", label: "C R O S S V E I L", tint: 0xdd3355 } },
       { kind: "buff",   label: "Observant Draw",  str: 2 },
-      { kind: "attack", label: "Ichigeki",        dmg: 14, hits: 1 }
+      { kind: "attack", label: "Ichigeki",        dmg: 18, hits: 1,
+        ex: { anim: "kd2_attack", label: "I C H I G E K I", tint: 0xff3344 } }
     ],
     reactions: {}
   },
@@ -321,8 +349,8 @@ Spire.ENEMIES = {
     vo: { intro: "e_cp_intro", special: "e_cp_devour", death: "e_cp_death" },
     /* the gauntlet's thrall-eater: audited facing = RIGHT (the one runtime flip in the new cast) */
     script: [
-      { kind: "attack",  label: "Sword & Board", dmg: 12, hits: 1 },
-      { kind: "special", label: "Devour Thrall", id: "devour", heal: 15, str: 2 },
+      { kind: "attack",  label: "Sword & Board", dmg: 12, hits: 1, ex: { anim: "cp_attack", label: "S W O R D   &   B O A R D", tint: 0xe0b34a } },
+      { kind: "special", label: "Devour Thrall", id: "devour", heal: 15, str: 2, ex: { anim: "cp_attack", label: "D E V O U R", tint: 0xff5533 } },
       { kind: "attack",  label: "Shield Bash",   dmg: 7,  hits: 2 },
       { kind: "block",   label: "Raise Shield",  block: 13 },
       { kind: "attack",  label: "Sword & Board", dmg: 12, hits: 1 }

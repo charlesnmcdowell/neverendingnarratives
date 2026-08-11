@@ -24,6 +24,7 @@ class FightScene extends Phaser.Scene {
       this.add.ellipse(x, this.groundY + 4, w, 64, 0xff9944, 0.13).setDepth(8).setBlendMode(Phaser.BlendModes.ADD);
     }
     this.PP = Spire.char().prefix;    // player sprite prefix: wl (Vessia) or kd (Tsubaki)
+    this._exSeen = new Set();         // each EX move announces itself ONCE per fight
     this.wl = Spire.spawn(this, this.PP + "_idle", this.wlX, this.groundY, { depth: 10, height: this.PP === "kd" ? 300 : 320 });
     /* BUG FIX (2026-07-30, corrected): the HOUND and BEAST sprite sets were generated facing
        RIGHT, so unflipped they stood with their backs to her. E.flip marks right-facing art
@@ -385,6 +386,13 @@ class FightScene extends Phaser.Scene {
       if (this.C.enemy.hp <= 0) { await this.victory(); return; }
     }
     const ev = this.C.resolveEnemyMove();
+    /* MvC FINISHERS (2026-08-11, Hiro): a boss's signature move announces itself
+       with the full cut-in — once per fight, the first time it comes out. */
+    if (ev.ex && !this._exSeen.has(ev.ex.label)) {
+      this._exSeen.add(ev.ex.label);
+      await this.exCutIn(ev.ex.anim || (this.E.prefix + "_attack"), ev.ex.label, ev.ex.tint || 0xff5533,
+                         { side: "right", flipX: !!this.E.flip });
+    }
     if (ev.kind === "attack") await this.enemyAttack(ev);
     if (ev.riposte !== undefined) {          // the counter stance answered (samurai)
       Spire.sfx.hit(ev.riposte >= 8);
@@ -419,6 +427,16 @@ class FightScene extends Phaser.Scene {
       this.wl.play("a_" + this.PP + "_hurt");
       await Spire.wait(this, 450);
       this.wl.play("a_" + this.PP + "_idle");
+      if (this.C.player.hp <= 0) { await this.defeat(); return; }
+    }
+    if (st.bleedDmg > 0) {         // a rival blade's opened veins, ticking on HER
+      Spire.sfx.hit(false);
+      this.blood(this.wlX + 10, this.groundY - 120);
+      this.floatText(this.wlX, this.groundY - 250, `-${st.bleedDmg} bleed`, "#ff4466", 22);
+      this.wl.play("a_" + this.PP + "_hurt");
+      await Spire.wait(this, 450);
+      this.wl.play("a_" + this.PP + "_idle");
+      this.refreshHud();
       if (this.C.player.hp <= 0) { await this.defeat(); return; }
     }
     await this.renderHand(true);
@@ -459,6 +477,7 @@ class FightScene extends Phaser.Scene {
       }
       this.hd.play("a_" + pre + "_idle");
       this.wl.play("a_" + this.PP + "_idle");
+      this.afterRivalHit(ev);
       return;
     }
     this.hd.play("a_" + pre + "_walk");
@@ -481,6 +500,24 @@ class FightScene extends Phaser.Scene {
     await Spire.tween(this, { targets: this.hd, x: homeX, duration: 420, ease: "Sine.easeOut" });
     this.hd.setFlipX(this.flipXFor("left")); this.hd.play("a_" + pre + "_idle");
     this.wl.play("a_" + this.PP + "_idle");
+    this.afterRivalHit(ev);
+  }
+  /* rival-kit aftermath shared by melee + ranged attacks (2026-08-11) */
+  afterRivalHit(ev) {
+    if (ev.bledPlayer) {
+      this.blood(this.wlX + 10, this.groundY - 120);
+      this.floatText(this.wlX, this.groundY - 275, `Bleed ${ev.bledPlayer}`, "#ff4466", 20);
+    }
+    if (ev.drained) {
+      const m = this.add.circle(this.wlX + 20, this.groundY - 130, 5, 0xdd2244).setDepth(16).setAlpha(0.95);
+      this.tweens.add({ targets: m, x: this.hdX - 20, y: this.groundY - 140, duration: 420, ease: "Sine.easeIn",
+                        onComplete: () => m.destroy() });
+      this.time.delayedCall(420, () => {
+        this.floatText(this.hdX, this.groundY - 255, `+${ev.drained}`, "#7ce87c", 20);
+        this.refreshHud();
+      });
+    }
+    this.refreshHud();
   }
   async enemyGuard(ev) {
     Spire.sfx.shield();
@@ -656,7 +693,10 @@ class FightScene extends Phaser.Scene {
     this.intentC.removeAll(true);
     Spire.run.hp = this.C.player.hp;
     Spire.clearNode();
-    if (this.E.vo && this.E.vo.death && (!this.E.voChar || this.E.voChar === Spire.run.character)) Spire.say(this, this.E.vo.death);   // last words
+    /* last words play OVER the death animation, but the scene WAITS for them to
+       finish before moving on (2026-08-11, Hiro: cinematics were overlapping) */
+    const lastWords = (this.E.vo && this.E.vo.death && (!this.E.voChar || this.E.voChar === Spire.run.character))
+      ? Spire.say(this, this.E.vo.death) : Promise.resolve();
     await this.react(this.E.prefix + "_death", { stay: true, raw: true });
     const soul = this.add.particles(this.hdX, this.groundY - 70, "dot", {
       lifespan: 1300, speedY: { min: -120, max: -40 }, speedX: { min: -30, max: 30 },
@@ -665,11 +705,12 @@ class FightScene extends Phaser.Scene {
     this.tweens.add({ targets: this.hd, alpha: 0.15, duration: 1200 });
     if (this.E.boss) Spire.sfx.fanfare(); else Spire.sfx.victory();
     await this.banner("V I C T O R Y", "#e0b34a", 1200);
+    await lastWords;                 // let the dying speech land before any scene change
     soul.destroy();
     Spire.won = true;
     this.cameras.main.fadeOut(450);
     await Spire.wait(this, 470);
-    if (this.E.id === "kagehime") this.scene.start("Epilogue");   // the duel won -> the Ashenveil
+    if (this.E.id === "kagehime" || this.E.id === "archproctor") this.scene.start("Epilogue");   // duel won -> epilogue
     else if (this.E.boss) this.scene.start("ActClear");
     else this.scene.start("Reward", { elite: !!this.E.elite });
   }
@@ -691,26 +732,29 @@ class FightScene extends Phaser.Scene {
   /* MvC-STYLE EX CUT-IN (2026-08-11, Hiro's ask): the big cards announce themselves.
      Dim the arena, streak speedlines, slam the move's own art across the screen with
      its name — and sometimes someone in the dark says something about it. */
-  async exCutIn(animKey, label, tint = 0xe0b34a) {
+  async exCutIn(animKey, label, tint = 0xe0b34a, opts) {
+    opts = opts || {};
+    const fromRight = opts.side === "right";     // enemy supers slam in from THEIR side
     const s = this;
     const junk = [];
     const dim = s.add.rectangle(640, 360, 1280, 720, 0x000000, 0.68).setDepth(48);
     junk.push(dim);
     for (let i = 0; i < 14; i++) {
-      const r = s.add.rectangle(1500, Phaser.Math.Between(30, 690), Phaser.Math.Between(180, 430),
+      const r = s.add.rectangle(fromRight ? -220 : 1500, Phaser.Math.Between(30, 690), Phaser.Math.Between(180, 430),
                                 Phaser.Math.Between(2, 4), tint, 0.5).setDepth(49).setBlendMode(Phaser.BlendModes.ADD);
       junk.push(r);
-      s.tweens.add({ targets: r, x: -260, duration: Phaser.Math.Between(280, 430), delay: i * 20, repeat: 2 });
+      s.tweens.add({ targets: r, x: fromRight ? 1540 : -260, duration: Phaser.Math.Between(280, 430), delay: i * 20, repeat: 2 });
     }
-    const big = Spire.spawn(s, animKey, -260, 660, { depth: 50, height: 560 });
+    const big = Spire.spawn(s, animKey, fromRight ? 1540 : -260, 660, { depth: 50, height: 560 });
+    if (opts.flipX) big.setFlipX(true);
     junk.push(big);
-    const txt = s.add.text(900, 580, label, {
+    const txt = s.add.text(fromRight ? 380 : 900, 580, label, {
       fontFamily: "Georgia, serif", fontSize: 42, color: "#ffe9b0", letterSpacing: 5,
       stroke: "#1a0e08", strokeThickness: 8
     }).setOrigin(0.5).setDepth(51).setAlpha(0);
     junk.push(txt);
     Spire.sfx.whoosh(); Spire.sfx.card();
-    await Spire.tween(s, { targets: big, x: 350, duration: 300, ease: "Expo.easeOut" });
+    await Spire.tween(s, { targets: big, x: fromRight ? 930 : 350, duration: 300, ease: "Expo.easeOut" });
     s.cameras.main.flash(120, 255, 240, 200);
     s.tweens.add({ targets: txt, alpha: 1, duration: 150 });
     if (Math.random() < 0.45) {   // a voice from beyond the arena

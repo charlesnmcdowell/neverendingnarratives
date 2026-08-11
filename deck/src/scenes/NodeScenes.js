@@ -325,6 +325,7 @@ class StoryScene extends Phaser.Scene {
     this.time.delayedCall(370, () => {
       if (this.next === "__nextact") { Spire.nextAct(); this.scene.start("Map", { toast: Spire.act().tag }); }
       else if (this.next === "__duel") this.scene.start("Fight", { enemy: "kagehime" });
+      else if (this.next === "__duelw") this.scene.start("Fight", { enemy: "archproctor" });
       else this.scene.start(this.next);
     });
   }
@@ -579,6 +580,13 @@ class ActClearScene extends Phaser.Scene {
           run._dueled = true;
           run.hp = run.maxHp;   // she binds her wounds at the gates — Sera's duel earned that much
           return this.scene.start("Story", { lines: ["k_duel", "e_k2_meet"], title: "AT  THE  BROKEN  GATES", next: "__duel" });
+        }
+        if (run.character === "warlock" && !run._dueled) {
+          /* THE FACULTY'S ANSWER (2026-08-11): the road is won — and the academy's
+             verdict is waiting in the ashes. Vessia's mirror of the Kagehime duel. */
+          run._dueled = true;
+          run.hp = run.maxHp;
+          return this.scene.start("Story", { lines: ["w_duel", "e_ow_meet"], title: "THE  FACULTY'S  ANSWER", next: "__duelw" });
         }
         return this.scene.start("Epilogue");
       }

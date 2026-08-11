@@ -49,8 +49,12 @@ Spire.Combat = class {
     const burn = this.player.statuses.burn || 0;
     let burnDmg = 0;
     if (burn > 0) { burnDmg = this.hurt(this.player, burn, true); this.player.statuses.burn--; }
+    /* her own veins can be opened now (rival samurai kits) — pierces block, fades by 1 */
+    const pbleed = this.player.statuses.bleed || 0;
+    let bleedDmg = 0;
+    if (pbleed > 0) { bleedDmg = this.hurt(this.player, pbleed, true); this.player.statuses.bleed--; }
     const drawn = this.drawCards(5);
-    return { drawn, burnDmg, carried, focusGain };
+    return { drawn, burnDmg, bleedDmg, carried, focusGain };
   }
   drawCards(n) {
     const out = [];
@@ -129,6 +133,15 @@ Spire.Combat = class {
       }
       if (this.player.hp === 0) this.over = true;
       out = { ...it, dealt: hits };
+      /* RIVAL KITS (2026-08-11): enemies can fight like the heroes do.
+         bleed: opened veins on HER, ticking at her turn start (mirror of hers).
+         drain: the caster drinks the damage dealt (mirror of her Thirst). */
+      const landed = hits.reduce((a, b) => a + b, 0);
+      if (it.bleed && landed > 0) { this.addStatus(this.player, "bleed", it.bleed); out.bledPlayer = it.bleed; }
+      if (it.drain && landed > 0) {
+        const got = Math.min(landed, this.enemy.maxHp - this.enemy.hp);
+        if (got > 0) { this.enemy.hp += got; out.drained = got; }
+      }
       /* RIPOSTE (samurai): a counter stance answers a guarded attack, once */
       const rip = this.player.statuses.riposte || 0;
       if (rip > 0 && guarded && this.player.hp > 0) {
