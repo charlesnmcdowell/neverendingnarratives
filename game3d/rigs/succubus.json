@@ -1,0 +1,15 @@
+{
+  "entity": "succubus",
+  "bodyPlan": "WINGED",
+  "note": "Winged biped demon. Auto-fit BIPED+wings; head pivot lowered (no hood), wings pulled wider for the spread silhouette. Attack uses the fire-cast clip.",
+  "bones": {
+    "head":  { "y": 0.12 },
+    "chest": { "y": 0.32 },
+    "wingL": { "x": 0.22, "y": 0.30 },
+    "wingR": { "x": 0.78, "y": 0.30 },
+    "handR": { "x": 0.70, "y": 0.50 },
+    "handL": { "x": 0.30, "y": 0.50 }
+  },
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "spawn", "die"],
+  "attack": "fireballCast"
+}

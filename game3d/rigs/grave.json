@@ -1,0 +1,13 @@
+{
+  "entity": "grave",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_grunt",
+  "note": "THE GRAVE COUNT (pit.js type 'grave', r:16). Riposte duelist — upright bladed stance, lead foot forward. Strike clip reads as the counter-thrust.",
+  "bones": {
+    "armR":  { "x": 0.64, "y": 0.32 },
+    "handR": { "x": 0.74, "y": 0.46 },
+    "legR":  { "x": 0.56, "y": 0.60 }
+  },
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "block", "spawn", "die"],
+  "attack": "attack"
+}

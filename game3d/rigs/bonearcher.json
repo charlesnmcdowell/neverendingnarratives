@@ -1,0 +1,11 @@
+{
+  "entity": "bonearcher",
+  "bodyPlan": "BIPED",
+  "note": "Skeletal archer. BIPED auto-fit; hands nudged to the bow grip / draw anchor. Attack is the draw+loose clip (loose is an alias of draw).",
+  "bones": {
+    "handL": { "x": 0.26, "y": 0.46 },
+    "handR": { "x": 0.42, "y": 0.50 }
+  },
+  "actions": ["idle", "walkF", "walkB", "draw", "loose", "hurt", "spawn", "die"],
+  "attack": "draw"
+}

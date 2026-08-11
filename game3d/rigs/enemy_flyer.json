@@ -1,0 +1,11 @@
+{
+  "entity": "enemy_flyer",
+  "bodyPlan": "WINGED",
+  "note": "Generic winged enemy template. WINGED auto-fit; wings spread wide for the silhouette. Ranged cast attack (fireballCast); reuse for harpies/wraiths/casters.",
+  "bones": {
+    "wingL": { "x": 0.20, "y": 0.30 },
+    "wingR": { "x": 0.80, "y": 0.30 }
+  },
+  "actions": ["idle", "walkF", "walkB", "fireballCast", "hurt", "spawn", "die"],
+  "attack": "fireballCast"
+}

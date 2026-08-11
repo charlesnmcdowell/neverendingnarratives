@@ -1,0 +1,14 @@
+{
+  "entity": "cultwarlock",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_grunt",
+  "note": "Enemy cult warlock (pit.js type 'cultwarlock'). Summons esuccubus/edragon — hooded caster, head pivot raised. Summon + cast.",
+  "bones": {
+    "head":  { "y": 0.13 },
+    "chest": { "y": 0.31 },
+    "handL": { "x": 0.28, "y": 0.50 },
+    "handR": { "x": 0.72, "y": 0.50 }
+  },
+  "actions": ["idle", "walkF", "walkB", "summon", "cast", "hurt", "spawn", "die"],
+  "attack": "summon"
+}

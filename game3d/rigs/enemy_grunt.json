@@ -1,0 +1,8 @@
+{
+  "entity": "enemy_grunt",
+  "bodyPlan": "BIPED",
+  "note": "Generic humanoid grunt template. Pure BIPED auto-fit (no overrides) — drop any roughly-upright enemy still on this and it animates. Overrides added per-enemy only where auto-fit reads wrong.",
+  "bones": {},
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "block", "spawn", "die"],
+  "attack": "attack"
+}

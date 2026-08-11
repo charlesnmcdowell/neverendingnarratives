@@ -163,7 +163,8 @@
             </div>
 
             <div class="hidden md:flex items-center gap-8 text-sm font-medium">
-                <a href="/play/" class="nav-link text-yellow-400 flex items-center gap-1.5"><i class="fa-solid fa-gamepad"></i> Play the Game</a>
+                <a href="#games" onclick="smoothScrollTo('games')" class="nav-link text-yellow-400 flex items-center gap-1.5"><i class="fa-solid fa-gamepad"></i> Play the Games</a>
+                <a href="/audiobook/" class="nav-link"><i class="fa-solid fa-headphones"></i> Book 1 Free</a>
                 <a href="#listen" onclick="smoothScrollTo('listen')" class="nav-link">Listen</a>
                 <a href="#read" onclick="smoothScrollTo('read')" class="nav-link">Read</a>
                 <a href="#audiobooks" onclick="smoothScrollTo('audiobooks')" class="nav-link">Audiobooks</a>
@@ -187,7 +188,8 @@
         <!-- Mobile Menu -->
         <div id="mobile-menu" class="hidden md:hidden bg-[#100d0b] border-t border-amber-900/40">
             <div class="flex flex-col px-6 py-6 gap-4 text-lg">
-                <a href="/play/" class="py-2 text-yellow-400 flex items-center gap-2"><i class="fa-solid fa-gamepad"></i> Play the Game</a>
+                <a href="#games" onclick="toggleMobileMenu()" class="py-2 text-yellow-400 flex items-center gap-2"><i class="fa-solid fa-gamepad"></i> Play the Games</a>
+                <a href="/audiobook/" class="py-2 flex items-center gap-2"><i class="fa-solid fa-headphones"></i> Book 1 Free</a>
                 <a href="#listen" onclick="toggleMobileMenu()" class="py-2">Listen</a>
                 <a href="#read" onclick="toggleMobileMenu()" class="py-2">Read</a>
                 <a href="#audiobooks" onclick="toggleMobileMenu()" class="py-2">Audiobooks</a>
@@ -222,7 +224,7 @@
             </div>
             <!-- Play · Listen · Read · Fund -->
             <div class="fade-in-delayed-2 flex flex-col sm:flex-row sm:flex-wrap gap-4 justify-center max-w-3xl mx-auto">
-                <a href="/play/"
+                <a href="#games" onclick="smoothScrollTo('games')"
                    class="flex-1 sm:min-w-[200px] inline-flex items-center justify-center gap-3 bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-5 rounded-full font-bold text-lg transition-all active:scale-95 shadow-2xl shadow-yellow-400/20">
                     <i class="fa-solid fa-gamepad text-xl"></i> Play Free
                 </a>
@@ -239,7 +241,62 @@
                     <i class="fa-solid fa-fire"></i> Fund
                 </a>
             </div>
-            <p class="fade-in-delayed-2 text-zinc-300 text-sm mt-5">No download. No sign-up. Jump straight into the ARPG.</p>
+            <p class="fade-in-delayed-2 text-zinc-300 text-sm mt-5">No download. No sign-up. Two games — jump straight in.</p>
+        </div>
+    </section>
+
+
+    <!-- GAMES — two playable browser games (2026-08-11) -->
+    <section id="games" class="py-24 bg-[#0a0807] border-t border-amber-900/30">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-6">
+                <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Play Free · In Your Browser</span>
+                <h2 class="heading-font text-4xl md:text-5xl font-bold mt-2 mb-4">Two Ways Into Karridge</h2>
+                <p class="text-zinc-400 text-lg max-w-2xl mx-auto serif">
+                    Same world, two very different fights. No installs, no accounts — click and play.
+                </p>
+            </div>
+            <div class="rune-divider mb-12"><i class="fa-solid fa-khanda"></i></div>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="rounded-3xl overflow-hidden border border-amber-900/30 bg-[#140f0c]/60 hover:border-yellow-400/40 transition-all flex flex-col">
+                    <div class="p-8 flex-1">
+                        <span class="text-yellow-400 text-xs font-medium uppercase tracking-widest">Action RPG</span>
+                        <h3 class="heading-font text-3xl font-bold mt-1 mb-3">The Pit of Karridge</h3>
+                        <p class="text-zinc-400 leading-relaxed mb-6 serif">
+                            The original arena brawler. Summon devils, dragons and the dead in real-time combat,
+                            and fight your way out of the Pit one bout at a time.
+                        </p>
+                        <ul class="text-zinc-300 text-sm space-y-2">
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Real-time arena combat</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Summons, transformations &amp; boss fights</li>
+                        </ul>
+                    </div>
+                    <div class="p-8 pt-0">
+                        <a href="/play/" class="block text-center bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-bold transition-all active:scale-95">
+                            <i class="fa-solid fa-gamepad mr-2"></i> Play the ARPG
+                        </a>
+                    </div>
+                </div>
+                <div class="rounded-3xl overflow-hidden border border-amber-900/30 bg-[#140f0c]/60 hover:border-yellow-400/40 transition-all flex flex-col">
+                    <div class="p-8 flex-1">
+                        <span class="text-yellow-400 text-xs font-medium uppercase tracking-widest">New · Deck-Building Roguelike</span>
+                        <h3 class="heading-font text-3xl font-bold mt-1 mb-3">Spire of Karridge</h3>
+                        <p class="text-zinc-400 leading-relaxed mb-6 serif">
+                            A story-driven card battler set twenty years later. Two playable characters, two sides
+                            of the same conspiracy — fully voice-acted, with every card its own animation.
+                        </p>
+                        <ul class="text-zinc-300 text-sm space-y-2">
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Two campaigns: the warlock &amp; the samurai</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Full voice acting &amp; original soundtrack</li>
+                        </ul>
+                    </div>
+                    <div class="p-8 pt-0">
+                        <a href="/deck/" class="block text-center bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-bold transition-all active:scale-95">
+                            <i class="fa-solid fa-layer-group mr-2"></i> Play the Deck-Builder
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -255,6 +312,21 @@
                 </p>
             </div>
             <div class="rune-divider mb-12"><i class="fa-solid fa-khanda"></i></div>
+
+            <!-- FULL BOOK ONE — streaming on-site (2026-08-11) -->
+            <div class="mb-12 rounded-3xl border border-yellow-400/40 bg-[#140f0c]/80 shadow-2xl shadow-yellow-400/10 p-8 md:p-10 flex flex-col md:flex-row md:items-center gap-8">
+                <div class="flex-1">
+                    <span class="text-yellow-400 text-xs font-medium uppercase tracking-widest">New · The Complete Book One</span>
+                    <h3 class="heading-font text-3xl md:text-4xl font-bold mt-1 mb-3">The Sorcerer Sword — Full Audiobook</h3>
+                    <p class="text-zinc-400 leading-relaxed serif">
+                        Every chapter of Book One, professionally narrated — stream the whole audiobook free,
+                        right here on the site. Your place is saved automatically between visits.
+                    </p>
+                </div>
+                <a href="/audiobook/" class="shrink-0 inline-flex items-center justify-center gap-3 bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-bold text-lg transition-all active:scale-95 shadow-2xl shadow-yellow-400/20">
+                    <i class="fa-solid fa-headphones text-xl"></i> Listen Now — Free
+                </a>
+            </div>
 
             <!-- Featured chapter: The Sorcerer-Sword -->
             <div class="mb-12 rounded-3xl overflow-hidden card-fantasy shadow-2xl shadow-black/50">

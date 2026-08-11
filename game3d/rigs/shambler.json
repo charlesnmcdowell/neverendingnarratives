@@ -1,0 +1,14 @@
+{
+  "entity": "shambler",
+  "bodyPlan": "BIPED",
+  "note": "Slow shambling undead summon. BIPED auto-fit; head lolls forward (pivot lowered) and arms hang front for the lurch. Attack is the generic overhead attack clip.",
+  "bones": {
+    "head":  { "x": 0.46, "y": 0.18 },
+    "armL":  { "x": 0.40, "y": 0.36 },
+    "armR":  { "x": 0.60, "y": 0.36 },
+    "handL": { "x": 0.36, "y": 0.46 },
+    "handR": { "x": 0.64, "y": 0.46 }
+  },
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "spawn", "die"],
+  "attack": "attack"
+}

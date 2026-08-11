@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The Sorcerer-Sword — Arena (2.5D beat-em-up)</title>
+<style>
+  html,body{margin:0;height:100%;background:#0a0710;overflow:hidden}
+  #game{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  /* framing now lives in-engine (world.js soft radial vignette) so the lit crowd
+     wall isn't crushed; keep only a faint outer shadow to seat the canvas. */
+  #game canvas{box-shadow:0 0 24px rgba(0,0,0,.55)}
+  #hint{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);
+    font:12px Georgia,serif;color:#7a6a96;opacity:.6;pointer-events:none}
+  /* DC-style on-screen touch controls — shown on touch devices (P1 parity gate).
+     Virtual stick (left) for the shallow-plane move; verb buttons (right) for the
+     warlock's 4-button kit. Keyboard still works on desktop, where these stay hidden. */
+  #touch{position:fixed;inset:0;pointer-events:none;z-index:50;display:none}
+  @media (pointer:coarse){ #touch{display:block} }
+  #stickBase{position:absolute;left:26px;bottom:26px;width:120px;height:120px;border-radius:50%;
+    background:radial-gradient(circle,rgba(120,90,160,.22),rgba(20,12,30,.42));
+    border:2px solid rgba(160,130,200,.4);pointer-events:auto;touch-action:none}
+  #stickNub{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;
+    border-radius:50%;background:radial-gradient(circle,rgba(206,176,244,.85),rgba(92,60,132,.7));
+    border:2px solid rgba(222,202,255,.6);will-change:transform}
+  .btn{position:absolute;width:72px;height:72px;border-radius:50%;pointer-events:auto;touch-action:none;
+    font:bold 12px Georgia,serif;color:#f0e6ff;display:flex;align-items:center;justify-content:center;
+    text-align:center;line-height:1.1;user-select:none;-webkit-user-select:none;
+    background:radial-gradient(circle,rgba(120,40,60,.5),rgba(40,12,20,.62));
+    border:2px solid rgba(220,150,170,.45)}
+  .btn.on{filter:brightness(1.55)}
+  #btnAtk{right:30px;bottom:32px;width:86px;height:86px;
+    background:radial-gradient(circle,rgba(150,50,70,.55),rgba(50,14,22,.64))}
+  #btnHex{right:128px;bottom:70px;border-color:rgba(176,112,240,.6)}
+  #btnWard{right:108px;bottom:160px;border-color:rgba(90,210,255,.55)}
+  #btnSummon{right:18px;bottom:160px;border-color:rgba(255,170,90,.55)}
+  #btnRaise{right:60px;bottom:248px;border-color:rgba(150,200,120,.55)}
+  /* DASH (held, like ATK) — sets T.sprint so the SHIFT-dash + the entire air-juggle
+     chain (dash-launcher -> air-hit-confirm -> OTG splat) is reachable on touch.
+     Left-side, just right of the stick, so the movement thumb can hold it while moving
+     (parity_lint check #8 touch-held-verb-coverage: T.sprint must have a touch source). */
+  #btnDash{left:158px;bottom:40px;width:64px;height:64px;border-color:rgba(150,180,255,.55);
+    background:radial-gradient(circle,rgba(60,90,150,.5),rgba(18,24,46,.62))}
+</style>
+</head>
+<body>
+  <div id="game"></div>
+  <div id="hint">WASD / arrows move · Space attack · H hex curse · P portal ward · K summon demons · L raise dead</div>
+
+  <!-- DC-style on-screen touch controls (P1 parity gate: playable on touch) -->
+  <div id="touch">
+    <div id="stickBase"><div id="stickNub"></div></div>
+    <div id="btnAtk" class="btn">ATK</div>
+    <div id="btnHex" class="btn">HEX</div>
+    <div id="btnWard" class="btn">WARD</div>
+    <div id="btnSummon" class="btn">SUMMON</div>
+    <div id="btnRaise" class="btn">RAISE</div>
+    <div id="btnDash" class="btn">DASH</div>
+  </div>
+
+  <!-- Phaser served locally over http (sibling published build) -->
+  <script src="../play/lib/phaser.min.js"></script>
+  <!-- rig engine (anim-owned) + build-owned arena modules -->
+  <script src="./src/rig.js"></script>
+  <script src="./src/world.js"></script>
+  <script src="./src/fx.js"></script>
+  <script src="./src/actors.js"></script>
+  <script src="./src/main.js"></script>
+  <!-- touch input -> window.__TOUCH__ (read by src/main.js alongside the keyboard) -->
+  <script>
+  (function () {
+    var T = window.__TOUCH__ = { dx: 0, dy: 0, attack: false, sprint: false,
+      _summonEdge: false, _hexEdge: false, _portalEdge: false, _undeadEdge: false };
+    var base = document.getElementById('stickBase'), nub = document.getElementById('stickNub');
+    var sid = null, cx = 0, cy = 0, R = 46;
+    function setNub(x, y) { nub.style.transform = 'translate(' + x + 'px,' + y + 'px)'; }
+    function move(e) {
+      var dx = e.clientX - cx, dy = e.clientY - cy, len = Math.hypot(dx, dy) || 1;
+      var cl = Math.min(len, R), nx = dx / len, ny = dy / len;
+      setNub(nx * cl, ny * cl); T.dx = nx * (cl / R); T.dy = ny * (cl / R);
+    }
+    function end(e) { if (e.pointerId === sid) { sid = null; T.dx = 0; T.dy = 0; setNub(0, 0); } }
+    base.addEventListener('pointerdown', function (e) {
+      sid = e.pointerId; var r = base.getBoundingClientRect();
+      cx = r.left + r.width / 2; cy = r.top + r.height / 2;
+      try { base.setPointerCapture(sid); } catch (x) {}
+      move(e); e.preventDefault();
+    });
+    base.addEventListener('pointermove', function (e) { if (e.pointerId === sid) move(e); });
+    base.addEventListener('pointerup', end);
+    base.addEventListener('pointercancel', end);
+    // ATK is held (like SPACE); HEX/WARD/SUMMON are edge-triggered (like JustDown).
+    function hold(id, set) {
+      var el = document.getElementById(id); if (!el) return;
+      el.addEventListener('pointerdown', function (e) { set(true); el.classList.add('on'); e.preventDefault(); });
+      var rel = function () { set(false); el.classList.remove('on'); };
+      el.addEventListener('pointerup', rel); el.addEventListener('pointercancel', rel);
+      el.addEventListener('pointerleave', rel);
+    }
+    function edge(id, flag) {
+      var el = document.getElementById(id); if (!el) return;
+      el.addEventListener('pointerdown', function (e) { T[flag] = true; el.classList.add('on'); e.preventDefault(); });
+      var rel = function () { el.classList.remove('on'); };
+      el.addEventListener('pointerup', rel); el.addEventListener('pointercancel', rel);
+    }
+    hold('btnAtk', function (v) { T.attack = v; });
+    hold('btnDash', function (v) { T.sprint = v; });   // DASH held -> main.js L1303 `!!T.sprint` (juggle chain reachable on touch)
+    edge('btnHex', '_hexEdge'); edge('btnWard', '_portalEdge'); edge('btnSummon', '_summonEdge');
+    edge('btnRaise', '_undeadEdge');   // L raise-dead foot-horde — was keyboard-only (parity_lint check #7)
+  })();
+  </script>
+  <script>
+    window.addEventListener('load', function () { window.bootArena(); });
+  </script>
+</body>
+</html>

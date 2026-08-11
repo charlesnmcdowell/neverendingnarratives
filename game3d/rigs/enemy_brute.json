@@ -1,0 +1,14 @@
+{
+  "entity": "enemy_brute",
+  "bodyPlan": "BIPED",
+  "note": "Heavy/wide enemy template. BIPED auto-fit with a lower, wider stance (hips raised, legs spread) and broad shoulders for big-bodied bosses. Overhead attack.",
+  "bones": {
+    "hips":  { "y": 0.56 },
+    "legL":  { "x": 0.40, "y": 0.60 },
+    "legR":  { "x": 0.60, "y": 0.60 },
+    "armL":  { "x": 0.34, "y": 0.34 },
+    "armR":  { "x": 0.66, "y": 0.34 }
+  },
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "block", "spawn", "die"],
+  "attack": "attack"
+}

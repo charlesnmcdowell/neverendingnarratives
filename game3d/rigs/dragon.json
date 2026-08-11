@@ -1,0 +1,11 @@
+{
+  "entity": "dragon",
+  "bodyPlan": "QUADRUPED",
+  "note": "Bone dragon. Quadruped template; head pulled forward/low for the long neck. Walk drives the four legs (diagonal gait); breath clip dips the head; claw rakes the foreleg.",
+  "bones": {
+    "head":  { "x": 0.10, "y": 0.34 },
+    "chest": { "x": 0.30, "y": 0.48 }
+  },
+  "actions": ["idle", "walkF", "walkB", "breath", "clawSwipe", "hurt", "spawn", "die"],
+  "attack": "breath"
+}

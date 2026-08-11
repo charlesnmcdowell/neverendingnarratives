@@ -1,0 +1,13 @@
+{
+  "entity": "gunner",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_grunt",
+  "note": "THE POWDER SAINT (pit.js type 'gunner', r:14). Ranged shooter — braces, raises the piece, fires. Reuses the draw/aim-loose clip as the level-and-fire.",
+  "bones": {
+    "armR":  { "x": 0.64, "y": 0.34 },
+    "handR": { "x": 0.78, "y": 0.40 },
+    "armL":  { "x": 0.40, "y": 0.36 }
+  },
+  "actions": ["idle", "walkF", "walkB", "draw", "loose", "hurt", "spawn", "die"],
+  "attack": "draw"
+}

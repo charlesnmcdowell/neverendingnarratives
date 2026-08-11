@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>rig_test — Sorcerer-Sword 2.5D rig proving ground</title>
+<style>
+  html,body{margin:0;background:#16121c;color:#d8c9f0;font:14px/1.4 system-ui,sans-serif}
+  #bar{padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-bottom:1px solid #34294a}
+  #bar b{color:#caa6ff;margin-right:6px}
+  button{background:#3a2c52;color:#e8ddff;border:1px solid #5a4684;border-radius:6px;padding:5px 10px;cursor:pointer}
+  button.on{background:#7d56c9;border-color:#a07fe0}
+  #state{margin-left:auto;font-variant-numeric:tabular-nums;color:#9d86c4;font-size:12px}
+  #wrap{display:flex;justify-content:center;padding:14px}
+  label{display:flex;gap:4px;align-items:center;color:#b7a4d6}
+</style>
+</head>
+<body>
+<div id="bar">
+  <b>rig_test</b>
+  <span id="acts"></span>
+  <label><input type="checkbox" id="giz" checked> bones</label>
+  <label><input type="checkbox" id="auto" checked> auto-cycle</label>
+  <span id="state">—</span>
+</div>
+<div id="wrap"><div id="game"></div></div>
+
+<!-- Phaser served locally over http (sibling published build) -->
+<script src="../play/lib/phaser.min.js"></script>
+<!-- The rig engine under test -->
+<script src="./src/rig.js"></script>
+<script>
+/* Standalone multi-actor proving ground. Builds one Rig per body plan on a
+ * placeholder silhouette (real art swaps in from ../play/assets when it lands)
+ * and cycles every clip in lockstep. Does NOT depend on arena.html — game3d-build
+ * wires the same Rig API into arena.html and feeds window.__riggedEntities() to __AUDIT__.
+ * Every action below is exercised so the page proves FULL clip coverage unattended. */
+var ACTIONS = ['idle','walkF','walkB','run','attack','hurt','knockback','knockdown','getup',
+               'cast','summon','transform','spawn','die','fireballCast','breath','clawSwipe','draw','loose','block','victory'];
+
+var ACTORS = [
+  { key:'warlock',    plan:'BIPED',     json:null },
+  { key:'succubus',   plan:'WINGED',    json:null },
+  { key:'dragon',     plan:'QUADRUPED', json:null },
+  { key:'bonearcher', plan:'BIPED',     json:null }
+];
+var COLW = 170, BOXW = 120, BOXH = 230, TOP = 36;
+var curAct = 'idle', actors = [];
+
+ACTORS.forEach(function(a){
+  fetch('./rigs/'+a.key+'.json').then(function(r){return r.ok?r.json():null;})
+    .then(function(j){ a.json = j; }).catch(function(){});
+});
+
+function box(plan,i){ return { x: 16 + i*COLW + (COLW-BOXW)/2, y: TOP, w: BOXW, h: BOXH }; }
+
+function drawBiped(g,w,h,robe,accent){
+  g.fillStyle=robe; g.beginPath(); g.moveTo(w*0.5,h*0.10); g.lineTo(w*0.80,h*0.55);
+  g.lineTo(w*0.72,h*0.98); g.lineTo(w*0.28,h*0.98); g.lineTo(w*0.20,h*0.55); g.closePath(); g.fill();
+  g.fillStyle=accent; g.fillRect(w*0.30,h*0.30,w*0.40,h*0.30);
+  g.fillStyle='#1b1530'; g.beginPath(); g.arc(w*0.5,h*0.16,w*0.20,Math.PI,0); g.closePath(); g.fill();
+  g.fillStyle='#c9a0ff'; g.fillRect(w*0.42,h*0.17,5,3); g.fillRect(w*0.54,h*0.17,5,3);
+}
+function drawWinged(g,w,h){
+  g.fillStyle='#5a2740';
+  g.beginPath(); g.moveTo(w*0.30,h*0.30); g.lineTo(w*0.02,h*0.18); g.lineTo(w*0.12,h*0.46); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(w*0.70,h*0.30); g.lineTo(w*0.98,h*0.18); g.lineTo(w*0.88,h*0.46); g.closePath(); g.fill();
+  drawBiped(g,w,h,'#7a2347','#9c3a5e');
+}
+function drawQuad(g,w,h){
+  g.fillStyle='#3a3450';
+  g.beginPath(); g.moveTo(w*0.20,h*0.42); g.lineTo(w*0.84,h*0.40); g.lineTo(w*0.84,h*0.60); g.lineTo(w*0.20,h*0.62); g.closePath(); g.fill();
+  g.fillStyle='#46405e';
+  g.beginPath(); g.moveTo(w*0.20,h*0.42); g.lineTo(w*0.04,h*0.30); g.lineTo(w*0.10,h*0.48); g.lineTo(w*0.22,h*0.56); g.closePath(); g.fill();
+  g.fillStyle='#2f2a44';
+  g.fillRect(w*0.26,h*0.60,w*0.06,h*0.36); g.fillRect(w*0.36,h*0.60,w*0.06,h*0.36);
+  g.fillRect(w*0.64,h*0.58,w*0.06,h*0.38); g.fillRect(w*0.74,h*0.58,w*0.06,h*0.38);
+  g.fillStyle='#caa0ff'; g.fillRect(w*0.10,h*0.36,5,3);
+}
+function makePlaceholder(scene,a,i){
+  var b=box(a.plan,i), w=b.w, h=b.h, c=scene.textures.createCanvas(a.key,w,h), g=c.getContext('2d');
+  g.clearRect(0,0,w,h);
+  if(a.plan==='QUADRUPED') drawQuad(g,w,h);
+  else if(a.plan==='WINGED') drawWinged(g,w,h);
+  else drawBiped(g,w,h, a.key==='bonearcher'?'#cdc6d8':'#2b2140', a.key==='bonearcher'?'#b6aec6':'#3a2c5a');
+  c.refresh();
+}
+
+function setAct(a){
+  curAct=a;
+  actors.forEach(function(ac){ ac.rig.play(a); });
+  document.querySelectorAll('#acts button').forEach(function(b){ b.classList.toggle('on', b.textContent===a); });
+}
+
+var Scene = {
+  preload:function(){},
+  create:function(){
+    var self=this;
+    ACTORS.forEach(function(a,i){
+      makePlaceholder(self,a,i);
+      var b=box(a.plan,i);
+      var rig=Rig.createRig(a.key,a.plan,a.json).layout(b);
+      var pts=rig.ropePoints();
+      var ox=b.x+b.w/2, oy=b.y;
+      var rope=self.add.rope(ox,oy,a.key,null,
+        pts.map(function(p){return new Phaser.Math.Vector2(p.x-ox,p.y-oy);}),false);
+      rope.setOrigin(0.5,0);
+      var gizmo=self.add.graphics();
+      self.add.text(b.x+b.w/2, TOP+BOXH+8, a.key+' ('+a.plan+')',
+        {fontFamily:'system-ui',fontSize:'11px',color:'#9d86c4'}).setOrigin(0.5,0);
+      actors.push({def:a, rig:rig, rope:rope, gizmo:gizmo, ox:ox, oy:oy});
+    });
+
+    var host=document.getElementById('acts');
+    ACTIONS.forEach(function(a){ var btn=document.createElement('button'); btn.textContent=a;
+      btn.onclick=function(){ setAct(a); }; host.appendChild(btn); });
+    setAct('idle');
+
+    var i=0; setInterval(function(){
+      if(!document.getElementById('auto').checked) return;
+      i=(i+1)%ACTIONS.length; setAct(ACTIONS[i]);
+    }, 2200);
+  },
+  update:function(time,deltaMs){
+    var dt=Math.min(deltaMs/1000, 0.05);
+    var showGiz=document.getElementById('giz').checked;
+    actors.forEach(function(ac){
+      ac.rig.update(dt);
+      var pts=ac.rig.ropePoints();
+      for(var i=0;i<ac.rope.points.length && i<pts.length;i++){
+        ac.rope.points[i].x=pts[i].x-ac.ox; ac.rope.points[i].y=pts[i].y-ac.oy;
+      }
+      ac.rope.setDirty();
+      ac.gizmo.clear();
+      if(showGiz){
+        var bones=ac.rig.poseBones();
+        ac.gizmo.lineStyle(2,0x7d56c9,0.9);
+        for(var j=0;j<bones.length;j++){ var bn=bones[j];
+          if(bn.parent){ var pa=null; for(var k=0;k<bones.length;k++) if(bones[k].name===bn.parent) pa=bones[k];
+            if(pa){ ac.gizmo.beginPath(); ac.gizmo.moveTo(pa.x,pa.y); ac.gizmo.lineTo(bn.x,bn.y); ac.gizmo.strokePath(); } }
+        }
+        ac.gizmo.fillStyle(0xffd36a,1);
+        for(var m=0;m<bones.length;m++) ac.gizmo.fillCircle(bones[m].x,bones[m].y,3);
+      }
+    });
+    var ents=window.__riggedEntities(), n=Object.keys(ents).length;
+    document.getElementById('state').textContent='action='+curAct+'  rigged actors='+n+
+      '  ('+Object.keys(ents).map(function(k){return k+':'+ents[k].plan;}).join(', ')+')';
+  }
+};
+
+new Phaser.Game({ type: Phaser.AUTO, width: 16+ACTORS.length*COLW+16, height: TOP+BOXH+34,
+  parent:'game', backgroundColor:'#1d1729', scene: Scene });
+</script>
+</body>
+</html>

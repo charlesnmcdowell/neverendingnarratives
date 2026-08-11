@@ -1,0 +1,13 @@
+{
+  "entity": "chain",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_grunt",
+  "note": "THE CHAIN (pit.js type 'chain', r:18). Nine-foot reach — wide planted stance, the right arm whips a long arc. Generic strike clip serves the swing.",
+  "bones": {
+    "legL":  { "x": 0.42 },
+    "legR":  { "x": 0.58 },
+    "handR": { "x": 0.76, "y": 0.50 }
+  },
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "spawn", "die"],
+  "attack": "attack"
+}

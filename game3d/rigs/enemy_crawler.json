@@ -1,0 +1,10 @@
+{
+  "entity": "enemy_crawler",
+  "bodyPlan": "QUADRUPED",
+  "note": "Generic four-legged/beast enemy template. QUADRUPED auto-fit; head forward-low. Claw-rake attack on the foreleg. Reuse for hounds/spiders/lizards.",
+  "bones": {
+    "head":  { "x": 0.12, "y": 0.40 }
+  },
+  "actions": ["idle", "walkF", "walkB", "clawSwipe", "hurt", "spawn", "die"],
+  "attack": "clawSwipe"
+}

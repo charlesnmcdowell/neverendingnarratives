@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Stream The Sorcerer Sword — Book One — the complete audiobook, free to listen on Neverending Narratives.">
+<link rel="canonical" href="https://neverendingnarratives.com/audiobook/">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#eab308">
+<title>The Sorcerer Sword — Book One Audiobook | Listen Free — Neverending Narratives</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neverending Narratives">
+<meta property="og:url" content="https://neverendingnarratives.com/audiobook/">
+<meta property="og:title" content="The Sorcerer Sword — Book One Audiobook, Free to Stream">
+<meta property="og:description" content="The complete Book One audiobook — professionally narrated. Press play and listen free.">
+<meta property="og:image" content="https://neverendingnarratives.com/assets/og-image.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:#09090b; color:#e4e4e7; min-height:100vh; }
+  a { color:inherit; text-decoration:none; }
+  .heading { font-family:'Playfair Display',serif; }
+  .wrap { max-width:880px; margin:0 auto; padding:0 20px; }
+  header.top { position:sticky; top:0; z-index:40; background:rgba(9,9,11,.92); backdrop-filter:blur(8px); border-bottom:1px solid #27272a; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; height:60px; }
+  .topbar .brand { font-weight:600; letter-spacing:.02em; }
+  .topbar .brand span { color:#eab308; }
+  .toplinks { display:flex; gap:18px; font-size:14px; color:#a1a1aa; }
+  .toplinks a:hover { color:#eab308; }
+  .hero { text-align:center; padding:56px 0 32px; }
+  .hero .kicker { color:#eab308; text-transform:uppercase; letter-spacing:.2em; font-size:12px; font-weight:600; }
+  .hero h1 { font-size:clamp(30px,5vw,52px); margin:10px 0 12px; }
+  .hero p { color:#a1a1aa; max-width:560px; margin:0 auto; line-height:1.6; }
+  .hero .note { margin-top:14px; font-size:13px; color:#71717a; }
+  .list { padding:12px 0 140px; }
+  .chapter { display:flex; align-items:center; gap:14px; padding:13px 16px; border:1px solid #27272a;
+             border-radius:14px; margin-bottom:8px; background:#101012; cursor:pointer; transition:all .18s; user-select:none; }
+  .chapter:hover { border-color:#eab30855; transform:translateX(3px); }
+  .chapter .num { width:34px; height:34px; border-radius:50%; background:#18181b; border:1px solid #3f3f46;
+                  display:flex; align-items:center; justify-content:center; font-size:12px; color:#a1a1aa; flex-shrink:0; }
+  .chapter .name { flex:1; font-size:15px; }
+  .chapter .dur { font-size:12.5px; color:#71717a; font-variant-numeric:tabular-nums; }
+  .chapter.active { border-color:#eab308; background:#141310; }
+  .chapter.active .num { background:#eab308; color:#18181b; border-color:#eab308; font-weight:700; }
+  .chapter.played .num { border-color:#eab30866; color:#eab308aa; }
+  /* ---- sticky player ---- */
+  .player { position:fixed; left:0; right:0; bottom:0; z-index:50; background:rgba(16,16,18,.97);
+            border-top:1px solid #27272a; backdrop-filter:blur(10px); }
+  .player .inner { max-width:880px; margin:0 auto; padding:12px 20px 16px; }
+  .ptitle { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:8px; }
+  .ptitle .now { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ptitle .now b { color:#eab308; font-weight:600; }
+  .ptitle .time { font-size:12.5px; color:#a1a1aa; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .seek { -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:3px; outline:none; cursor:pointer;
+          background:linear-gradient(to right, #eab308 var(--fill,0%), #3f3f46 var(--fill,0%)); }
+  .seek::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#eab308; border:none; }
+  .seek::-moz-range-thumb { width:15px; height:15px; border-radius:50%; background:#eab308; border:none; }
+  .controls { display:flex; align-items:center; justify-content:center; gap:18px; margin-top:10px; }
+  .cbtn { background:none; border:none; color:#e4e4e7; cursor:pointer; font-size:18px; padding:6px 10px; border-radius:10px; transition:all .15s; }
+  .cbtn:hover { color:#eab308; background:#18181b; }
+  .cbtn.big { width:54px; height:54px; font-size:22px; border-radius:50%; background:#eab308; color:#18181b; }
+  .cbtn.big:hover { background:#f5c518; color:#18181b; }
+  .rate { font-size:12.5px; color:#a1a1aa; border:1px solid #3f3f46; border-radius:999px; padding:5px 11px; background:none; cursor:pointer; }
+  .rate:hover { color:#eab308; border-color:#eab308; }
+  .autoplay { font-size:12.5px; color:#a1a1aa; display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .autoplay input { accent-color:#eab308; }
+  @media (max-width:560px) { .controls { gap:8px; } .toplinks { gap:10px; font-size:12.5px; } }
+  /* ---- gentle support interstitial (after Chapter 2, once) ---- */
+  .support-veil { position:fixed; inset:0; z-index:80; background:rgba(9,9,11,.82); backdrop-filter:blur(4px);
+                  display:none; align-items:center; justify-content:center; padding:20px; }
+  .support-veil.show { display:flex; }
+  .support-card { max-width:460px; width:100%; background:#141310; border:1px solid #eab30866; border-radius:20px;
+                  padding:30px 28px; text-align:center; box-shadow:0 24px 80px rgba(0,0,0,.6); }
+  .support-card .k { color:#eab308; text-transform:uppercase; letter-spacing:.18em; font-size:11px; font-weight:600; }
+  .support-card h3 { font-family:'Playfair Display',serif; font-size:26px; margin:8px 0 10px; }
+  .support-card p { color:#a1a1aa; font-size:14.5px; line-height:1.65; }
+  .support-card .btns { display:flex; flex-direction:column; gap:10px; margin-top:20px; }
+  .support-card .fund { background:#eab308; color:#18181b; font-weight:700; border:none; border-radius:999px;
+                        padding:13px 20px; font-size:15px; cursor:pointer; }
+  .support-card .fund:hover { background:#f5c518; }
+  .support-card .keep { background:none; color:#a1a1aa; border:1px solid #3f3f46; border-radius:999px;
+                        padding:11px 20px; font-size:14px; cursor:pointer; }
+  .support-card .keep:hover { color:#eab308; border-color:#eab308; }
+</style>
+</head>
+<body oncontextmenu="return false;">
+<header class="top"><div class="wrap topbar">
+  <a class="brand" href="/">NEVERENDING <span>NARRATIVES</span></a>
+  <nav class="toplinks">
+    <a href="/">Home</a>
+    <a href="/play/">Pit ARPG</a>
+    <a href="/deck/">Deck-Builder</a>
+  </nav>
+</div></header>
+
+<section class="hero wrap">
+  <div class="kicker">Listen Free · The Complete Book One</div>
+  <h1 class="heading">The Sorcerer Sword</h1>
+  <p>The full Book One audiobook — every chapter, professionally narrated, free to stream right here.
+     Pick a chapter below, or just press play and let it run.</p>
+  <div class="note">Streaming only — support the series by buying the books on the <a href="/#read" style="color:#eab308">home page</a>.</div>
+</section>
+
+<section class="list wrap" id="chapters"></section>
+
+<div class="player"><div class="inner">
+  <div class="ptitle">
+    <div class="now">Now playing: <b id="nowTitle">—</b></div>
+    <div class="time"><span id="tCur">0:00</span> / <span id="tDur">0:00</span></div>
+  </div>
+  <input type="range" class="seek" id="seek" min="0" max="1000" value="0">
+  <div class="controls">
+    <label class="autoplay"><input type="checkbox" id="auto" checked> auto-play next</label>
+    <button class="cbtn" id="prev" title="Previous chapter">&#9664;&#9664;</button>
+    <button class="cbtn" id="back30" title="Back 30s">&#8617; 30</button>
+    <button class="cbtn big" id="play" title="Play / Pause">&#9654;</button>
+    <button class="cbtn" id="fwd30" title="Forward 30s">30 &#8618;</button>
+    <button class="cbtn" id="next" title="Next chapter">&#9654;&#9654;</button>
+    <button class="rate" id="rate" title="Playback speed">1&times;</button>
+  </div>
+</div></div>
+
+<div class="support-veil" id="supportVeil">
+  <div class="support-card">
+    <div class="k">A quick word from the author</div>
+    <h3>Enjoying the story so far?</h3>
+    <p>This audiobook is free, start to finish. If it's worth something to you, a small
+       donation on the Fund page is what keeps the next book — and the games — coming.
+       Either way, thank you for listening.</p>
+    <div class="btns">
+      <button class="fund" onclick="window.open('/#fund','_blank')">&#9829; Support on the Fund page</button>
+      <button class="keep" id="keepListening">Keep listening &#8594;</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* THE SORCERER SWORD — Book One streaming player (listen-only; no download UI). */
+const CHAPTERS = [
+  ["Opening Credits", "00_Opening_Credits"],
+  ["Chapter 1",  "01_Chapter_01"], ["Chapter 2",  "02_Chapter_02"], ["Chapter 3",  "03_Chapter_03"],
+  ["Chapter 4",  "04_Chapter_04"], ["Chapter 5",  "05_Chapter_05"], ["Chapter 6",  "06_Chapter_06"],
+  ["Chapter 7",  "07_Chapter_07"], ["Chapter 8",  "08_Chapter_08"], ["Chapter 9",  "09_Chapter_09"],
+  ["Chapter 10", "10_Chapter_10"], ["Chapter 11", "11_Chapter_11"], ["Chapter 12", "12_Chapter_12"],
+  ["Chapter 13", "13_Chapter_13"], ["Chapter 14", "14_Chapter_14"], ["Chapter 15", "15_Chapter_15"],
+  ["Chapter 16", "16_Chapter_16"], ["Chapter 17", "17_Chapter_17"], ["Chapter 18", "18_Chapter_18"],
+  ["Chapter 19", "19_Chapter_19"], ["Chapter 20", "20_Chapter_20"], ["Chapter 21", "21_Chapter_21"],
+  ["Chapter 22", "22_Chapter_22"], ["Chapter 23", "23_Chapter_23"], ["Chapter 24", "24_Chapter_24"],
+  ["Chapter 25", "25_Chapter_25"], ["Chapter 26", "26_Chapter_26"], ["Chapter 27", "27_Chapter_27"],
+  ["Chapter 28", "28_Chapter_28"], ["Chapter 29", "29_Chapter_29"], ["Chapter 30", "30_Chapter_30"],
+  ["Chapter 31", "31_Chapter_31"], ["Closing Credits", "32_Closing_Credits"],
+];
+const audio = new Audio();
+audio.preload = "metadata";
+let cur = -1;
+const $ = id => document.getElementById(id);
+const fmt = s => { s = Math.max(0, s|0); const m = (s/60)|0, ss = s%60; const h = (m/60)|0;
+  return h ? `${h}:${String(m%60).padStart(2,"0")}:${String(ss).padStart(2,"0")}` : `${m}:${String(ss).padStart(2,"0")}`; };
+
+/* chapter list */
+const list = $("chapters");
+CHAPTERS.forEach(([name, file], i) => {
+  const row = document.createElement("div");
+  row.className = "chapter"; row.id = "ch" + i;
+  row.innerHTML = `<div class="num">${i === 0 ? "♪" : (i === CHAPTERS.length-1 ? "♪" : i)}</div>
+                   <div class="name">${name}</div><div class="dur" id="dur${i}"></div>`;
+  row.onclick = () => load(i, 0, true);
+  list.appendChild(row);
+});
+
+function mark() {
+  document.querySelectorAll(".chapter").forEach((el, i) => el.classList.toggle("active", i === cur));
+}
+function load(i, at, play) {
+  if (i < 0 || i >= CHAPTERS.length) return;
+  cur = i;
+  audio.src = "audio/" + CHAPTERS[i][1] + ".mp3";
+  audio.currentTime = 0;
+  $("nowTitle").textContent = CHAPTERS[i][0];
+  mark();
+  audio.addEventListener("loadedmetadata", function once() {
+    audio.removeEventListener("loadedmetadata", once);
+    if (at > 0 && at < audio.duration - 5) audio.currentTime = at;
+    $("tDur").textContent = fmt(audio.duration);
+  });
+  if (play) audio.play().catch(() => {});
+  save();
+}
+function save() {
+  try { localStorage.setItem("ss_book1", JSON.stringify({ i: cur, t: audio.currentTime || 0 })); } catch (e) {}
+}
+/* controls */
+$("play").onclick = () => { if (cur < 0) load(0, 0, true); else if (audio.paused) audio.play(); else audio.pause(); };
+$("prev").onclick = () => load(Math.max(0, cur - 1), 0, true);
+$("next").onclick = () => load(Math.min(CHAPTERS.length - 1, cur + 1), 0, true);
+$("back30").onclick = () => { audio.currentTime = Math.max(0, audio.currentTime - 30); };
+$("fwd30").onclick = () => { audio.currentTime = Math.min(audio.duration || 1e9, audio.currentTime + 30); };
+const RATES = [1, 1.25, 1.5, 1.75, 2, 0.75];
+let ri = 0;
+$("rate").onclick = () => { ri = (ri + 1) % RATES.length; audio.playbackRate = RATES[ri]; $("rate").textContent = RATES[ri] + "×"; };
+$("seek").oninput = e => { if (audio.duration) audio.currentTime = audio.duration * e.target.value / 1000; };
+audio.addEventListener("timeupdate", () => {
+  if (!audio.duration) return;
+  const f = audio.currentTime / audio.duration * 1000;
+  $("seek").value = f;
+  $("seek").style.setProperty("--fill", (f / 10) + "%");
+  $("tCur").textContent = fmt(audio.currentTime);
+  if (((audio.currentTime | 0) % 10) === 0) save();
+});
+audio.addEventListener("play",  () => $("play").innerHTML = "&#10074;&#10074;");
+audio.addEventListener("pause", () => { $("play").innerHTML = "&#9654;"; save(); });
+audio.addEventListener("ended", () => {
+  const row = $("ch" + cur); if (row) row.classList.add("played");
+  /* one gentle ask after Chapter 2, then never again on this device */
+  let seen = false;
+  try { seen = !!localStorage.getItem("ss_ab_support"); } catch (e) {}
+  if (cur === 2 && !seen) {
+    try { localStorage.setItem("ss_ab_support", "1"); } catch (e) {}
+    document.getElementById("supportVeil").classList.add("show");
+    return;   // the Keep Listening button continues to Chapter 3
+  }
+  if ($("auto").checked && cur < CHAPTERS.length - 1) load(cur + 1, 0, true);
+});
+document.getElementById("keepListening").onclick = () => {
+  document.getElementById("supportVeil").classList.remove("show");
+  if (cur < CHAPTERS.length - 1) load(cur + 1, 0, true);
+};
+/* resume where they left off */
+try {
+  const s = JSON.parse(localStorage.getItem("ss_book1") || "null");
+  if (s && s.i >= 0 && s.i < CHAPTERS.length) { load(s.i, s.t || 0, false); }
+} catch (e) {}
+/* media keys */
+if ("mediaSession" in navigator) {
+  navigator.mediaSession.setActionHandler("previoustrack", () => $("prev").onclick());
+  navigator.mediaSession.setActionHandler("nexttrack", () => $("next").onclick());
+}
+</script>
+</body>
+</html>

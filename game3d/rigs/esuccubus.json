@@ -1,0 +1,13 @@
+{
+  "entity": "esuccubus",
+  "bodyPlan": "WINGED",
+  "archetype": "enemy_flyer",
+  "note": "Enemy succubus (pit.js type 'esuccubus'). Winged caster — wings spread wide for the hover silhouette. Hurls fire; ranged cast attack.",
+  "bones": {
+    "wingL": { "x": 0.22, "y": 0.30 },
+    "wingR": { "x": 0.78, "y": 0.30 },
+    "handR": { "x": 0.70, "y": 0.48 }
+  },
+  "actions": ["idle", "walkF", "walkB", "fireballCast", "hurt", "spawn", "die"],
+  "attack": "fireballCast"
+}

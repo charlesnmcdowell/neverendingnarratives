@@ -1,0 +1,13 @@
+{
+  "entity": "imp",
+  "bodyPlan": "BIPED",
+  "note": "Small claw-fiend player summon. BIPED auto-fit, scaled-short so head pivot rides high and hands sit forward for the rake. Attack is clawSwipe.",
+  "bones": {
+    "head":  { "y": 0.16 },
+    "chest": { "y": 0.34 },
+    "handL": { "x": 0.32, "y": 0.48 },
+    "handR": { "x": 0.68, "y": 0.48 }
+  },
+  "actions": ["idle", "walkF", "walkB", "clawSwipe", "hurt", "spawn", "die", "victory"],
+  "attack": "clawSwipe"
+}

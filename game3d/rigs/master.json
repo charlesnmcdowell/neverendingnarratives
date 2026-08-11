@@ -1,0 +1,12 @@
+{
+  "entity": "master",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_grunt",
+  "note": "HOUND MASTER (pit.js type 'master', r:17). Handler — whip arm raised high, commanding posture. Generic strike clip for the lash.",
+  "bones": {
+    "armR":  { "x": 0.66, "y": 0.30 },
+    "handR": { "x": 0.78, "y": 0.42 }
+  },
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "spawn", "die"],
+  "attack": "attack"
+}

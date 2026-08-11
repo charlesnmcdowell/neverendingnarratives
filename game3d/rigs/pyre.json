@@ -1,0 +1,12 @@
+{
+  "entity": "pyre",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_grunt",
+  "note": "PYRE / kiln-mage (pit.js type 'pyre', r:15). Fire caster — both hands forward to hurl flame. Ranged cast clip.",
+  "bones": {
+    "handL": { "x": 0.34, "y": 0.46 },
+    "handR": { "x": 0.66, "y": 0.46 }
+  },
+  "actions": ["idle", "walkF", "walkB", "fireballCast", "hurt", "spawn", "die"],
+  "attack": "fireballCast"
+}

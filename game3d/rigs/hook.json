@@ -1,0 +1,12 @@
+{
+  "entity": "hook",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_grunt",
+  "note": "TWIN HOOKS (pit.js type 'hook', r:14). Lean, fast duelist with long reaching hooks — hands ride forward/low for the snag. Generic strike clip.",
+  "bones": {
+    "handL": { "x": 0.26, "y": 0.56 },
+    "handR": { "x": 0.74, "y": 0.56 }
+  },
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "spawn", "die"],
+  "attack": "attack"
+}

@@ -1,0 +1,16 @@
+{
+  "entity": "door",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_brute",
+  "note": "THE DOOR / THE WALL (pit.js type 'door', r:26). Heaviest tank — low wide stance, broad shoulders, raised hips. Overhead slam attack.",
+  "bones": {
+    "hips":  { "y": 0.56 },
+    "chest": { "y": 0.32 },
+    "armL":  { "x": 0.32, "y": 0.34 },
+    "armR":  { "x": 0.68, "y": 0.34 },
+    "legL":  { "x": 0.40, "y": 0.60 },
+    "legR":  { "x": 0.60, "y": 0.60 }
+  },
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "block", "spawn", "die"],
+  "attack": "attack"
+}

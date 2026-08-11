@@ -1,0 +1,9 @@
+{
+  "entity": "skel",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_grunt",
+  "note": "Raised skeleton (pit.js type 'skel'). Thin upright biped — pure auto-fit silhouette, generic strike.",
+  "bones": {},
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "spawn", "die"],
+  "attack": "attack"
+}

@@ -1,0 +1,12 @@
+{
+  "entity": "stitch",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_grunt",
+  "note": "THE STITCHER / Sawbones healer (pit.js type 'stitch', r:13). Support — raises hands to mend allies. Reuses the cast clip as the heal gesture.",
+  "bones": {
+    "handL": { "x": 0.36, "y": 0.44 },
+    "handR": { "x": 0.64, "y": 0.44 }
+  },
+  "actions": ["idle", "walkF", "walkB", "cast", "hurt", "spawn", "die"],
+  "attack": "cast"
+}

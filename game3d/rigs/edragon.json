@@ -1,0 +1,12 @@
+{
+  "entity": "edragon",
+  "bodyPlan": "QUADRUPED",
+  "archetype": "enemy_crawler",
+  "note": "Enemy bone/cult dragon (pit.js type 'edragon'). Four-legged drake — head forward-low for the breath. Mirrors the player dragon rig; breath attack.",
+  "bones": {
+    "head":  { "x": 0.12, "y": 0.40 },
+    "chest": { "x": 0.30, "y": 0.50 }
+  },
+  "actions": ["idle", "walkF", "walkB", "breath", "clawSwipe", "hurt", "spawn", "die"],
+  "attack": "breath"
+}

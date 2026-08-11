@@ -1,0 +1,11 @@
+{
+  "entity": "hound",
+  "bodyPlan": "QUADRUPED",
+  "note": "Four-legged hound summon. Quadruped template; head pulled forward/low for the lunge-bite. Walk drives the four legs (diagonal gait); bite reuses clawSwipe on the foreleg/head lunge.",
+  "bones": {
+    "head":  { "x": 0.12, "y": 0.40 },
+    "chest": { "x": 0.32, "y": 0.52 }
+  },
+  "actions": ["idle", "walkF", "walkB", "clawSwipe", "hurt", "spawn", "die"],
+  "attack": "clawSwipe"
+}

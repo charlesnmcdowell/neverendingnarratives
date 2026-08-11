@@ -1,0 +1,18 @@
+{
+  "entity": "warlock",
+  "bodyPlan": "BIPED",
+  "note": "Auto-fit defaults from the BIPED template. Overrides below nudge the rig where auto-fit reads wrong on the warlock still (tall hood raises the head pivot; staff arm is the right hand).",
+  "bones": {
+    "head":  { "y": 0.12 },
+    "chest": { "y": 0.31 },
+    "handR": { "x": 0.72, "y": 0.50 },
+    "handL": { "x": 0.28, "y": 0.50 }
+  },
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "cast", "summon"],
+  "summons": {
+    "succubus": "fireballCast",
+    "boneDragon": "breath",
+    "imp": "clawSwipe",
+    "archer": "draw"
+  }
+}

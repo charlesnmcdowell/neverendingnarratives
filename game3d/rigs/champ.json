@@ -1,0 +1,15 @@
+{
+  "entity": "champ",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_brute",
+  "note": "THE FORMER CHAMPION (pit.js type 'champ', r:20). Big, powerful, well-proportioned — slightly wide stance, strong shoulders. Heavy strike.",
+  "bones": {
+    "hips":  { "y": 0.58 },
+    "armL":  { "x": 0.35, "y": 0.33 },
+    "armR":  { "x": 0.65, "y": 0.33 },
+    "legL":  { "x": 0.42, "y": 0.61 },
+    "legR":  { "x": 0.58, "y": 0.61 }
+  },
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "block", "spawn", "die", "victory"],
+  "attack": "attack"
+}

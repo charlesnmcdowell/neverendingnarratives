@@ -1,0 +1,13 @@
+{
+  "entity": "beast",
+  "bodyPlan": "QUADRUPED",
+  "archetype": "enemy_crawler",
+  "note": "BELLOW'S SECRET (pit.js type 'beast', r:30, phased). Huge four-legged horror — head low/forward, broad chest. Claw-rake on the foreleg.",
+  "bones": {
+    "head":  { "x": 0.10, "y": 0.44 },
+    "chest": { "x": 0.30, "y": 0.52 },
+    "hips":  { "x": 0.74, "y": 0.52 }
+  },
+  "actions": ["idle", "walkF", "walkB", "clawSwipe", "hurt", "spawn", "die"],
+  "attack": "clawSwipe"
+}

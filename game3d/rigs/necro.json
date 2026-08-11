@@ -1,0 +1,12 @@
+{
+  "entity": "necro",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_grunt",
+  "note": "THE GRAVEDIGGER (pit.js type 'necro', r:15). Raiser — sweeping conjure to pull thralls/skeletons from the dirt. Reuses the summon clip.",
+  "bones": {
+    "head":  { "y": 0.16 },
+    "handR": { "x": 0.72, "y": 0.46 }
+  },
+  "actions": ["idle", "walkF", "walkB", "summon", "cast", "hurt", "spawn", "die"],
+  "attack": "summon"
+}

@@ -1,0 +1,13 @@
+{
+  "entity": "thrall",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_grunt",
+  "note": "Raised thrall (pit.js type 'thrall'). Shambling risen humanoid — head lolls forward, arms hang front. Generic strike.",
+  "bones": {
+    "head":  { "x": 0.47, "y": 0.18 },
+    "handL": { "x": 0.36, "y": 0.46 },
+    "handR": { "x": 0.64, "y": 0.46 }
+  },
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "spawn", "die"],
+  "attack": "attack"
+}

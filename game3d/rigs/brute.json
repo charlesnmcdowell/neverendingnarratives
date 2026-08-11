@@ -1,0 +1,15 @@
+{
+  "entity": "brute",
+  "bodyPlan": "BIPED",
+  "archetype": "enemy_brute",
+  "note": "Stitcher's brute minion (pit.js type 'brute', r:21). Big-bodied — low wide stance, broad shoulders. Overhead strike.",
+  "bones": {
+    "hips":  { "y": 0.56 },
+    "legL":  { "x": 0.40, "y": 0.60 },
+    "legR":  { "x": 0.60, "y": 0.60 },
+    "armL":  { "x": 0.34, "y": 0.34 },
+    "armR":  { "x": 0.66, "y": 0.34 }
+  },
+  "actions": ["idle", "walkF", "walkB", "attack", "hurt", "block", "spawn", "die"],
+  "attack": "attack"
+}
