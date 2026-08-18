@@ -142,7 +142,7 @@
 
 <script>
 /* THE SUNDERED GATE — Books 2–5 omnibus streaming player (listen-only). */
-const AUDIO_BASE = "https://github.com/charlesnmcdowell/neverendingnarratives/releases/download/audiobook2-audio/";
+const AUDIO_BASE = "https://charlesnmcdowell.github.io/audiobook2-audio/";
 const TRACKS = [
   ["", "Opening Credits", "00_Opening_Credits", "0:05"],
   ["", "Prologue — The Story So Far", "01_Recap", "2:52"],
@@ -224,9 +224,7 @@ const TRACKS = [
 ];
 const audio = new Audio();
 audio.preload = "metadata";
-let cur = -1, pendingAt = 0, unlocked = false;
-const blobCache = {};              // track index -> object URL
-let fetchCtl = null, prefetchCtl = null, prefetchIdx = -1;
+let cur = -1;
 const $ = id => document.getElementById(id);
 const fmt = s => { s = Math.max(0, s|0); const m = (s/60)|0, ss = s%60; const h = (m/60)|0;
   return h ? `${h}:${String(m%60).padStart(2,"0")}:${String(ss).padStart(2,"0")}` : `${m}:${String(ss).padStart(2,"0")}`; };
@@ -248,104 +246,36 @@ TRACKS.forEach(([sec, name, file, dur], i) => {
   const isCredit = !sec;
   row.innerHTML = `<div class="num">${isCredit ? "\u266a" : (name.split(" ")[0]==="Chapter" ? name.split(":")[0].replace("Chapter ","") : "\u266a")}</div>
                    <div class="name">${name}</div><div class="dur">${dur}</div>`;
-  row.onclick = () => { unlock(); select(i, 0, true); };
+  row.onclick = () => load(i, 0, true);
   list.appendChild(row);
 });
 
-/* iOS: unlock the audio element inside a real user gesture so we can start
-   playback later, after the chapter has finished downloading. */
-function unlock() {
-  if (unlocked) return; unlocked = true;
-  try {
-    audio.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=";
-    audio.play().then(() => audio.pause()).catch(() => {});
-  } catch (e) {}
-}
 function mark() {
   document.querySelectorAll(".chapter").forEach(el => el.classList.remove("active"));
   const row = $("ch" + cur); if (row) row.classList.add("active");
 }
-function setNow(t) { $("nowTitle").textContent = t; }
-function select(i, at, autoplay) {
+function load(i, at, play) {
   if (i < 0 || i >= TRACKS.length) return;
-  cur = i; pendingAt = at || 0; mark(); setNow(TRACKS[i][1]); save();
-  if (autoplay) begin();
-}
-/* GitHub release assets are served as octet-stream, which some mobile
-   browsers refuse to stream directly. So we download the chapter ourselves
-   and play it as a properly-typed audio blob; if that fails (e.g. no CORS),
-   we fall back to handing the URL straight to the audio element. */
-async function fetchBlob(i, setCtl, onProgress) {
-  const url = AUDIO_BASE + TRACKS[i][2] + ".mp3";
-  const ctl = new AbortController(); setCtl(ctl);
-  const resp = await fetch(url, { signal: ctl.signal });
-  if (!resp.ok) throw new Error("HTTP " + resp.status);
-  const total = +resp.headers.get("Content-Length") || 0;
-  const reader = resp.body.getReader();
-  const chunks = []; let got = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value); got += value.length;
-    if (onProgress && total) onProgress(Math.min(99, Math.round(got / total * 100)));
-  }
-  return URL.createObjectURL(new Blob(chunks, { type: "audio/mpeg" }));
-}
-function evict() {
-  for (const k of Object.keys(blobCache)) {
-    const ki = +k;
-    if (ki !== cur && ki !== cur + 1) { URL.revokeObjectURL(blobCache[k]); delete blobCache[k]; }
-  }
-}
-async function begin() {
-  const i = cur;
-  if (fetchCtl) { fetchCtl.abort(); fetchCtl = null; }
-  let src = blobCache[i];
-  if (!src) {
-    if (prefetchIdx === i && prefetchCtl) { prefetchCtl.abort(); prefetchCtl = null; prefetchIdx = -1; }
-    setNow(TRACKS[i][1] + " \u2014 loading\u2026");
-    try {
-      src = await fetchBlob(i, c => fetchCtl = c,
-        p => { if (cur === i) setNow(TRACKS[i][1] + " \u2014 loading " + p + "%"); });
-      blobCache[i] = src;
-    } catch (e) {
-      if (e && e.name === "AbortError") return;
-      src = AUDIO_BASE + TRACKS[i][2] + ".mp3";
-    }
-    fetchCtl = null;
-    if (cur !== i) return;
-  }
-  setNow(TRACKS[i][1]);
-  audio.src = src; audio.dataset.idx = i;
-  const at = pendingAt; pendingAt = 0;
+  cur = i;
+  audio.src = AUDIO_BASE + TRACKS[i][2] + ".mp3";
+  audio.currentTime = 0;
+  $("nowTitle").textContent = TRACKS[i][1];
+  mark();
   audio.addEventListener("loadedmetadata", function once() {
     audio.removeEventListener("loadedmetadata", once);
     if (at > 0 && at < audio.duration - 5) audio.currentTime = at;
     $("tDur").textContent = fmt(audio.duration);
   });
-  audio.play().catch(() => {});
-  evict(); prefetch(i + 1);
-}
-async function prefetch(j) {
-  if (j < 0 || j >= TRACKS.length || blobCache[j] || (prefetchIdx === j && prefetchCtl)) return;
-  if (prefetchCtl) prefetchCtl.abort();
-  prefetchIdx = j;
-  try { blobCache[j] = await fetchBlob(j, c => prefetchCtl = c, null); } catch (e) {}
-  prefetchCtl = null; prefetchIdx = -1; evict();
+  if (play) audio.play().catch(() => {});
+  save();
 }
 function save() {
-  try {
-    const t = (audio.dataset.idx == cur ? audio.currentTime : pendingAt) || 0;
-    localStorage.setItem("ss_book2", JSON.stringify({ i: cur, t: t }));
-  } catch (e) {}
+  try { localStorage.setItem("ss_book2", JSON.stringify({ i: cur, t: audio.currentTime || 0 })); } catch (e) {}
 }
 /* controls */
-$("play").onclick = () => { unlock();
-  if (cur < 0) select(0, 0, true);
-  else if (audio.dataset.idx != cur || !audio.src || audio.src.indexOf("data:") === 0) begin();
-  else if (audio.paused) audio.play(); else audio.pause(); };
-$("prev").onclick = () => { unlock(); select(Math.max(0, cur - 1), 0, true); };
-$("next").onclick = () => { unlock(); select(Math.min(TRACKS.length - 1, cur + 1), 0, true); };
+$("play").onclick = () => { if (cur < 0) load(0, 0, true); else if (audio.paused) audio.play(); else audio.pause(); };
+$("prev").onclick = () => load(Math.max(0, cur - 1), 0, true);
+$("next").onclick = () => load(Math.min(TRACKS.length - 1, cur + 1), 0, true);
 $("back30").onclick = () => { audio.currentTime = Math.max(0, audio.currentTime - 30); };
 $("fwd30").onclick = () => { audio.currentTime = Math.min(audio.duration || 1e9, audio.currentTime + 30); };
 const RATES = [1, 1.25, 1.5, 1.75, 2, 0.75];
@@ -363,7 +293,6 @@ audio.addEventListener("timeupdate", () => {
 audio.addEventListener("play",  () => $("play").innerHTML = "&#10074;&#10074;");
 audio.addEventListener("pause", () => { $("play").innerHTML = "&#9654;"; save(); });
 audio.addEventListener("ended", () => {
-  if (audio.src.indexOf("data:") === 0) return;   // silent unlock clip, ignore
   const row = $("ch" + cur); if (row) row.classList.add("played");
   let seen = false;
   try { seen = !!localStorage.getItem("ss_ab2_support"); } catch (e) {}
@@ -372,16 +301,16 @@ audio.addEventListener("ended", () => {
     document.getElementById("supportVeil").classList.add("show");
     return;
   }
-  if ($("auto").checked && cur < TRACKS.length - 1) select(cur + 1, 0, true);
+  if ($("auto").checked && cur < TRACKS.length - 1) load(cur + 1, 0, true);
 });
 document.getElementById("keepListening").onclick = () => {
   document.getElementById("supportVeil").classList.remove("show");
-  if (cur < TRACKS.length - 1) select(cur + 1, 0, true);
+  if (cur < TRACKS.length - 1) load(cur + 1, 0, true);
 };
-/* resume where they left off (no download until they press play) */
+/* resume where they left off */
 try {
   const s = JSON.parse(localStorage.getItem("ss_book2") || "null");
-  if (s && s.i >= 0 && s.i < TRACKS.length) select(s.i, s.t || 0, false);
+  if (s && s.i >= 0 && s.i < TRACKS.length) load(s.i, s.t || 0, false);
 } catch (e) {}
 /* media keys */
 if ("mediaSession" in navigator) {
