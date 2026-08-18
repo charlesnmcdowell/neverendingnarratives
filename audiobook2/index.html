@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Stream The Sundered Gate — the complete Books 2–5 omnibus audiobook of The Sorcerer-Sword saga, free to listen on Neverending Narratives.">
+<link rel="canonical" href="https://neverendingnarratives.com/audiobook2/">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#eab308">
+<title>The Sundered Gate — Books 2–5 Omnibus Audiobook | Listen Free — Neverending Narratives</title>
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neverending Narratives">
+<meta property="og:url" content="https://neverendingnarratives.com/audiobook2/">
+<meta property="og:title" content="The Sundered Gate — Books 2–5 Omnibus Audiobook, Free to Stream">
+<meta property="og:description" content="25+ hours. Four books. A full cast of voices. Stream the complete omnibus audiobook free.">
+<meta property="og:image" content="https://neverendingnarratives.com/assets/og-image.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Inter',sans-serif; background:#09090b; color:#e4e4e7; min-height:100vh; }
+  a { color:inherit; text-decoration:none; }
+  .heading { font-family:'Playfair Display',serif; }
+  .wrap { max-width:880px; margin:0 auto; padding:0 20px; }
+  header.top { position:sticky; top:0; z-index:40; background:rgba(9,9,11,.92); backdrop-filter:blur(8px); border-bottom:1px solid #27272a; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; height:60px; }
+  .topbar .brand { font-weight:600; letter-spacing:.02em; }
+  .topbar .brand span { color:#eab308; }
+  .toplinks { display:flex; gap:18px; font-size:14px; color:#a1a1aa; }
+  .toplinks a:hover { color:#eab308; }
+  .hero { text-align:center; padding:56px 0 32px; }
+  .hero .kicker { color:#eab308; text-transform:uppercase; letter-spacing:.2em; font-size:12px; font-weight:600; }
+  .hero h1 { font-size:clamp(30px,5vw,52px); margin:10px 0 12px; }
+  .hero p { color:#a1a1aa; max-width:560px; margin:0 auto; line-height:1.6; }
+  .hero .note { margin-top:14px; font-size:13px; color:#71717a; }
+  .list { padding:12px 0 140px; }
+  .chapter { display:flex; align-items:center; gap:14px; padding:13px 16px; border:1px solid #27272a;
+             border-radius:14px; margin-bottom:8px; background:#101012; cursor:pointer; transition:all .18s; user-select:none; }
+  .chapter:hover { border-color:#eab30855; transform:translateX(3px); }
+  .chapter .num { width:34px; height:34px; border-radius:50%; background:#18181b; border:1px solid #3f3f46;
+                  display:flex; align-items:center; justify-content:center; font-size:12px; color:#a1a1aa; flex-shrink:0; }
+  .chapter .name { flex:1; font-size:15px; }
+  .chapter .dur { font-size:12.5px; color:#71717a; font-variant-numeric:tabular-nums; }
+  .chapter.active { border-color:#eab308; background:#141310; }
+  .chapter.active .num { background:#eab308; color:#18181b; border-color:#eab308; font-weight:700; }
+  .chapter.played .num { border-color:#eab30866; color:#eab308aa; }
+  /* ---- sticky player ---- */
+  .player { position:fixed; left:0; right:0; bottom:0; z-index:50; background:rgba(16,16,18,.97);
+            border-top:1px solid #27272a; backdrop-filter:blur(10px); }
+  .player .inner { max-width:880px; margin:0 auto; padding:12px 20px 16px; }
+  .ptitle { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:8px; }
+  .ptitle .now { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ptitle .now b { color:#eab308; font-weight:600; }
+  .ptitle .time { font-size:12.5px; color:#a1a1aa; font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .seek { -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:3px; outline:none; cursor:pointer;
+          background:linear-gradient(to right, #eab308 var(--fill,0%), #3f3f46 var(--fill,0%)); }
+  .seek::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#eab308; border:none; }
+  .seek::-moz-range-thumb { width:15px; height:15px; border-radius:50%; background:#eab308; border:none; }
+  .controls { display:flex; align-items:center; justify-content:center; gap:18px; margin-top:10px; }
+  .cbtn { background:none; border:none; color:#e4e4e7; cursor:pointer; font-size:18px; padding:6px 10px; border-radius:10px; transition:all .15s; }
+  .cbtn:hover { color:#eab308; background:#18181b; }
+  .cbtn.big { width:54px; height:54px; font-size:22px; border-radius:50%; background:#eab308; color:#18181b; }
+  .cbtn.big:hover { background:#f5c518; color:#18181b; }
+  .rate { font-size:12.5px; color:#a1a1aa; border:1px solid #3f3f46; border-radius:999px; padding:5px 11px; background:none; cursor:pointer; }
+  .rate:hover { color:#eab308; border-color:#eab308; }
+  .autoplay { font-size:12.5px; color:#a1a1aa; display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .autoplay input { accent-color:#eab308; }
+  @media (max-width:560px) { .controls { gap:8px; } .toplinks { gap:10px; font-size:12.5px; } }
+  /* ---- gentle support interstitial (after Chapter 2, once) ---- */
+  .support-veil { position:fixed; inset:0; z-index:80; background:rgba(9,9,11,.82); backdrop-filter:blur(4px);
+                  display:none; align-items:center; justify-content:center; padding:20px; }
+  .support-veil.show { display:flex; }
+  .support-card { max-width:460px; width:100%; background:#141310; border:1px solid #eab30866; border-radius:20px;
+                  padding:30px 28px; text-align:center; box-shadow:0 24px 80px rgba(0,0,0,.6); }
+  .support-card .k { color:#eab308; text-transform:uppercase; letter-spacing:.18em; font-size:11px; font-weight:600; }
+  .support-card h3 { font-family:'Playfair Display',serif; font-size:26px; margin:8px 0 10px; }
+  .support-card p { color:#a1a1aa; font-size:14.5px; line-height:1.65; }
+  .support-card .btns { display:flex; flex-direction:column; gap:10px; margin-top:20px; }
+  .support-card .fund { background:#eab308; color:#18181b; font-weight:700; border:none; border-radius:999px;
+                        padding:13px 20px; font-size:15px; cursor:pointer; }
+  .support-card .fund:hover { background:#f5c518; }
+  .support-card .keep { background:none; color:#a1a1aa; border:1px solid #3f3f46; border-radius:999px;
+                        padding:11px 20px; font-size:14px; cursor:pointer; }
+  .support-card .keep:hover { color:#eab308; border-color:#eab308; }
+
+  .sect { margin:26px 0 10px; padding-left:4px; }
+  .sect .k { color:#eab308; text-transform:uppercase; letter-spacing:.18em; font-size:11px; font-weight:600; }
+  .sect h2 { font-family:'Playfair Display',serif; font-size:22px; margin-top:2px; }
+</style>
+</head>
+<body oncontextmenu="return false;">
+<header class="top"><div class="wrap topbar">
+  <a class="brand" href="/">NEVERENDING <span>NARRATIVES</span></a>
+  <nav class="toplinks">
+    <a href="/">Home</a>
+    <a href="/audiobook/">Book 1</a>
+    <a href="/play/">Pit ARPG</a>
+    <a href="/deck/">Deck-Builder</a>
+  </nav>
+</div></header>
+
+<section class="hero wrap">
+  <div class="kicker">Listen Free · Books 2–5 Omnibus · 25+ Hours</div>
+  <h1 class="heading">The Sundered Gate</h1>
+  <p>The saga continues — Books Two through Five of The Sorcerer-Sword in one massive omnibus,
+     narrated with a full cast of voices. Pick a chapter below, or press play and let it run.</p>
+  <div class="note">New here? Start with <a href="/audiobook/" style="color:#eab308">Book One</a> —
+     it's free too. Support the series on the <a href="/#fund" style="color:#eab308">Fund page</a>.</div>
+</section>
+
+<section class="list wrap" id="chapters"></section>
+
+<div class="player"><div class="inner">
+  <div class="ptitle">
+    <div class="now">Now playing: <b id="nowTitle">—</b></div>
+    <div class="time"><span id="tCur">0:00</span> / <span id="tDur">0:00</span></div>
+  </div>
+  <input type="range" class="seek" id="seek" min="0" max="1000" value="0">
+  <div class="controls">
+    <label class="autoplay"><input type="checkbox" id="auto" checked> auto-play next</label>
+    <button class="cbtn" id="prev" title="Previous chapter">&#9664;&#9664;</button>
+    <button class="cbtn" id="back30" title="Back 30s">&#8617; 30</button>
+    <button class="cbtn big" id="play" title="Play / Pause">&#9654;</button>
+    <button class="cbtn" id="fwd30" title="Forward 30s">30 &#8618;</button>
+    <button class="cbtn" id="next" title="Next chapter">&#9654;&#9654;</button>
+    <button class="rate" id="rate" title="Playback speed">1&times;</button>
+  </div>
+</div></div>
+
+<div class="support-veil" id="supportVeil">
+  <div class="support-card">
+    <div class="k">A quick word from the author</div>
+    <h3>Enjoying the story so far?</h3>
+    <p>This entire omnibus is free, start to finish. If it's worth something to you, a small
+       donation on the Fund page is what keeps the next book — and the games — coming.
+       Either way, thank you for listening.</p>
+    <div class="btns">
+      <button class="fund" onclick="window.open('/#fund','_blank')">&#9829; Support on the Fund page</button>
+      <button class="keep" id="keepListening">Keep listening &#8594;</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* THE SUNDERED GATE — Books 2–5 omnibus streaming player (listen-only). */
+const AUDIO_BASE = "https://github.com/charlesnmcdowell/neverendingnarratives/releases/download/audiobook2-audio/";
+const TRACKS = [
+  ["", "Opening Credits", "00_Opening_Credits", "0:05"],
+  ["", "Prologue — The Story So Far", "01_Recap", "2:52"],
+  ["Book Two — The Sundered Gate", "Chapter One: New Skin", "02_Book2_Ch01_New_Skin", "20:35"],
+  ["Book Two — The Sundered Gate", "Chapter Two: The Spear and the Net", "03_Book2_Ch02_The_Spear_and_the_Net", "20:33"],
+  ["Book Two — The Sundered Gate", "Chapter Three: Dead Ground", "04_Book2_Ch03_Dead_Ground", "17:12"],
+  ["Book Two — The Sundered Gate", "Chapter Four: Three Doors Down", "05_Book2_Ch04_Three_Doors_Down", "13:33"],
+  ["Book Two — The Sundered Gate", "Chapter Five: The List", "06_Book2_Ch05_The_List", "12:27"],
+  ["Book Two — The Sundered Gate", "Chapter Six: Infrastructure", "07_Book2_Ch06_Infrastructure", "17:02"],
+  ["Book Two — The Sundered Gate", "Chapter Seven: Bartol", "08_Book2_Ch07_Bartol", "16:41"],
+  ["Book Two — The Sundered Gate", "Chapter Eight: The Pipeline", "09_Book2_Ch08_The_Pipeline", "14:03"],
+  ["Book Two — The Sundered Gate", "Chapter Nine: The Pipeline, Part II", "10_Book2_Ch09_The_Pipeline_Part_II", "14:27"],
+  ["Book Two — The Sundered Gate", "Chapter Ten: Combat Operations", "11_Book2_Ch10_Combat_Operations", "16:54"],
+  ["Book Two — The Sundered Gate", "Chapter Eleven: The Iron Coliseum", "12_Book2_Ch11_The_Iron_Coliseum", "30:07"],
+  ["Book Two — The Sundered Gate", "Chapter Twelve: The Iron Coliseum, Part II", "13_Book2_Ch12_The_Iron_Coliseum_Part_II", "13:37"],
+  ["Book Two — The Sundered Gate", "Chapter Thirteen: Champion", "14_Book2_Ch13_Champion", "12:01"],
+  ["Book Two — The Sundered Gate", "Chapter Fourteen: The Hearing and the Hum", "15_Book2_Ch14_The_Hearing_and_the_Hum", "28:22"],
+  ["Book Two — The Sundered Gate", "Chapter Fifteen: The Assault", "16_Book2_Ch15_The_Assault", "14:34"],
+  ["Book Two — The Sundered Gate", "Chapter Sixteen: The Heart", "17_Book2_Ch16_The_Heart", "24:45"],
+  ["Book Two — The Sundered Gate", "Chapter Seventeen: The Cork", "18_Book2_Ch17_The_Cork", "18:41"],
+  ["Book Two — The Sundered Gate", "Chapter Eighteen: The Seal", "19_Book2_Ch18_The_Seal", "14:45"],
+  ["Book Two — The Sundered Gate", "Chapter Nineteen: Long Rest", "20_Book2_Ch19_Long_Rest", "58:22"],
+  ["Book Three — The Iron Crown War", "Chapter One: Come", "21_Book3_Ch01_Come", "18:18"],
+  ["Book Three — The Iron Crown War", "Chapter Two: The Forest Answers", "22_Book3_Ch02_The_Forest_Answers", "19:26"],
+  ["Book Three — The Iron Crown War", "Chapter Three: Family Dinner", "23_Book3_Ch03_Family_Dinner", "21:50"],
+  ["Book Three — The Iron Crown War", "Chapter Four: Mythic", "24_Book3_Ch04_Mythic", "17:42"],
+  ["Book Three — The Iron Crown War", "Chapter Five: The Bath", "25_Book3_Ch05_The_Bath", "19:13"],
+  ["Book Three — The Iron Crown War", "Chapter Six: Settling Debts", "26_Book3_Ch06_Settling_Debts", "16:15"],
+  ["Book Three — The Iron Crown War", "Chapter Seven: Eve of War", "27_Book3_Ch07_Eve_of_War", "15:41"],
+  ["Book Three — The Iron Crown War", "Chapter Eight: The Day the Forge Died", "28_Book3_Ch08_The_Day_the_Forge_Died", "15:16"],
+  ["Book Three — The Iron Crown War", "Chapter Nine: Champion", "29_Book3_Ch09_Champion", "14:01"],
+  ["Book Three — The Iron Crown War", "Chapter Ten: The Crossing", "30_Book3_Ch10_The_Crossing", "12:32"],
+  ["Book Three — The Iron Crown War", "Chapter Eleven: The Iron Throne", "31_Book3_Ch11_The_Iron_Throne", "13:23"],
+  ["Book Three — The Iron Crown War", "Chapter Twelve: The Choice", "32_Book3_Ch12_The_Choice", "21:49"],
+  ["Book Four — The Fraying Empire", "Chapter One: Greymere", "33_Book4_Ch01_Greymere", "23:55"],
+  ["Book Four — The Fraying Empire", "Chapter Two: The Greenveil", "34_Book4_Ch02_The_Greenveil", "18:48"],
+  ["Book Four — The Fraying Empire", "Chapter Three: Stillday", "35_Book4_Ch03_Stillday", "23:58"],
+  ["Book Four — The Fraying Empire", "Chapter Four: Millhaven", "36_Book4_Ch04_Millhaven", "23:59"],
+  ["Book Four — The Fraying Empire", "Chapter Five: The Eastbound Run", "37_Book4_Ch05_The_Eastbound_Run", "29:23"],
+  ["Book Four — The Fraying Empire", "Chapter Six: The Southern Marker", "38_Book4_Ch06_The_Southern_Marker", "23:23"],
+  ["Book Four — The Fraying Empire", "Chapter Seven: The Dead Road", "39_Book4_Ch07_The_Dead_Road", "25:28"],
+  ["Book Four — The Fraying Empire", "Chapter Eight: The Cell", "40_Book4_Ch08_The_Cell", "21:03"],
+  ["Book Four — The Fraying Empire", "Chapter Nine: The Name", "41_Book4_Ch09_The_Name", "20:25"],
+  ["Book Four — The Fraying Empire", "Chapter Ten: The South Road", "42_Book4_Ch10_The_South_Road", "28:27"],
+  ["Book Four — The Fraying Empire", "Chapter Eleven: The Voice from the Marsh", "43_Book4_Ch11_The_Voice_from_the_Marsh", "30:55"],
+  ["Book Four — The Fraying Empire", "Chapter Twelve: The Formation", "44_Book4_Ch12_The_Formation", "22:26"],
+  ["Book Four — The Fraying Empire", "Chapter Thirteen: The Shield Wall", "45_Book4_Ch13_The_Shield_Wall", "22:14"],
+  ["Book Four — The Fraying Empire", "Chapter Fourteen: Oathbreaker", "46_Book4_Ch14_Oathbreaker", "25:10"],
+  ["Book Four — The Fraying Empire", "Chapter Fifteen: Root and Steam", "47_Book4_Ch15_Root_and_Steam", "30:33"],
+  ["Book Four — The Fraying Empire", "Chapter Sixteen: Listening Roof Left Behind", "48_Book4_Ch16_Listening_Roof_Left_Behind", "20:20"],
+  ["Book Four — The Fraying Empire", "Chapter Seventeen: Paper and Smoke", "49_Book4_Ch17_Paper_and_Smoke", "15:13"],
+  ["Book Four — The Fraying Empire", "Chapter Eighteen: Exhibit A", "50_Book4_Ch18_Exhibit_A", "27:41"],
+  ["Book Four — The Fraying Empire", "Chapter Nineteen: The Fitting", "51_Book4_Ch19_The_Fitting", "18:15"],
+  ["Book Four — The Fraying Empire", "Chapter Twenty: The Western Cut", "52_Book4_Ch20_The_Western_Cut", "16:36"],
+  ["Book Four — The Fraying Empire", "Chapter Twenty-One: The Brass Hitch Hours", "53_Book4_Ch21_The_Brass_Hitch_Hours", "13:16"],
+  ["Book Four — The Fraying Empire", "Chapter Twenty-Two: The Morning Ledger", "54_Book4_Ch22_The_Morning_Ledger", "12:54"],
+  ["Book Four — The Fraying Empire", "Chapter Twenty-Three: The Road Chooses", "55_Book4_Ch23_The_Road_Chooses", "21:38"],
+  ["Book Four — The Fraying Empire", "Chapter Twenty-Four: The Gate Line", "56_Book4_Ch24_The_Gate_Line", "18:19"],
+  ["Book Four — The Fraying Empire", "Chapter Twenty-Five: The Scribe's Eye", "57_Book4_Ch25_The_Scribes_Eye", "17:04"],
+  ["Book Four — The Fraying Empire", "Chapter Twenty-Six: Her Watch", "58_Book4_Ch26_Her_Watch", "12:44"],
+  ["Book Four — The Fraying Empire", "Chapter Twenty-Seven: Manifest Revision", "59_Book4_Ch27_Manifest_Revision", "12:55"],
+  ["Book Four — The Fraying Empire", "Chapter Twenty-Eight: Sky in the Mountain", "60_Book4_Ch28_Sky_in_the_Mountain", "12:46"],
+  ["Book Four — The Fraying Empire", "Chapter Twenty-Nine: Seam Witness", "61_Book4_Ch29_Seam_Witness", "12:45"],
+  ["Book Four — The Fraying Empire", "Chapter Thirty: Trapped With Me", "62_Book4_Ch30_Trapped_With_Me", "12:18"],
+  ["Book Four — The Fraying Empire", "Chapter Thirty-One: Two Weeks and a Green Door", "63_Book4_Ch31_Two_Weeks_and_a_Green_Door", "12:39"],
+  ["Book Four — The Fraying Empire", "Chapter Thirty-Two: Waystation Recovery", "64_Book4_Ch32_Waystation_Recovery", "14:15"],
+  ["Book Four — The Fraying Empire", "Chapter Thirty-Three: Anku Nyx", "65_Book4_Ch33_Anku_Nyx", "19:10"],
+  ["Book Four — The Fraying Empire", "Chapter Thirty-Four: Seven Days", "66_Book4_Ch34_Seven_Days", "47:08"],
+  ["Book Four — The Fraying Empire", "Chapter Thirty-Five: What We Are", "67_Book4_Ch35_What_We_Are", "47:32"],
+  ["Book Four — The Fraying Empire", "Chapter Thirty-Six: The Heist of Varkul", "68_Book4_Ch36_The_Heist_of_Varkul", "49:29"],
+  ["Book Four — The Fraying Empire", "Chapter Thirty-Seven: The Fire-Man", "69_Book4_Ch37_The_FireMan", "26:03"],
+  ["Book Four — The Fraying Empire", "Chapter Thirty-Eight: The Table", "70_Book4_Ch38_The_Table", "43:19"],
+  ["Book Four — The Fraying Empire", "Chapter Thirty-Nine: The Kingdom", "71_Book4_Ch39_The_Kingdom", "26:39"],
+  ["Book Four — The Fraying Empire", "Chapter Forty: The Weld", "72_Book4_Ch40_The_Weld", "15:12"],
+  ["Book Five — Preview", "Part One: The Bard of Varenholm", "73_Book5_Pt1_The_Bard_of_Varenholm", "11:07"],
+  ["Book Five — Preview", "Part Two: The Dragon Who Walked Down", "74_Book5_Pt2_The_Dragon_Who_Walked_Down", "11:43"],
+  ["Book Five — Preview", "Part Three: Four Roads to Karridge", "75_Book5_Pt3_Four_Roads_to_Karridge", "11:35"],
+  ["", "Closing Credits", "76_Closing_Credits", "0:11"],
+];
+const audio = new Audio();
+audio.preload = "metadata";
+let cur = -1;
+const $ = id => document.getElementById(id);
+const fmt = s => { s = Math.max(0, s|0); const m = (s/60)|0, ss = s%60; const h = (m/60)|0;
+  return h ? `${h}:${String(m%60).padStart(2,"0")}:${String(ss).padStart(2,"0")}` : `${m}:${String(ss).padStart(2,"0")}`; };
+
+/* chapter list with book-section headings */
+const list = $("chapters");
+let lastSec = null;
+TRACKS.forEach(([sec, name, file, dur], i) => {
+  if (sec && sec !== lastSec) {
+    lastSec = sec;
+    const h = document.createElement("div");
+    h.className = "sect";
+    const parts = sec.split(" — ");
+    h.innerHTML = `<div class="k">${parts[0]}</div><h2>${parts[1] || ""}</h2>`;
+    list.appendChild(h);
+  }
+  const row = document.createElement("div");
+  row.className = "chapter"; row.id = "ch" + i;
+  const isCredit = !sec;
+  row.innerHTML = `<div class="num">${isCredit ? "♪" : (name.split(" ")[0]==="Chapter" ? name.split(":")[0].replace("Chapter ","") : "♪")}</div>
+                   <div class="name">${name}</div><div class="dur">${dur}</div>`;
+  row.onclick = () => load(i, 0, true);
+  list.appendChild(row);
+});
+
+function mark() {
+  document.querySelectorAll(".chapter").forEach(el => el.classList.remove("active"));
+  const row = $("ch" + cur); if (row) row.classList.add("active");
+}
+function load(i, at, play) {
+  if (i < 0 || i >= TRACKS.length) return;
+  cur = i;
+  audio.src = AUDIO_BASE + TRACKS[i][2] + ".mp3";
+  audio.currentTime = 0;
+  $("nowTitle").textContent = TRACKS[i][1];
+  mark();
+  audio.addEventListener("loadedmetadata", function once() {
+    audio.removeEventListener("loadedmetadata", once);
+    if (at > 0 && at < audio.duration - 5) audio.currentTime = at;
+    $("tDur").textContent = fmt(audio.duration);
+  });
+  if (play) audio.play().catch(() => {});
+  save();
+}
+function save() {
+  try { localStorage.setItem("ss_book2", JSON.stringify({ i: cur, t: audio.currentTime || 0 })); } catch (e) {}
+}
+/* controls */
+$("play").onclick = () => { if (cur < 0) load(0, 0, true); else if (audio.paused) audio.play(); else audio.pause(); };
+$("prev").onclick = () => load(Math.max(0, cur - 1), 0, true);
+$("next").onclick = () => load(Math.min(TRACKS.length - 1, cur + 1), 0, true);
+$("back30").onclick = () => { audio.currentTime = Math.max(0, audio.currentTime - 30); };
+$("fwd30").onclick = () => { audio.currentTime = Math.min(audio.duration || 1e9, audio.currentTime + 30); };
+const RATES = [1, 1.25, 1.5, 1.75, 2, 0.75];
+let ri = 0;
+$("rate").onclick = () => { ri = (ri + 1) % RATES.length; audio.playbackRate = RATES[ri]; $("rate").textContent = RATES[ri] + "×"; };
+$("seek").oninput = e => { if (audio.duration) audio.currentTime = audio.duration * e.target.value / 1000; };
+audio.addEventListener("timeupdate", () => {
+  if (!audio.duration) return;
+  const f = audio.currentTime / audio.duration * 1000;
+  $("seek").value = f;
+  $("seek").style.setProperty("--fill", (f / 10) + "%");
+  $("tCur").textContent = fmt(audio.currentTime);
+  if (((audio.currentTime | 0) % 10) === 0) save();
+});
+audio.addEventListener("play",  () => $("play").innerHTML = "&#10074;&#10074;");
+audio.addEventListener("pause", () => { $("play").innerHTML = "&#9654;"; save(); });
+audio.addEventListener("ended", () => {
+  const row = $("ch" + cur); if (row) row.classList.add("played");
+  /* one gentle ask after the third chapter, then never again on this device */
+  let seen = false;
+  try { seen = !!localStorage.getItem("ss_ab2_support"); } catch (e) {}
+  if (cur === 4 && !seen) {
+    try { localStorage.setItem("ss_ab2_support", "1"); } catch (e) {}
+    document.getElementById("supportVeil").classList.add("show");
+    return;
+  }
+  if ($("auto").checked && cur < TRACKS.length - 1) load(cur + 1, 0, true);
+});
+document.getElementById("keepListening").onclick = () => {
+  document.getElementById("supportVeil").classList.remove("show");
+  if (cur < TRACKS.length - 1) load(cur + 1, 0, true);
+};
+/* resume where they left off */
+try {
+  const s = JSON.parse(localStorage.getItem("ss_book2") || "null");
+  if (s && s.i >= 0 && s.i < TRACKS.length) { load(s.i, s.t || 0, false); }
+} catch (e) {}
+/* media keys */
+if ("mediaSession" in navigator) {
+  navigator.mediaSession.setActionHandler("previoustrack", () => $("prev").onclick());
+  navigator.mediaSession.setActionHandler("nexttrack", () => $("next").onclick());
+}
+</script>
+</body>
+</html>
