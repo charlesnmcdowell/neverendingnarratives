@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Stream The Sundered Gate — the complete Books 2–5 omnibus audiobook of The Sorcerer-Sword saga, free to listen on Neverending Narratives.">
+<meta name="description" content="Stream The Sundered Gate — the new edition of The Sorcerer-Sword saga, rewritten and re-recorded with a full cast. Chapter One is live; new chapters added as they are finished.">
 <link rel="canonical" href="https://neverendingnarratives.com/audiobook2/">
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#eab308">
-<title>The Sundered Gate — Books 2–5 Omnibus Audiobook | Listen Free — Neverending Narratives</title>
+<title>The Sundered Gate — New Edition Audiobook | Listen Free — Neverending Narratives</title>
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Neverending Narratives">
 <meta property="og:url" content="https://neverendingnarratives.com/audiobook2/">
-<meta property="og:title" content="The Sundered Gate — Books 2–5 Omnibus Audiobook, Free to Stream">
-<meta property="og:description" content="25+ hours. Four books. A full cast of voices. Stream the complete omnibus audiobook free.">
+<meta property="og:title" content="The Sundered Gate — New Edition, Free to Stream">
+<meta property="og:description" content="The new edition of The Sundered Gate — rewritten, re-recorded, full cast. Chapter One is live. Free to stream.">
 <meta property="og:image" content="https://neverendingnarratives.com/assets/og-image.png">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:wght@700&display=swap');
@@ -99,10 +99,9 @@
 </div></header>
 
 <section class="hero wrap">
-  <div class="kicker">Listen Free · Books 2–5 Omnibus · 25+ Hours</div>
+  <div class="kicker">Listen Free · New Edition · More Chapters Coming</div>
   <h1 class="heading">The Sundered Gate</h1>
-  <p>The saga continues — Books Two through Five of The Sorcerer-Sword in one massive omnibus,
-     narrated with a full cast of voices. Pick a chapter below, or press play and let it run.</p>
+  <p>The Sundered Gate is being rewritten and re-recorded from the ground up — tighter, funnier, and fully cast. Chapter One of the new edition is live now. New chapters will appear here as they are finished.</p>
   <div class="note">New here? Start with <a href="/audiobook/" style="color:#eab308">Book One</a> —
      it's free too. Support the series on the <a href="/#fund" style="color:#eab308">Fund page</a>.</div>
 </section>
@@ -142,85 +141,9 @@
 
 <script>
 /* THE SUNDERED GATE — Books 2–5 omnibus streaming player (listen-only). */
-const AUDIO_BASE = "https://charlesnmcdowell.github.io/audiobook2-audio/";
+const AUDIO_BASE = "/audiobook2/audio/";
 const TRACKS = [
-  ["", "Opening Credits", "00_Opening_Credits", "0:05"],
-  ["", "Prologue — The Story So Far", "01_Recap", "2:52"],
-  ["Book Two — The Sundered Gate", "Chapter One: New Skin", "02_Book2_Ch01_New_Skin", "20:35"],
-  ["Book Two — The Sundered Gate", "Chapter Two: The Spear and the Net", "03_Book2_Ch02_The_Spear_and_the_Net", "20:33"],
-  ["Book Two — The Sundered Gate", "Chapter Three: Dead Ground", "04_Book2_Ch03_Dead_Ground", "17:12"],
-  ["Book Two — The Sundered Gate", "Chapter Four: Three Doors Down", "05_Book2_Ch04_Three_Doors_Down", "13:33"],
-  ["Book Two — The Sundered Gate", "Chapter Five: The List", "06_Book2_Ch05_The_List", "12:27"],
-  ["Book Two — The Sundered Gate", "Chapter Six: Infrastructure", "07_Book2_Ch06_Infrastructure", "17:02"],
-  ["Book Two — The Sundered Gate", "Chapter Seven: Bartol", "08_Book2_Ch07_Bartol", "16:41"],
-  ["Book Two — The Sundered Gate", "Chapter Eight: The Pipeline", "09_Book2_Ch08_The_Pipeline", "14:03"],
-  ["Book Two — The Sundered Gate", "Chapter Nine: The Pipeline, Part II", "10_Book2_Ch09_The_Pipeline_Part_II", "14:27"],
-  ["Book Two — The Sundered Gate", "Chapter Ten: Combat Operations", "11_Book2_Ch10_Combat_Operations", "16:54"],
-  ["Book Two — The Sundered Gate", "Chapter Eleven: The Iron Coliseum", "12_Book2_Ch11_The_Iron_Coliseum", "30:07"],
-  ["Book Two — The Sundered Gate", "Chapter Twelve: The Iron Coliseum, Part II", "13_Book2_Ch12_The_Iron_Coliseum_Part_II", "13:37"],
-  ["Book Two — The Sundered Gate", "Chapter Thirteen: Champion", "14_Book2_Ch13_Champion", "12:01"],
-  ["Book Two — The Sundered Gate", "Chapter Fourteen: The Hearing and the Hum", "15_Book2_Ch14_The_Hearing_and_the_Hum", "28:22"],
-  ["Book Two — The Sundered Gate", "Chapter Fifteen: The Assault", "16_Book2_Ch15_The_Assault", "14:34"],
-  ["Book Two — The Sundered Gate", "Chapter Sixteen: The Heart", "17_Book2_Ch16_The_Heart", "24:45"],
-  ["Book Two — The Sundered Gate", "Chapter Seventeen: The Cork", "18_Book2_Ch17_The_Cork", "18:41"],
-  ["Book Two — The Sundered Gate", "Chapter Eighteen: The Seal", "19_Book2_Ch18_The_Seal", "14:45"],
-  ["Book Two — The Sundered Gate", "Chapter Nineteen: Long Rest", "20_Book2_Ch19_Long_Rest", "58:22"],
-  ["Book Three — The Iron Crown War", "Chapter One: Come", "21_Book3_Ch01_Come", "18:18"],
-  ["Book Three — The Iron Crown War", "Chapter Two: The Forest Answers", "22_Book3_Ch02_The_Forest_Answers", "19:26"],
-  ["Book Three — The Iron Crown War", "Chapter Three: Family Dinner", "23_Book3_Ch03_Family_Dinner", "21:50"],
-  ["Book Three — The Iron Crown War", "Chapter Four: Mythic", "24_Book3_Ch04_Mythic", "17:42"],
-  ["Book Three — The Iron Crown War", "Chapter Five: The Bath", "25_Book3_Ch05_The_Bath", "19:13"],
-  ["Book Three — The Iron Crown War", "Chapter Six: Settling Debts", "26_Book3_Ch06_Settling_Debts", "16:15"],
-  ["Book Three — The Iron Crown War", "Chapter Seven: Eve of War", "27_Book3_Ch07_Eve_of_War", "15:41"],
-  ["Book Three — The Iron Crown War", "Chapter Eight: The Day the Forge Died", "28_Book3_Ch08_The_Day_the_Forge_Died", "15:16"],
-  ["Book Three — The Iron Crown War", "Chapter Nine: Champion", "29_Book3_Ch09_Champion", "14:01"],
-  ["Book Three — The Iron Crown War", "Chapter Ten: The Crossing", "30_Book3_Ch10_The_Crossing", "12:32"],
-  ["Book Three — The Iron Crown War", "Chapter Eleven: The Iron Throne", "31_Book3_Ch11_The_Iron_Throne", "13:23"],
-  ["Book Three — The Iron Crown War", "Chapter Twelve: The Choice", "32_Book3_Ch12_The_Choice", "21:49"],
-  ["Book Four — The Fraying Empire", "Chapter One: Greymere", "33_Book4_Ch01_Greymere", "23:55"],
-  ["Book Four — The Fraying Empire", "Chapter Two: The Greenveil", "34_Book4_Ch02_The_Greenveil", "18:48"],
-  ["Book Four — The Fraying Empire", "Chapter Three: Stillday", "35_Book4_Ch03_Stillday", "23:58"],
-  ["Book Four — The Fraying Empire", "Chapter Four: Millhaven", "36_Book4_Ch04_Millhaven", "23:59"],
-  ["Book Four — The Fraying Empire", "Chapter Five: The Eastbound Run", "37_Book4_Ch05_The_Eastbound_Run", "29:23"],
-  ["Book Four — The Fraying Empire", "Chapter Six: The Southern Marker", "38_Book4_Ch06_The_Southern_Marker", "23:23"],
-  ["Book Four — The Fraying Empire", "Chapter Seven: The Dead Road", "39_Book4_Ch07_The_Dead_Road", "25:28"],
-  ["Book Four — The Fraying Empire", "Chapter Eight: The Cell", "40_Book4_Ch08_The_Cell", "21:03"],
-  ["Book Four — The Fraying Empire", "Chapter Nine: The Name", "41_Book4_Ch09_The_Name", "20:25"],
-  ["Book Four — The Fraying Empire", "Chapter Ten: The South Road", "42_Book4_Ch10_The_South_Road", "28:27"],
-  ["Book Four — The Fraying Empire", "Chapter Eleven: The Voice from the Marsh", "43_Book4_Ch11_The_Voice_from_the_Marsh", "30:55"],
-  ["Book Four — The Fraying Empire", "Chapter Twelve: The Formation", "44_Book4_Ch12_The_Formation", "22:26"],
-  ["Book Four — The Fraying Empire", "Chapter Thirteen: The Shield Wall", "45_Book4_Ch13_The_Shield_Wall", "22:14"],
-  ["Book Four — The Fraying Empire", "Chapter Fourteen: Oathbreaker", "46_Book4_Ch14_Oathbreaker", "25:10"],
-  ["Book Four — The Fraying Empire", "Chapter Fifteen: Root and Steam", "47_Book4_Ch15_Root_and_Steam", "30:33"],
-  ["Book Four — The Fraying Empire", "Chapter Sixteen: Listening Roof Left Behind", "48_Book4_Ch16_Listening_Roof_Left_Behind", "20:20"],
-  ["Book Four — The Fraying Empire", "Chapter Seventeen: Paper and Smoke", "49_Book4_Ch17_Paper_and_Smoke", "15:13"],
-  ["Book Four — The Fraying Empire", "Chapter Eighteen: Exhibit A", "50_Book4_Ch18_Exhibit_A", "27:41"],
-  ["Book Four — The Fraying Empire", "Chapter Nineteen: The Fitting", "51_Book4_Ch19_The_Fitting", "18:15"],
-  ["Book Four — The Fraying Empire", "Chapter Twenty: The Western Cut", "52_Book4_Ch20_The_Western_Cut", "16:36"],
-  ["Book Four — The Fraying Empire", "Chapter Twenty-One: The Brass Hitch Hours", "53_Book4_Ch21_The_Brass_Hitch_Hours", "13:16"],
-  ["Book Four — The Fraying Empire", "Chapter Twenty-Two: The Morning Ledger", "54_Book4_Ch22_The_Morning_Ledger", "12:54"],
-  ["Book Four — The Fraying Empire", "Chapter Twenty-Three: The Road Chooses", "55_Book4_Ch23_The_Road_Chooses", "21:38"],
-  ["Book Four — The Fraying Empire", "Chapter Twenty-Four: The Gate Line", "56_Book4_Ch24_The_Gate_Line", "18:19"],
-  ["Book Four — The Fraying Empire", "Chapter Twenty-Five: The Scribe's Eye", "57_Book4_Ch25_The_Scribes_Eye", "17:04"],
-  ["Book Four — The Fraying Empire", "Chapter Twenty-Six: Her Watch", "58_Book4_Ch26_Her_Watch", "12:44"],
-  ["Book Four — The Fraying Empire", "Chapter Twenty-Seven: Manifest Revision", "59_Book4_Ch27_Manifest_Revision", "12:55"],
-  ["Book Four — The Fraying Empire", "Chapter Twenty-Eight: Sky in the Mountain", "60_Book4_Ch28_Sky_in_the_Mountain", "12:46"],
-  ["Book Four — The Fraying Empire", "Chapter Twenty-Nine: Seam Witness", "61_Book4_Ch29_Seam_Witness", "12:45"],
-  ["Book Four — The Fraying Empire", "Chapter Thirty: Trapped With Me", "62_Book4_Ch30_Trapped_With_Me", "12:18"],
-  ["Book Four — The Fraying Empire", "Chapter Thirty-One: Two Weeks and a Green Door", "63_Book4_Ch31_Two_Weeks_and_a_Green_Door", "12:39"],
-  ["Book Four — The Fraying Empire", "Chapter Thirty-Two: Waystation Recovery", "64_Book4_Ch32_Waystation_Recovery", "14:15"],
-  ["Book Four — The Fraying Empire", "Chapter Thirty-Three: Anku Nyx", "65_Book4_Ch33_Anku_Nyx", "19:10"],
-  ["Book Four — The Fraying Empire", "Chapter Thirty-Four: Seven Days", "66_Book4_Ch34_Seven_Days", "47:08"],
-  ["Book Four — The Fraying Empire", "Chapter Thirty-Five: What We Are", "67_Book4_Ch35_What_We_Are", "47:32"],
-  ["Book Four — The Fraying Empire", "Chapter Thirty-Six: The Heist of Varkul", "68_Book4_Ch36_The_Heist_of_Varkul", "49:29"],
-  ["Book Four — The Fraying Empire", "Chapter Thirty-Seven: The Fire-Man", "69_Book4_Ch37_The_FireMan", "26:03"],
-  ["Book Four — The Fraying Empire", "Chapter Thirty-Eight: The Table", "70_Book4_Ch38_The_Table", "43:19"],
-  ["Book Four — The Fraying Empire", "Chapter Thirty-Nine: The Kingdom", "71_Book4_Ch39_The_Kingdom", "26:39"],
-  ["Book Four — The Fraying Empire", "Chapter Forty: The Weld", "72_Book4_Ch40_The_Weld", "15:12"],
-  ["Book Five — Preview", "Part One: The Bard of Varenholm", "73_Book5_Pt1_The_Bard_of_Varenholm", "11:07"],
-  ["Book Five — Preview", "Part Two: The Dragon Who Walked Down", "74_Book5_Pt2_The_Dragon_Who_Walked_Down", "11:43"],
-  ["Book Five — Preview", "Part Three: Four Roads to Karridge", "75_Book5_Pt3_Four_Roads_to_Karridge", "11:35"],
-  ["", "Closing Credits", "76_Closing_Credits", "0:11"],
+  ["Book Two — The Sundered Gate (New Edition)", "Chapter One: The First Day", "Book2_Ch01_The_First_Day_v2", "30:54"],
 ];
 const audio = new Audio();
 audio.preload = "metadata";
