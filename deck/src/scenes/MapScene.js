@@ -45,7 +45,7 @@ class MapScene extends Phaser.Scene {
       .on("pointerdown", () => { Spire.sfx.click(); Spire.toggleMusic(); this.musTxt.setText(Spire.musicOn ? "♪ on" : "♪ off"); });
     this.add.text(1252, 44, "⛶", { fontSize: 20, color: "#caa26a" }).setOrigin(1, 0).setDepth(30)
       .setInteractive({ useHandCursor: true })
-      .on("pointerdown", () => { Spire.sfx.click(); if (this.scale.isFullscreen) this.scale.stopFullscreen(); else this.scale.startFullscreen(); });
+      .on("pointerdown", () => { Spire.sfx.click(); if (this.scale.isFullscreen) { this.scale.stopFullscreen(); Spire._savePref("spire_fs", false); } else { this.scale.startFullscreen(); Spire._savePref("spire_fs", true); } });
 
     this.drawMap(run.map);
     if (this._toast) this.toast(this._toast);

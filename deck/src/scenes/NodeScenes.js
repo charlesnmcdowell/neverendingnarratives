@@ -661,6 +661,7 @@ class EpilogueScene extends Phaser.Scene {
     this.add.text(640, 130, `her road, walked — cards claimed: ${Math.max(0, cardsWonK)} · final deck: ${Spire.run.deck.length} · HP ${Spire.run.hp}/${Spire.run.maxHp}`, {
       fontFamily: "Georgia, serif", fontSize: 14, color: "#9a8264"
     }).setOrigin(0.5).setDepth(30);
+    this.moreStoryPanel();
     NODE_BUTTON(this, 640, 660, "WALK IT AGAIN", () => this.finish(), 260);
   }
   async playLines() {
@@ -678,7 +679,27 @@ class EpilogueScene extends Phaser.Scene {
     this.add.text(640, 130, `the whole road, walked — cards claimed: ${Math.max(0, cardsWon)} · final deck: ${Spire.run.deck.length} · HP ${Spire.run.hp}/${Spire.run.maxHp}`, {
       fontFamily: "Georgia, serif", fontSize: 14, color: "#9a8264"
     }).setOrigin(0.5).setDepth(30);
+    this.moreStoryPanel();
     NODE_BUTTON(this, 640, 660, "WALK IT AGAIN", () => this.finish(), 260);
+  }
+  /* 2026-08-11 (Hiro): the game is finished — point them at the rest of the story.
+     YouTube podcast = music + art; the site audiobook = the pure story. */
+  moreStoryPanel() {
+    this.add.rectangle(640, 566, 700, 118, 0x140f0c, 0.93).setStrokeStyle(1.5, 0xe0b34a, 0.55).setDepth(30);
+    this.add.text(640, 522, "the story continues beyond the game", {
+      fontFamily: "Georgia, serif", fontSize: 15, color: "#e0b34a"
+    }).setOrigin(0.5).setDepth(31);
+    const mk = (x, label, sub, url) => {
+      const bg = this.add.rectangle(x, 572, 330, 46, 0x3a2420, 0.95).setStrokeStyle(1.5, 0xe0b34a).setDepth(31)
+        .setInteractive({ useHandCursor: true })
+        .on("pointerover", () => bg.setFillStyle(0x5a3426, 0.96))
+        .on("pointerout", () => bg.setFillStyle(0x3a2420, 0.95))
+        .on("pointerdown", () => { Spire.sfx.click(); try { window.open(url, "_blank"); } catch (e) {} });
+      this.add.text(x, 564, label, { fontFamily: "Georgia, serif", fontSize: 14, color: "#ffd97a" }).setOrigin(0.5).setDepth(32);
+      this.add.text(x, 582, sub, { fontFamily: "Georgia, serif", fontSize: 11, fontStyle: "italic", color: "#caa26a" }).setOrigin(0.5).setDepth(32);
+    };
+    mk(458, "▶  THE PODCAST ON YOUTUBE", "chapters with music & art", "https://www.youtube.com/@Neverendingnarratives37?sub_confirmation=1");
+    mk(822, "THE FULL AUDIOBOOK — FREE", "just the story, start to finish", "https://neverendingnarratives.com/audiobook/");
   }
   finish() {
     if (this._done) return;

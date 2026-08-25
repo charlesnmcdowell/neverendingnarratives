@@ -3,7 +3,14 @@
    city.mp3 under Karridge and the west road. */
 window.Spire = window.Spire || {};
 Spire.won = false;
-Spire.musicOn = false;
+/* 2026-08-11 (Hiro): music and fullscreen are ON by default; the player's toggles
+   are remembered between sessions. Browsers only allow sound + fullscreen after
+   the first click, so both engage on the first pointer-down. */
+Spire._pref = function (key, dflt) {
+  try { const v = localStorage.getItem(key); return v === null ? dflt : v === "1"; } catch (e) { return dflt; }
+};
+Spire._savePref = function (key, val) { try { localStorage.setItem(key, val ? "1" : "0"); } catch (e) {} };
+Spire.musicOn = Spire._pref("spire_music", true);
 Spire._audio = null;
 Spire._musicKey = null;
 Spire.playMusic = function (key) {
@@ -18,18 +25,32 @@ Spire.playMusic = function (key) {
   if (Spire.musicOn) Spire._audio.play().catch(() => {});   // keep playing across track swaps
 };
 Spire.startMusic = function () {
-  if (!Spire._audio) Spire.playMusic(Spire.run ? Spire.act().music : "arena");
+  if (!Spire._audio) Spire.playMusic(Spire.run ? Spire.act().music : "w_pit");
   if (!Spire._audio) return;
   Spire._audio.play().then(() => { Spire.musicOn = true; }).catch(() => {});
   Spire.musicOn = true;
+  Spire._savePref("spire_music", true);
 };
 Spire.toggleMusic = function () {
   if (!Spire._audio) { Spire.startMusic(); return; }
   if (Spire.musicOn) { Spire._audio.pause(); Spire.musicOn = false; }
   else { Spire._audio.play().catch(() => {}); Spire.musicOn = true; }
+  Spire._savePref("spire_music", Spire.musicOn);
 };
 
 window.addEventListener("pointerdown", () => { if (Spire.sfx) Spire.sfx.unlock(); }, { once: true });
+
+/* first gesture: let the default-on settings actually engage (autoplay rules) */
+let _fsTried = false;
+window.addEventListener("pointerdown", () => {
+  if (Spire.musicOn && (!Spire._audio || Spire._audio.paused)) Spire.startMusic();   // title screen included
+  if (!_fsTried) {
+    _fsTried = true;
+    if (Spire._pref("spire_fs", true) && window.game && game.scale && !game.scale.isFullscreen) {
+      try { game.scale.startFullscreen(); } catch (e) {}
+    }
+  }
+});
 
 window.addEventListener("load", () => {
   const params = new URLSearchParams(location.search);
