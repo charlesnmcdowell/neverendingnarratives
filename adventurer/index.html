@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Adventurer — A Permadeath Tactical RPG | Play Free — Neverending Narratives</title>
+<meta name="description" content="Adventurer: a classless, permadeath tactical RPG from the makers of the Sorcerer-Sword. Stats never change, skills are learned by watching them used, and death is not the end of what you know. Play free in your browser.">
+<link rel="canonical" href="https://neverendingnarratives.com/adventurer/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Neverending Narratives">
+<meta property="og:title" content="Adventurer — A Permadeath Tactical RPG">
+<meta property="og:description" content="A life, several times over. Classless, skill-based, permadeath. Play free in your browser.">
+<meta property="og:url" content="https://neverendingnarratives.com/adventurer/">
+<meta property="og:image" content="https://neverendingnarratives.com/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Adventurer — A Permadeath Tactical RPG">
+<meta name="twitter:description" content="A life, several times over. Classless, skill-based, permadeath. Play free in your browser.">
+<meta name="twitter:image" content="https://neverendingnarratives.com/assets/og-image.png">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0b0a08;color:#d8cdb8;font-family:'Courier New',monospace}
+  #bar{position:fixed;top:0;left:0;right:0;height:36px;display:flex;align-items:center;gap:14px;padding:0 12px;
+       background:#0a0908;border-bottom:1px solid rgba(146,64,14,.4);font-size:12px;letter-spacing:1px;z-index:5}
+  #bar a{color:#e7b450;text-decoration:none}
+  #bar a:hover{text-decoration:underline}
+  #bar .sp{flex:1}
+  #bar .t{color:#e7b450;text-transform:uppercase;font-weight:bold;letter-spacing:3px}
+  #bar .sub{color:#6b5d4f;font-style:italic}
+  #game{position:fixed;top:36px;left:0;right:0;bottom:0;border:0;width:100%;height:calc(100% - 36px);background:#0b0a08}
+  @media (max-width:640px){ #bar .sub{display:none} }
+</style>
+</head>
+<body>
+<div id="bar">
+  <a href="/">&larr; Neverending Narratives</a>
+  <span class="t">Adventurer</span>
+  <span class="sub">a life, several times over</span>
+  <span class="sp"></span>
+  <a href="#" id="fs">&#x26F6; Fullscreen</a>
+</div>
+<!-- The game itself is served from its own repo (github.com/charlesnmcdowell/Adventure-Game) via GitHub Pages;
+     this page keeps it on neverendingnarratives.com. Save data lives in the game's own origin. -->
+<iframe id="game" src="https://charlesnmcdowell.github.io/Adventure-Game/" title="Adventurer" allow="fullscreen; autoplay" allowfullscreen></iframe>
+<script>
+  const f = document.getElementById('game');
+  document.getElementById('fs').addEventListener('click', e => {
+    e.preventDefault();
+    (f.requestFullscreen || f.webkitRequestFullscreen || function(){ window.open(f.src, '_blank'); }).call(f);
+  });
+  // keyboard goes to the game, not this shell
+  window.addEventListener('load', () => f.focus());
+</script>
+</body>
+</html>
