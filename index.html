@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
-    <meta name="description" content="Play Adventurer, the complete browser RPG, or try the Adventurer: Expeditions demo. Read and listen to our fantasy stories, send feedback, or donate to support development.">
+    <meta name="description" content="Play Adventurer, the complete browser RPG, or try the Adventurer: Expeditions demo. Read and listen to our fantasy stories, send feedback, or support us on Patreon.">
     <meta name="keywords" content="Sorcerer-Sword, the sorcerer sword, free browser ARPG, free browser RPG, permadeath RPG, tactical RPG, Adventurer Expeditions, story RPG, LitRPG game, GameLit, LitRPG audiobook, free audiobook chapters, Altar of Omnia, Neverending Narratives, browser action RPG, indie RPG, royal road litrpg, dark fantasy">
     <meta name="author" content="Neverending Narratives">
     <link rel="canonical" href="https://neverendingnarratives.com/">
@@ -19,7 +19,7 @@
     <meta property="og:site_name" content="Neverending Narratives">
     <meta property="og:url" content="https://neverendingnarratives.com/">
     <meta property="og:title" content="Adventurer &amp; Expeditions — Play Free | Neverending Narratives">
-    <meta property="og:description" content="Play the complete Adventurer RPG or try the in-development Adventurer: Expeditions demo. Free in your browser. Share feedback or donate to help keep the games growing.">
+    <meta property="og:description" content="Play the complete Adventurer RPG or try the in-development Adventurer: Expeditions demo. Free in your browser. Share feedback or support the games on Patreon.">
     <meta property="og:image" content="https://neverendingnarratives.com/assets/expeditions-cover.webp">
     <meta property="og:image:width" content="1280">
     <meta property="og:image:height" content="720">
@@ -169,8 +169,6 @@
         .nav-brand span{font-size:inherit!important}
         .hero-actions a{min-height:52px}
         .select-all{overflow-wrap:anywhere;font-size:clamp(16px,4.5vw,24px)!important}
-        #audiobooks ol li{display:block;overflow-wrap:anywhere}
-        #audiobooks ol li>span:first-child{margin-right:8px}
         @media(max-width:1199px){.desktop-nav{display:none!important}#mobile-menu-button{display:block!important}#mobile-menu{display:block}#mobile-menu.hidden{display:none}}
         @media(max-width:600px){nav>div:first-child{padding:14px 16px!important;gap:8px}nav .nav-extras{gap:10px}.nav-extras>a:first-child{display:none}.nav-brand{font-size:15px}nav .fa-khanda{font-size:22px}#contact a[href^="mailto"]{font-size:13px;padding:16px 12px}.hero-title{font-size:clamp(34px,10vw,58px)!important}.fund-actions{flex-direction:column}}
         @media(prefers-reduced-motion:reduce){.hero-video{display:none}.fade-in,.fade-in-delayed,.fade-in-delayed-2{animation:none;opacity:1;transform:none}}
@@ -195,8 +193,7 @@
                 <a href="/audiobook2/" class="nav-link"><i class="fa-solid fa-headphones"></i> Books 2–5 Free</a>
                 <a href="#listen" onclick="smoothScrollTo('listen')" class="nav-link">Listen</a>
                 <a href="#read" onclick="smoothScrollTo('read')" class="nav-link">Read</a>
-                <a href="#audiobooks" onclick="smoothScrollTo('audiobooks')" class="nav-link">Audiobooks</a>
-                <a href="#fund" onclick="smoothScrollTo('fund')" class="nav-link text-yellow-400 flex items-center gap-1.5"><i class="fa-solid fa-fire"></i> Donate</a>
+                <a href="#fund" onclick="smoothScrollTo('fund')" class="nav-link text-yellow-400 flex items-center gap-1.5"><i class="fa-solid fa-fire"></i> Support</a>
                 <a href="#about" onclick="smoothScrollTo('about')" class="nav-link">About</a>
             </div>
 
@@ -221,8 +218,7 @@
                 <a href="/audiobook2/" class="py-2 flex items-center gap-2"><i class="fa-solid fa-headphones"></i> Books 2–5 Free</a>
                 <a href="#listen" onclick="toggleMobileMenu()" class="py-2">Listen</a>
                 <a href="#read" onclick="toggleMobileMenu()" class="py-2">Read</a>
-                <a href="#audiobooks" onclick="toggleMobileMenu()" class="py-2">Audiobooks</a>
-                <a href="#fund" onclick="toggleMobileMenu()" class="py-2 text-yellow-400"><i class="fa-solid fa-fire"></i> Donate</a>
+                <a href="#fund" onclick="toggleMobileMenu()" class="py-2 text-yellow-400"><i class="fa-solid fa-fire"></i> Support</a>
                 <a href="#about" onclick="toggleMobileMenu()" class="py-2">About</a>
             </div>
         </div>
@@ -276,7 +272,7 @@
                     <div class="p-7 pt-0"><a href="/expeditions/" class="block text-center bg-purple-300 hover:bg-purple-200 text-zinc-950 px-5 py-4 rounded-full font-bold">Play Expeditions Demo</a></div>
                 </article>
             </div>
-            <p class="text-center text-zinc-400 text-sm mt-7">Found a bug or have an idea? <a href="https://www.facebook.com/neverendingnarratives" target="_blank" rel="noopener noreferrer" class="text-yellow-300 underline">Send feedback on Facebook</a>. If you would like to help with costs, <a href="#fund" class="text-yellow-300 underline">donate any amount</a>.</p>
+            <p class="text-center text-zinc-400 text-sm mt-7">Found a bug or have an idea? <a href="https://www.facebook.com/neverendingnarratives" target="_blank" rel="noopener noreferrer" class="text-yellow-300 underline">Send feedback on Facebook</a>. If you would like to help, <a href="#fund" class="text-yellow-300 underline">grab a book or join the Patreon</a>.</p>
         </div>
     </section>
 
@@ -446,121 +442,59 @@
         </div>
     </section>
 
-    <!-- AUDIOBOOKS — $10 two-book bundle via Cash App (manual fulfillment) -->
-    <section id="audiobooks" class="py-24 bg-[#0c0a09] border-t border-amber-900/30">
-        <div class="max-w-4xl mx-auto px-6">
-            <div class="text-center mb-6">
-                <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Audiobooks</span>
-                <h2 class="heading-font text-4xl md:text-5xl font-bold mt-2 mb-4">Both Audiobooks — <span class="text-gold-grad">$10</span></h2>
-                <p class="text-zinc-400 text-lg max-w-2xl mx-auto serif">
-                    Get both Sorcerer-Sword audiobooks as a bundle — <span class="text-zinc-200">The Sorcerer Sword</span> (Book One)
-                    and <span class="text-zinc-200">The Sundered Gate</span> (the new edition, releasing chapter by chapter). Professionally narrated —
-                    yours to keep and listen offline.
-                </p>
-            </div>
-            <div class="rune-divider mb-12"><i class="fa-solid fa-headphones"></i></div>
-
-            <div class="card-fantasy rounded-3xl p-8 md:p-10 shadow-2xl shadow-black/50">
-                <div class="flex flex-col md:flex-row md:items-center gap-8">
-                    <div class="shrink-0 text-center">
-                        <i class="fa-solid fa-headphones text-yellow-400 text-6xl mb-3"></i>
-                        <div class="heading-font text-5xl font-bold text-gold-grad">$10</div>
-                        <div class="text-zinc-500 text-xs uppercase tracking-widest mt-1">Both audiobooks</div>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="heading-font text-2xl font-bold mb-3">How it works</h3>
-                        <ol class="text-zinc-300 text-sm space-y-3 mb-6">
-                            <li class="flex gap-3"><span class="text-yellow-400 font-bold">1.</span> Send <span class="text-yellow-400 font-semibold">$10</span> on Cash App to <span class="text-yellow-400 font-semibold">$Hiroprotagonist36</span> — add a note saying "Audiobooks".</li>
-                            <li class="flex gap-3"><span class="text-yellow-400 font-bold">2.</span> Email <a href="mailto:neverendingnarratives@gmail.com?subject=Audiobook%20Bundle" class="text-yellow-400 hover:underline">neverendingnarratives@gmail.com</a> with your Cash App name so we can match the payment.</li>
-                            <li class="flex gap-3"><span class="text-yellow-400 font-bold">3.</span> We send you both audiobooks to download. <!-- PLACEHOLDER: Hiro, confirm delivery method / file location for the audiobook files --></li>
-                        </ol>
-                        <div class="bg-yellow-400/10 border-2 border-yellow-400 rounded-2xl px-6 py-5 text-center">
-                            <div class="text-zinc-400 text-xs uppercase tracking-widest mb-1">Send $10 on Cash App to</div>
-                            <div class="heading-font text-2xl md:text-3xl font-bold text-gold-grad select-all"><i class="fa-brands fa-square-cash-app mr-2"></i>$Hiroprotagonist36</div>
-                        </div>
-                        <p class="text-zinc-500 text-xs mt-3 text-center">I send the files by email after matching your payment. Please include your Cash App name so I can find it.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FUND — help develop the Sorcerer-Sword: manual goal bar + Cash App (only money channel) -->
+    <!-- FUND — support through the Kindle books or Patreon (Hiro, 2026-10-13: no Cash App donations) -->
     <section id="fund" class="py-24 bg-[#0a0807] border-t border-amber-900/30">
         <div class="max-w-5xl mx-auto px-6">
             <div class="text-center mb-6">
-                <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Fund Development</span>
+                <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Support the Work</span>
                 <h2 class="heading-font text-4xl md:text-5xl font-bold mt-2 mb-4">Help Keep the Games Growing</h2>
                 <p class="text-zinc-400 text-lg max-w-2xl mx-auto serif">
-                    I’m Charles, also known as Hiro Protagonist. I make these games and stories, and I’m grateful you’re here playing them. Donations help cover the site, development tools, artwork, music and voice work. Any amount helps; you never need to donate to play. Buying a book or audiobook helps too.
+                    I’m Charles, also known as Hiro Protagonist. I make these games and stories, and I’m grateful you’re here playing them.
+                    If you want to help me keep going, the best ways are picking up the books on Kindle or joining the Patreon.
                 </p>
             </div>
             <div class="rune-divider mb-12"><i class="fa-solid fa-fire"></i></div>
-
-            <!-- ===================================================================== -->
-            <!-- DONATION PROGRESS BAR  (MANUAL)                                       -->
-            <!-- Hiro: Cash App can't auto-report a total, so this bar is manual.      -->
-            <!-- After you tally donations, edit the ONE number below: data-raised.    -->
-            <!-- e.g. data-raised="250"  -> shows $250 raised. Keep it honest.         -->
-            <!-- ===================================================================== -->
-            <div id="fund-bar"
-                 data-raised="425"
-                 data-goal1="1000"
-                 data-goal2="5000"
-                 class="card-fantasy rounded-3xl p-8 md:p-10 shadow-2xl shadow-black/50 mb-10">
+            <!-- FUNDING GOALS (manual). Hiro: after you tally Patreon and book support, edit the ONE
+                 number below, data-raised. e.g. data-raised="520" shows $520. Keep it honest. -->
+            <div id="fund-bar" data-raised="425" data-goal1="500" data-goal2="700"
+                 class="card-fantasy rounded-3xl p-8 md:p-10 shadow-2xl shadow-black/50 mb-10 max-w-4xl mx-auto">
                 <div class="flex items-end justify-between mb-3">
                     <div>
-                        <span class="text-zinc-400 text-xs font-medium uppercase tracking-widest">Recorded support · updated manually</span>
+                        <span class="text-zinc-400 text-xs font-medium uppercase tracking-widest">Raised so far · updated by hand</span>
                         <div class="heading-font text-4xl font-bold text-gold-grad"><span id="fund-raised">$0</span></div>
                     </div>
                     <div class="text-right">
                         <span class="text-zinc-400 text-xs font-medium uppercase tracking-widest">Next goal</span>
-                        <div class="text-xl font-semibold" id="fund-next-goal">$1,000</div>
+                        <div class="text-xl font-semibold" id="fund-next-goal">$500</div>
                     </div>
                 </div>
-
-                <!-- track -->
                 <div class="relative h-5 bg-[#1a1512] rounded-full overflow-hidden border border-amber-900/40">
                     <div id="fund-fill" class="absolute inset-y-0 left-0 bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-600 rounded-full transition-all duration-700" style="width:0%"></div>
                 </div>
-                <p class="text-zinc-500 text-xs mt-2" id="fund-progress-label">$0 of $1,000 toward the first goal</p>
-
-                <!-- milestones -->
+                <p class="text-zinc-500 text-xs mt-2" id="fund-progress-label">$0 of $500 toward chapter two</p>
                 <div class="grid sm:grid-cols-2 gap-4 mt-8">
                     <div id="milestone-1" class="rounded-2xl p-5 border border-amber-900/30 bg-[#140f0c]/60">
-                        <div class="flex items-center gap-2 mb-1">
-                            <i class="fa-solid fa-palette text-yellow-400"></i>
-                            <span class="font-semibold">Goal 1 — $1,000</span>
-                        </div>
-                        <p class="text-zinc-400 text-sm serif">Help cover ongoing development tools, artwork and the costs of keeping the site running.</p>
+                        <div class="flex items-center gap-2 mb-1"><i class="fa-solid fa-khanda text-yellow-400"></i><span class="font-semibold">Goal 1 — $500</span></div>
+                        <p class="text-zinc-400 text-sm serif">Chapter 2 of Adventurer: Expeditions.</p>
                     </div>
                     <div id="milestone-2" class="rounded-2xl p-5 border border-amber-900/30 bg-[#140f0c]/60">
-                        <div class="flex items-center gap-2 mb-1">
-                            <i class="fa-solid fa-person-running text-yellow-400"></i>
-                            <span class="font-semibold">Goal 2 — $5,000</span>
-                        </div>
-                        <p class="text-zinc-400 text-sm serif">Support more campaign chapters, combat animation and testing for Adventurer: Expeditions.</p>
+                        <div class="flex items-center gap-2 mb-1"><i class="fa-solid fa-khanda text-yellow-400"></i><span class="font-semibold">Goal 2 — $700</span></div>
+                        <p class="text-zinc-400 text-sm serif">Chapter 3 of Adventurer: Expeditions.</p>
                     </div>
                 </div>
             </div>
-
-            <!-- Way to give: Cash App only -->
-            <div class="max-w-xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 <div class="card-fantasy rounded-3xl p-8 flex flex-col text-center">
-                    <i class="fa-brands fa-square-cash-app text-yellow-400 text-4xl mb-3"></i>
-                    <h3 class="text-2xl font-bold mb-3 heading-font">Donate via Cash App</h3>
-                    <p class="text-zinc-400 mb-6 serif">Choose an amount you are comfortable with. The button opens Cash App, where you can review the recipient and amount before sending.</p>
-                    <div class="bg-yellow-400/10 border-2 border-yellow-400 rounded-2xl px-6 py-6 text-center">
-                        <div class="text-zinc-400 text-xs uppercase tracking-widest mb-1">Send any amount on Cash App to</div>
-                        <div class="heading-font text-2xl md:text-3xl font-bold text-gold-grad select-all"><i class="fa-brands fa-square-cash-app mr-2"></i>$Hiroprotagonist36</div>
-                        <div class="text-zinc-400 text-sm mt-3">Recipient: $Hiroprotagonist36</div>
-                        <div class="fund-actions flex flex-wrap justify-center gap-3 mt-5">
-                            <a href="https://cash.app/$Hiroprotagonist36" target="_blank" rel="noopener noreferrer" class="bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-6 py-3 rounded-full font-bold">Donate with Cash App</a>
-                            <button id="copy-cashtag" type="button" class="border border-yellow-400 text-yellow-300 px-6 py-3 rounded-full">Copy Cash App name</button>
-                        </div>
-                        <p id="copy-status" class="text-sm mt-3" role="status" aria-live="polite"></p>
-                        <p class="text-zinc-400 text-sm mt-2">Or search for the name above in the Cash App app.</p>
-                    </div>
+                    <i class="fa-brands fa-amazon text-yellow-400 text-4xl mb-3"></i>
+                    <h3 class="text-2xl font-bold mb-3 heading-font">Read the Books on Kindle</h3>
+                    <p class="text-zinc-400 mb-6 serif flex-1">The Sorcerer-Sword novels are on Amazon. Every copy helps pay for the next chapter and the next game.</p>
+                    <a href="#read" onclick="smoothScrollTo('read')" class="bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-6 py-3 rounded-full font-bold">See the Books</a>
+                </div>
+                <div class="card-fantasy rounded-3xl p-8 flex flex-col text-center">
+                    <i class="fa-brands fa-patreon text-yellow-400 text-4xl mb-3"></i>
+                    <h3 class="text-2xl font-bold mb-3 heading-font">Join the Patreon</h3>
+                    <p class="text-zinc-400 mb-6 serif flex-1">Back Neverending Narratives on Patreon and help fund new chapters, art, music and voice work.</p>
+                    <a href="https://www.patreon.com/NeverendingNarratives" target="_blank" rel="noopener noreferrer" class="bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-6 py-3 rounded-full font-bold">Join on Patreon</a>
                 </div>
             </div>
             <p class="text-center text-zinc-500 text-xs mt-8">
@@ -582,7 +516,7 @@
                         Neverending Narratives is my home for browser RPGs, fantasy novels and LitRPG audiobooks. Adventurer is the complete game. Expeditions is my current project, with a playable opening chapter and more story on the way.
                     </p>
                     <p class="text-zinc-400 text-lg leading-relaxed mb-8 serif">
-                        Tell me what you enjoyed, what confused you and where the game broke. That feedback helps me decide what to fix next. If you want to support the work financially, the donation section above is the place to do it.
+                        Tell me what you enjoyed, what confused you and where the game broke. That feedback helps me decide what to fix next. If you want to support the work, the books and the Patreon above are the best ways.
                     </p>
 
                     <div class="grid grid-cols-3 gap-8">
@@ -625,7 +559,7 @@
             <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Get in Touch</span>
             <h2 class="heading-font text-4xl md:text-5xl font-bold mt-2 mb-4">Send Feedback or Say Hello</h2>
             <p class="mt-2 text-zinc-400 serif max-w-xl mx-auto">
-                For game feedback, message Neverending Narratives or Hiro Protagonist on Facebook. For audiobook purchases or other questions, email me below.
+                For game feedback, message Neverending Narratives or Hiro Protagonist on Facebook. For anything else, email Neverending Narratives below.
             </p>
             <div class="flex flex-wrap justify-center gap-3 mt-6">
                 <a href="https://www.facebook.com/neverendingnarratives" target="_blank" rel="noopener noreferrer" class="border border-yellow-400/60 text-yellow-300 px-5 py-3 rounded-full">Neverending Narratives on Facebook</a>
@@ -634,7 +568,7 @@
             <div class="mt-8">
                 <a href="mailto:neverendingnarratives@gmail.com"
                    class="inline-flex items-center justify-center gap-3 bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-bold text-lg transition-all active:scale-95">
-                    <i class="fa-solid fa-envelope"></i> Email Charles
+                    <i class="fa-solid fa-envelope"></i> Email Neverending Narratives
                 </a>
             </div>
             <div class="flex justify-center gap-6 text-2xl mt-8 text-zinc-400">
@@ -659,7 +593,7 @@
                     <a href="#games" onclick="smoothScrollTo('games')" class="hover:text-yellow-400">Play</a>
                     <a href="#listen" onclick="smoothScrollTo('listen')" class="hover:text-yellow-400">Listen</a>
                     <a href="#read" onclick="smoothScrollTo('read')" class="hover:text-yellow-400">Read</a>
-                    <a href="#fund" onclick="smoothScrollTo('fund')" class="hover:text-yellow-400">Donate</a>
+                    <a href="#fund" onclick="smoothScrollTo('fund')" class="hover:text-yellow-400">Support</a>
                 </div>
 
                 <div class="flex gap-6 text-2xl">
@@ -676,11 +610,6 @@
     </footer>
 
     <script>
-        document.getElementById('copy-cashtag').addEventListener('click', async () => {
-            const status = document.getElementById('copy-status');
-            try { await navigator.clipboard.writeText('$Hiroprotagonist36'); status.textContent = 'Copied: $Hiroprotagonist36'; }
-            catch (_) { status.textContent = 'Please copy this name: $Hiroprotagonist36'; }
-        });
         function smoothScrollTo(sectionId) {
             const element = document.getElementById(sectionId);
             if (element) {
@@ -716,38 +645,26 @@
 
         document.querySelectorAll('.stat-counter').forEach(counter => observer.observe(counter));
 
-        // ---------------------------------------------------------------
-        // DONATION PROGRESS BAR — reads ONE manually-edited value.
-        // Hiro: update data-raised="..." on #fund-bar after you tally
-        // Cash App donations. This NEVER fakes a live total; it only
-        // reflects the number you set.
-        // ---------------------------------------------------------------
+
+        // Funding goals: reads the one hand-edited number on #fund-bar (data-raised).
         (function () {
             const bar = document.getElementById('fund-bar');
             if (!bar) return;
             const fmt = n => '$' + Number(n).toLocaleString('en-US');
             const raised = Math.max(0, parseFloat(bar.dataset.raised) || 0);
-            const goal1 = parseFloat(bar.dataset.goal1) || 1000;
-            const goal2 = parseFloat(bar.dataset.goal2) || 5000;
-            const goalReached = raised >= goal1;
-            const activeGoal = goalReached ? goal2 : goal1;
-            const base = goalReached ? goal1 : 0;
-            const pct = Math.max(0, Math.min(100, ((raised - base) / (activeGoal - base)) * 100));
-            const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+            const goal1 = parseFloat(bar.dataset.goal1) || 500, goal2 = parseFloat(bar.dataset.goal2) || 700;
+            const first = raised < goal1, goal = first ? goal1 : goal2, base = first ? 0 : goal1;
+            const pct = Math.max(0, Math.min(100, ((raised - base) / (goal - base)) * 100));
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
             set('fund-raised', fmt(raised));
-            set('fund-next-goal', fmt(activeGoal));
-            const fill = document.getElementById('fund-fill');
-            if (fill) fill.style.width = pct.toFixed(1) + '%';
-            set('fund-progress-label',
-                goalReached
-                    ? fmt(raised) + ' raised — Goal 1 complete! ' + fmt(raised - goal1) + ' toward the $5,000 sprite goal'
-                    : fmt(raised) + ' of ' + fmt(goal1) + ' toward the first goal');
-            const active = document.getElementById(goalReached ? 'milestone-2' : 'milestone-1');
-            if (active) { active.classList.remove('border-amber-900/30'); active.classList.add('border-yellow-400', 'bg-yellow-400/5'); }
-            if (raised >= goal2) {
-                const m2 = document.getElementById('milestone-2');
-                if (m2) { m2.classList.remove('border-amber-900/30'); m2.classList.add('border-yellow-400', 'bg-yellow-400/5'); }
-            }
+            set('fund-next-goal', raised >= goal2 ? 'Both reached' : fmt(goal));
+            document.getElementById('fund-fill').style.width = pct.toFixed(1) + '%';
+            set('fund-progress-label', first ? fmt(raised) + ' of ' + fmt(goal1) + ' toward chapter two'
+                : raised < goal2 ? 'Chapter two goal reached! ' + fmt(raised) + ' of ' + fmt(goal2) + ' toward chapter three'
+                : 'Both goals reached. Thank you!');
+            const mark = id => { const m = document.getElementById(id); m.classList.remove('border-amber-900/30'); m.classList.add('border-yellow-400', 'bg-yellow-400/5'); };
+            mark(first ? 'milestone-1' : 'milestone-2');
+            if (raised >= goal1) mark('milestone-1');
         })();
 
         console.log('%c⚔ The Sorcerer-Sword — Neverending Narratives', 'color:#eab308; font-family:monospace');
