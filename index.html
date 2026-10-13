@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
-    <meta name="description" content="The Sorcerer-Sword by Neverending Narratives — play three free browser games — an action-RPG, a deck-builder and a permadeath tactical RPG — listen to free LitRPG audiobook chapters, read the novels, and help fund development. An ever-expanding dark-fantasy LitRPG world.">
-    <meta name="keywords" content="Sorcerer-Sword, the sorcerer sword, free browser ARPG, free browser RPG, permadeath RPG, tactical RPG, deck-builder, LitRPG game, GameLit, LitRPG audiobook, free audiobook chapters, Altar of Omnia, Neverending Narratives, browser action RPG, indie RPG, royal road litrpg, dark fantasy">
+    <meta name="description" content="The Sorcerer-Sword by Neverending Narratives — play two free browser RPGs — the permadeath tactical RPG Adventurer and the Adventurer: Expeditions story demo — listen to free LitRPG audiobook chapters, read the novels, and help fund development. An ever-expanding dark-fantasy LitRPG world.">
+    <meta name="keywords" content="Sorcerer-Sword, the sorcerer sword, free browser ARPG, free browser RPG, permadeath RPG, tactical RPG, Adventurer Expeditions, story RPG, LitRPG game, GameLit, LitRPG audiobook, free audiobook chapters, Altar of Omnia, Neverending Narratives, browser action RPG, indie RPG, royal road litrpg, dark fantasy">
     <meta name="author" content="Neverending Narratives">
     <link rel="canonical" href="https://neverendingnarratives.com/">
     <meta name="robots" content="index, follow">
@@ -59,10 +59,10 @@
         },
         {
           "@type": "VideoGame",
-          "name": "The Sorcerer-Sword",
-          "url": "https://neverendingnarratives.com/play/",
-          "description": "A free browser-based action RPG set in the ever-expanding dark-fantasy LitRPG world of the Sorcerer-Sword. No download, no sign-up — play instantly in your browser.",
-          "genre": ["Action RPG", "LitRPG", "GameLit", "Dark Fantasy"],
+          "name": "Adventurer: Expeditions",
+          "url": "https://neverendingnarratives.com/expeditions/",
+          "description": "Varenholm's Gate from Adventurer, retold as a voiced side-on action RPG. Chapter one is free to play in your browser.",
+          "genre": ["Action RPG", "Story RPG", "LitRPG", "Dark Fantasy"],
           "gamePlatform": ["Web Browser"],
           "applicationCategory": "Game",
           "operatingSystem": "Any (web browser)",
@@ -190,7 +190,7 @@
                     <i class="fa-solid fa-scroll"></i>
                     <span class="hidden md:inline">Our Stories</span>
                 </a>
-                <a href="/play/"
+                <a href="#games" onclick="smoothScrollTo('games')"
                    class="bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-5 py-2.5 rounded-full font-semibold text-sm transition-all active:scale-95">
                     Play Free
                 </a>
@@ -265,13 +265,15 @@
         <div class="max-w-6xl mx-auto px-6">
             <div class="text-center mb-6">
                 <span class="text-yellow-400 text-sm font-medium uppercase tracking-widest">Play Free · In Your Browser</span>
-                <h2 class="heading-font text-4xl md:text-5xl font-bold mt-2 mb-4">Three Ways to Play</h2>
+                <h2 class="heading-font text-4xl md:text-5xl font-bold mt-2 mb-4">Two Ways to Play</h2>
                 <p class="text-zinc-400 text-lg max-w-2xl mx-auto serif">
-                    Three very different fights. No installs, no accounts — click and play.
+                    Two very different fights. No installs, no accounts — click and play.
                 </p>
             </div>
             <div class="rune-divider mb-12"><i class="fa-solid fa-khanda"></i></div>
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Hidden 2026-10-12 (Hiro: only Adventurer for now). The Pit of Karridge (/play/) and Spire of Karridge (/deck/)
+                     are still on the server; to bring them back, move these two cards out of this comment and set the grid to md:grid-cols-3.
                 <div class="rounded-3xl overflow-hidden border border-amber-900/30 bg-[#140f0c]/60 hover:border-yellow-400/40 transition-all flex flex-col">
                     <div class="p-8 flex-1">
                         <span class="text-yellow-400 text-xs font-medium uppercase tracking-widest">Action RPG</span>
@@ -310,6 +312,7 @@
                         </a>
                     </div>
                 </div>
+                -->
                 <div class="rounded-3xl overflow-hidden border border-amber-900/30 bg-[#140f0c]/60 hover:border-yellow-400/40 transition-all flex flex-col">
                     <div class="p-8 flex-1">
                         <span class="text-yellow-400 text-xs font-medium uppercase tracking-widest">Permadeath Tactical RPG</span>
@@ -327,6 +330,25 @@
                     <div class="p-8 pt-0">
                         <a href="/adventurer/" class="block text-center bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-bold transition-all active:scale-95">
                             <i class="fa-solid fa-skull mr-2"></i> Play Adventurer
+                        </a>
+                    </div>
+                </div>
+                <div class="rounded-3xl overflow-hidden border border-amber-900/30 bg-[#140f0c]/60 hover:border-yellow-400/40 transition-all flex flex-col">
+                    <div class="p-8 flex-1">
+                        <span class="text-yellow-400 text-xs font-medium uppercase tracking-widest">Story Action RPG · Free Demo</span>
+                        <h3 class="heading-font text-3xl font-bold mt-1 mb-3">Adventurer: Expeditions</h3>
+                        <p class="text-zinc-400 leading-relaxed mb-6 serif">
+                            Varenholm's Gate, retold side-on. Same story, same voices, but every fight is yours to
+                            play: time your counters, land the finisher, keep moving. Chapter one is up now.
+                        </p>
+                        <ul class="text-zinc-300 text-sm space-y-2">
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Fully voiced chapter one of the Adventurer campaign</li>
+                            <li class="flex items-center gap-3"><i class="fa-solid fa-check text-yellow-400"></i> Painted fights, finishing moves and a high-score board</li>
+                        </ul>
+                    </div>
+                    <div class="p-8 pt-0">
+                        <a href="/expeditions/" class="block text-center bg-yellow-400 hover:bg-amber-400 text-zinc-950 px-8 py-4 rounded-full font-bold transition-all active:scale-95">
+                            <i class="fa-solid fa-khanda mr-2"></i> Play the Demo
                         </a>
                     </div>
                 </div>
@@ -615,7 +637,7 @@
                 </div>
             </div>
             <p class="text-center text-zinc-500 text-xs mt-8">
-                Other ways to help for free: <a href="/play/" class="text-yellow-400 hover:underline">play the game</a>,
+                Other ways to help for free: <a href="#games" class="text-yellow-400 hover:underline">play the games</a>,
                 <a href="https://www.youtube.com/@Neverendingnarratives37?sub_confirmation=1" target="_blank" class="text-yellow-400 hover:underline">subscribe on YouTube</a>,
                 and share the Sorcerer-Sword with a friend.
             </p>
