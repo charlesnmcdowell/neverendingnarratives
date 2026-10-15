@@ -7,15 +7,15 @@ const MUTE_KEY='adventurer_expeditions_story_muted';
 const storedMute=()=>{try{return localStorage.getItem(MUTE_KEY)==='1';}catch(_){return false;}};
 let session=null,muted=storedMute(),voice=null,music=null,reply=null,line=0,applied=null;
 let battleFrame=null;
-// Local chapter limit; the website packager independently forces chapter one.
-// Raise DEMO_THROUGH as chapters are finished; a local server can play further with
-// ?through=N for testing.
+// Complete local campaign. The website packager independently sets its free
+// and password chapter limits; changing this does not publish more chapters.
+// A local ?through=N remains useful when checking an earlier chapter boundary.
 const DEMO_THROUGH=1,localHost=/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 // Password access (Hiro, 2026-10-14: chapter one free on the site, chapters two
 // to five "if they know password"). UNLOCK_THROUGH above DEMO_THROUGH turns it on;
 // the site packager sets both. Only a SHA-256 of the lower-cased password is
 // here. It is a casual gate: the chapters' files ship with the page.
-const UNLOCK_THROUGH=5,UNLOCK_HASH='e2324f665ae42249ee042331e8e804bb24aa492e123ca40ea13ac9fa0ab56de9',UNLOCK_KEY='adventurer_expeditions_unlocked';
+const UNLOCK_THROUGH=6,UNLOCK_HASH='e2324f665ae42249ee042331e8e804bb24aa492e123ca40ea13ac9fa0ab56de9',UNLOCK_KEY='adventurer_expeditions_unlocked';
 const unlocked=()=>{try{return localStorage.getItem(UNLOCK_KEY)===UNLOCK_HASH;}catch(_){return false;}};
 const askedThrough=Number(new URLSearchParams(location.search).get('through'));
 const PLAYABLE_THROUGH=unlocked()?Math.max(DEMO_THROUGH,UNLOCK_THROUGH):DEMO_THROUGH;
@@ -142,6 +142,7 @@ function devSkipTo(target){
   for(let guard=0;guard<20000&&!(r.chapter===target&&r.phase==='departure');guard++){
     const perks=ADV.GatePerks?.state(g);if(perks?.pending.length)ADV.GatePerks.acknowledge(g,perks.pending.slice());
     delete r.chapterRewardDue;delete r.seatOffer;
+    if(r.travelPending){S.finishTravel(s);continue;}
     if(r.phase==='inn'){S.leaveInn(s);continue;}
     if(r.phase==='combat'){S.victory(s,[]);continue;}
     const beat=r.reply||S.beats(s)[0];
@@ -158,6 +159,8 @@ function devSkipTo(target){
 }
 function render(){
   stopVoice();panel.replaceChildren();const r=session.record;
+  // Cap the outbound leg before showing content from a locked website chapter.
+  if(r.travelPending&&r.travelPending.chapter<=PLAYABLE_THROUGH)return travel();
   const perks=ADV.GatePerks?.state(session.game);
   if(perks?.pending.length){
     const notices=perks.pending.slice(),box=text('section','',panel,'menu');text('h1','Campaign gifts',box);
@@ -205,6 +208,18 @@ function render(){
   function advance(){if(beat.death&&!reply){choices.querySelectorAll('button').forEach(b=>b.disabled=true);flash();setTimeout(step,600);}else step();}
   function step(){if(!box.isConnected)return;if(reply)reply=null;S.shiftBeat(session);line=0;applied=null;render();}
   if(sceneFile)holdForScene(box,sceneFile,()=>say(beat));else say(beat);
+}
+function travel(){
+  const activeSession=session,spec=S.travelSpec(session);if(!spec){S.finishTravel(session);render();return;}
+  sceneContext=null;$('weather').hidden=true;playMusic();backdrop.pause(false);
+  // Leave the entire painting visible; the title/sound controls remain usable.
+  const note=text('div',spec.leg==='return'?'Returning to the inn':'On the road',panel,'travel-caption');
+  note.style.cssText='position:fixed;bottom:max(18px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);color:#fff;text-shadow:0 2px 4px #000;pointer-events:none';
+  const id=spec.id;
+  backdrop.show({...spec,onComplete:()=>{
+    if(session!==activeSession||S.travelSpec(session)?.id!==id)return;
+    S.finishTravel(session);render();
+  }});
 }
 function inn(){
   const X=ADV.Expedition,r=session.record,run=r.run;
@@ -254,7 +269,25 @@ function ending(){
   const read=button('Read aloud',()=>{if(active){active=false;stopVoice();read.textContent='Read aloud';return;}setMuted(false);playMusic();active=true;at=-1;next();},controls);
   function next(){stopVoice();if(!active||!box.isConnected||muted)return;const row=end.narration[++at];rows.forEach(p=>p.classList.remove('reading'));if(!row){active=false;read.textContent='Read again';return;}
     const el=rows[row.paragraph];if(el){el.classList.add('reading');el.scrollIntoView({block:'nearest'});}read.textContent='Stop narration';voice=new Audio(url(row.file));voice.onended=next;voice.onerror=next;voice.play().catch(()=>{active=false;read.textContent='Read aloud';});}
+  button('Continue',endCard,controls);
   button('Back to title',title,controls);
+}
+// A separate closing card follows the authored ending; it never replaces the
+// player's final choice, the epilogue, or its narration.
+function endCard(){
+  stopVoice();panel.replaceChildren();sceneContext=null;backdrop.pause(false);
+  backdrop.show({kind:'inn',id:'inn',visit:15,run:{...session.record.run,cycles:{story:14}}});
+  const box=text('section','',panel,'menu');box.id='story-thanks';
+  text('h1','Thanks for playing!',box);
+  text('p','Thank you for taking Hiro all the way to the end. I hope you enjoyed the journey.',box,'speech');
+  text('p','There are more games and books to explore at Neverending Narratives. If you can, a donation helps keep the site running and pays for the next game.',box,'speech');
+  text('p','Stay tuned for the next adventure. — Hiro Protagonist',box,'caption');
+  const links=text('div','',box,'buttons');
+  for(const [label,section]of [['More games','games'],['Explore the books','read'],['Support the next game','fund']]){
+    const a=document.createElement('a');a.textContent=label;a.href='https://neverendingnarratives.com/#'+section;a.target='_blank';a.rel='noopener noreferrer';
+    a.style.cssText='display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 20px;color:#ebcf8f;border:1px solid #a28859;border-radius:5px;background:#172033e8';links.append(a);
+  }
+  button('Read the ending again',()=>{panel.replaceChildren();ending();},box);button('Back to title',title,box);
 }
 // Separate animated atmosphere on the reused panorama, never in front of UI.
 const canvas=$('weather'),ctx=canvas.getContext('2d');let w=0,h=0;
