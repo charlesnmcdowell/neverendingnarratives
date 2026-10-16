@@ -85,7 +85,11 @@ function showDefences(scene,actor,g){
     else if(!hit||hit.dmg<=0)outcome(scene,target,'resist',hit?'0':'Resisted');
   }
   // Reflected/counter damage is not one of Hiro's outgoing hit events.
-  for(const e of g.after)if(e.t==='damage'&&e.uid===actor.uid&&e.by!==actor.uid&&e.tag!=='dot')impact(scene,actor,e,{});
+  for(const e of g.after)if(e.t==='damage'&&e.uid===actor.uid&&e.by!==actor.uid&&e.tag!=='dot'){
+    // Say where a passive hit came from: a taunting foe striking back.
+    if(e.tag==='retaliation')V().damageNumber(scene,actor.x,actor.y-actor.height*.78,'Struck back','#ffb3a1');
+    impact(scene,actor,e,{});
+  }
 }
 
 // Impact presentation shared by every landed blow.

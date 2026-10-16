@@ -504,11 +504,11 @@ class Actor {
         this.img.on('animationstart', onStart); this.img.on('animationupdate', onUpdate); this.img.on('animationcomplete', onDone);
         this.img.play(key, false);
         this.syncPause();
-      if (!c.loop && approaching) {
-        const first = contacts.length ? contacts[0] : Math.floor(c.frames.length / 2);
-        const leadMs = (c.durationMs || 600) * first / c.frames.length;
-        move(contactX, Math.max(1, Math.min(170, leadMs || 1)), 'Sine.Out');
-      } else if (!c.loop && returning) move(this.home.x, Math.max(100, (c.durationMs || 500) - 80), 'Sine.Out');
+        if (!c.loop && approaching) {
+          const first = contacts.length ? contacts[0] : Math.floor(c.frames.length / 2);
+          const leadMs = (c.durationMs || 600) * first / c.frames.length;
+          move(contactX, Math.max(1, Math.min(170, leadMs || 1)), 'Sine.Out');
+        } else if (!c.loop && returning) move(this.home.x, Math.max(100, (c.durationMs || 500) - 80), 'Sine.Out');
       };
       if (pairApproach) {
         this.resetImageTransform();

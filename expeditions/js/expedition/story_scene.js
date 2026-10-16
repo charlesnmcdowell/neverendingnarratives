@@ -33,7 +33,10 @@ class StoryBattle extends X.Scene{
     this.events.once('shutdown',()=>{this.ended=true;this.music?.pause();});
     this.startMusic();X.Painted.present(this,this.env,()=>this.fight(true));
   }
-  startMusic(){if(this.music)return;this.music=new Audio(S.Presentation.media('audio/music/'+this.quest.music+'.mp3'));this.music.loop=true;this.music.volume=.16;
+  // A Retry restarts this scene, and shutdown paused the old track: resume it
+  // instead of returning early, which left every retried fight silent (Hiro,
+  // 2026-10-15: no music in fights from chapter two, where retries began).
+  startMusic(){if(this.music){if(!this.opts.muted)this.music.play().catch(()=>{});return;}this.music=new Audio(S.Presentation.media('audio/music/'+this.quest.music+'.mp3'));this.music.loop=true;this.music.volume=.16;
     if(!this.opts.muted)this.music.play().catch(()=>{});}
   spawnFoes(){
     super.spawnFoes();
